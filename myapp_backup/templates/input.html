@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generated Chapters & HTML Input</title>
+</head>
+<body>
+    <p><a href="{% url 'random_file' %}">🔀 View a Random File</a></p>
+    <p><a href="{% url 'all_chapters' %}">📖 View All Chapters</a></p>
+
+    <h1>Generated Chapters</h1>
+    {% if chapters %}
+        <ul>
+            {% for chapter in chapters %}
+                <li><a href="{% url 'chapter_detail' chapter %}">{{ chapter }}</a></li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No chapters have been generated yet.</p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Paste Your HTML Code</h2>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Process HTML</button>
+    </form>
+</body>
+</html>

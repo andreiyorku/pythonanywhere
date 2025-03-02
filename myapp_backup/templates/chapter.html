@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{{ chapter_name }}</title>
+</head>
+<body>
+    <h1>Files in {{ chapter_name }}</h1>
+
+    <p><a href="{% url 'full_chapter' chapter_name %}">📖 View Full Chapter</a></p>
+    <p><a href="{% url 'key_points' chapter_name %}">📌 View Key Points One at a Time</a></p>
+    <p><a href="{% url 'random_key_point' chapter_name %}">🎲 View Random Key Point</a></p>
+
+    <ul>
+        {% for file, file_link in files %}
+            <li><a href="{{ file_link }}">{{ file }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <a href="/">Back to Chapters</a>
+</body>
+</html>

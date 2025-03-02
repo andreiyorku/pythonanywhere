@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</title>
+    <style>
+        #answerContent {
+            display: {% if show_answer %}block{% else %}none{% endif %};
+            margin-top: 15px;
+        }
+    </style>
+    <script>
+        function showAnswer() {
+            document.getElementById('answerContent').style.display = 'block';
+            document.getElementById('showAnswerButton').style.display = 'none';
+        }
+    </script>
+</head>
+<body>
+    <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
+
+    {% if question_data %}
+        <p><strong>Question:</strong> {{ question_data.question }}</p>
+
+        <div id="answerContent">
+            {{ content|safe }}
+            <form method="POST">
+                {% csrf_token %}
+                <button type="submit" name="answer_correct">✅ Correct</button>
+                <button type="submit" name="answer_incorrect">❌ Incorrect</button>
+            </form>
+        </div>
+
+        <div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
+            <button type="button" onclick="showAnswer()">❓ Show Answer</button>
+        </div>
+
+    {% else %}
+        <div>{{ content|safe }}</div>
+        <h3>Add a Question for This Key Point</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="question" placeholder="Enter a question" required>
+            <button type="submit" name="submit_question">💾 Save Question</button>
+        </form>
+    {% endif %}
+
+    <p><a href="{% url 'chapter_detail' chapter_number %}">📚 Back to Chapter</a></p>
+    <p><a href="{% url 'index' %}">🏠 Back to Main Page</a></p>
+</body>
+</html>

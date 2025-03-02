@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chapters - Key Point Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        h2 {
+            font-size: 20px;
+            margin: 20px 0 10px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        a {
+            text-decoration: none;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        form {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 20px 0;
+            background: #f9f9f9;
+        }
+        input, textarea {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin: 5px 0;
+        }
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📚 Key Point Explorer</h1>
+
+<h2>Navigation</h2>
+<ul>
+    <li><a href="{% url 'all_key_points_combined' %}">📄 View All Key Points in All Chapters (Single Page)</a></li>
+    <li><a href="{% url 'sequential_key_points' %}">➡️ Go Through All Key Points One-by-One</a></li>
+    <li><a href="{% url 'random_file' %}">🎲 Random Key Point Across All Chapters</a></li>
+</ul>
+
+<h2>📂 Chapter Management</h2>
+<ul>
+    <li><a href="{% url 'chapter_editor' %}">🛠️ Manage Chapters & Key Points (Editor)</a></li>
+</ul>
+
+
+<h2>Chapters</h2>
+<ul>
+    {% for chapter in chapters %}
+        <li><a href="{% url 'chapter_detail' chapter %}">Chapter {{ chapter }}</a></li>
+    {% endfor %}
+</ul>
+
+<h2>➕ Add / Append Key Point</h2>
+<form method="POST" enctype="multipart/form-data" action="{% url 'add_key_point' %}">
+    {% csrf_token %}
+    <label for="chapter_number">Chapter Number:</label>
+    <input type="number" name="chapter_number" required><br>
+
+    <label for="starting_point">Key Point Number (New or to Append To):</label>
+    <input type="number" name="starting_point" required><br>
+
+    <label for="title">Optional Key Point Title:</label>
+    <input type="text" name="title"><br>
+
+    <label for="content">Optional Key Point Content:</label>
+    <textarea name="content"></textarea><br>
+
+    <label for="images">Images to Attach (optional):</label>
+    <input type="file" name="images" multiple><br>
+
+    <button type="submit" name="action" value="add">➕ Add New Key Point</button>
+    <button type="submit" name="action" value="append">📎 Append to Existing Key Point</button>
+</form>
+
+</body>
+</html>
