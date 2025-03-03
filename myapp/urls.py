@@ -3,6 +3,8 @@ from .views import *
 
 urlpatterns = [
 
+    path('github-webhook/', github_webhook, name='github_webhook'),
+
     path('editor/', chapter_editor_view, name='chapter_editor'),
 
     # ==========================

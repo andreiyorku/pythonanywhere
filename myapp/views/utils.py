@@ -6,6 +6,16 @@ from bs4 import BeautifulSoup
 from django.conf import settings
 from django.shortcuts import redirect
 
+
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
+def github_webhook(request):
+    if request.method == "POST":
+        subprocess.run(['git', '-C', '/home/andreiyorku/mysite', 'pull', 'origin', 'main'])
+        return JsonResponse({"status": "success"}, status=200)
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
 # ====================================
 # Constants
 # ====================================
