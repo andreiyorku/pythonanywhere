@@ -22,7 +22,7 @@
             margin-bottom: 16px;
         }
         .question {
-            font-size: 1.2rem;  /* Question text slightly larger than normal paragraphs */
+            font-size: 1.2rem;  /* Slightly larger question text */
             margin-bottom: 16px;
         }
 
@@ -89,8 +89,12 @@
                 font-size: 4rem; /* 2x size */
             }
 
-            p, div, a, .question {
+            p, div, a {
                 font-size: 2rem; /* 2x for all text */
+            }
+
+            .question {
+                font-size: 2.4rem; /* 2x for question */
             }
 
             form {
@@ -129,7 +133,7 @@
         </p>
 
         <div id="answerContent">
-            {{ content|safe }}
+            <p>{{ content|safe }}</p>  <!-- Ensure key point content is also in a separate <p> -->
             <form method="POST">
                 {% csrf_token %}
                 <button type="submit" name="answer_correct">✅ Correct</button>
