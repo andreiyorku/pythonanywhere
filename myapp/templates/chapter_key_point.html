@@ -21,12 +21,9 @@
             font-size: 1.2rem;
             margin-bottom: 16px;
         }
-        .question-wrapper {
-            font-size: 1.2rem;
+        .question {
+            font-size: 1.2rem;  /* Normal size on desktop */
             margin-bottom: 16px;
-        }
-        .question-wrapper strong {
-            font-weight: bold;
         }
         form {
             display: flex;
@@ -74,22 +71,19 @@
             text-decoration: underline;
         }
 
-        /* 📱 Mobile (<=768px) - 3x size for EVERYTHING, including the question and its label */
+        /* 📱 Mobile (<=768px) - 3x size for the entire question (label + text) */
         @media (max-width: 768px) {
             body {
                 font-size: 54px; /* 3x */
             }
             h1 {
-                font-size: 7.5rem; /* 3x */
+                font-size: 7.5rem;
             }
             p, div, a {
-                font-size: 3.6rem; /* 3x */
+                font-size: 3.6rem;
             }
-            .question-wrapper {
-                font-size: 3.6rem; /* 3x */
-            }
-            .question-wrapper strong {
-                font-size: 3.6rem; /* 3x */
+            .question {
+                font-size: 3.6rem;  /* 3x for question */
             }
             form {
                 gap: 36px;
@@ -120,9 +114,9 @@
     <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
 
     {% if question_data %}
-        <div class="question-wrapper">
-            <strong>Question:</strong> {{ question_data.question }}
-        </div>
+        <p class="question">
+            Question: {{ question_data.question }}
+        </p>
 
         <div id="answerContent">
             {{ content|safe }}
