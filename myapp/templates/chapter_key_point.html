@@ -21,8 +21,8 @@
             font-size: 1rem;  /* Normal paragraph size */
             margin-bottom: 16px;
         }
-        .question {
-            font-size: 1.2rem;  /* Slightly larger question text */
+        p {
+            font-size: 1rem;  /* Normal paragraph size for both key point and question */
             margin-bottom: 16px;
         }
 
@@ -93,10 +93,6 @@
                 font-size: 2rem; /* 2x for all text */
             }
 
-            .question {
-                font-size: 2.4rem; /* 2x for question */
-            }
-
             form {
                 gap: 24px;
                 padding: 24px;
@@ -128,7 +124,7 @@
     <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
 
     {% if question_data %}
-        <p class="question">
+        <p>
             Question: {{ question_data.question }}
         </p>
 
