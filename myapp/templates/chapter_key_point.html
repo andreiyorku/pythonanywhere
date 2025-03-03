@@ -89,7 +89,7 @@
 
         <div id="answerContent">
             {{ content|safe }}
-            <form method="POST">
+            <form method="POST" style="font-size: 1.2rem; max-width: 500px; margin: 16px auto; padding: 16px; background-color: #f0f0f0; border-radius: 6px;">
                 {% csrf_token %}
                 <button type="submit" name="answer_correct">✅ Correct</button>
                 <button type="submit" name="answer_incorrect">❌ Incorrect</button>
@@ -103,7 +103,7 @@
     {% else %}
         <div>{{ content|safe }}</div>
         <h3>Add a Question for This Key Point</h3>
-        <form method="POST">
+        <form method="POST" style="font-size: 1.2rem; max-width: 500px; margin: 16px auto; padding: 16px; background-color: #f0f0f0; border-radius: 6px;">
             {% csrf_token %}
             <input type="text" name="question" placeholder="Enter a question" required>
             <button type="submit" name="submit_question" style="font-size: 1.2rem; padding: 16px 24px;">💾 Save Question</button>
