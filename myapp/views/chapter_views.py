@@ -25,6 +25,7 @@ def full_chapter_view(request, chapter_number):
             soup = BeautifulSoup(f.read(), "html.parser")
 
         title = get_key_point_title(chapter_number, point_number)
+
         content_list.append(f"<h2>Key Point {point_number}: {title}</h2>")
         content_list.append(str(soup.body) if soup.body else str(soup))
         content_list.append("<hr>")

@@ -12,6 +12,9 @@ from .utils import (
     move_to_next_key_point
 )
 
+def key_points_view(request, chapter_number):
+    return single_key_point_view(request, chapter_number, 1)
+
 def single_key_point_view(request, chapter_number, point_number):
     key_points = get_files_in_chapter(chapter_number)
     if point_number < 1 or point_number > len(key_points):
@@ -20,6 +23,46 @@ def single_key_point_view(request, chapter_number, point_number):
 
 def random_key_point_view(request, chapter_number):
     return single_key_point_view(request, chapter_number, random.choice(get_files_in_chapter(chapter_number)))
+
+def random_key_point_across_chapters_view(request):
+    all_points = [
+        (ch, kp) for ch in get_generated_chapters()
+        for kp in get_files_in_chapter(ch)
+    ]
+    if not all_points:
+        return render(request, "error.html", {"message": "No key points found."})
+
+    chapter_number, key_point_number = random.choice(all_points)
+
+    # ✅ Pass is_random_across_chapters=True
+    return render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=True)
+
+def all_key_points_combined_view(request):
+    all_content = []
+    chapters = get_generated_chapters()
+
+    for chapter_number in chapters:
+        all_content.append(f"<h1>Chapter {chapter_number}</h1>")
+
+        key_points = get_files_in_chapter(chapter_number)
+
+        for point_number in key_points:
+            file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{point_number}.html")
+            with open(file_path, "r", encoding="utf-8") as f:
+                soup = BeautifulSoup(f.read(), "html.parser")
+
+            title = get_key_point_title(chapter_number, point_number)
+
+            all_content.append(f"<h2>Key Point {point_number}: {title}</h2>")
+            all_content.append(str(soup.body) if soup.body else str(soup))
+            all_content.append("<hr>")
+
+    return render(request, "all_key_points_combined.html", {
+        "combined_content": "\n".join(all_content)
+    })
+
+def sequential_key_points_view(request):
+    return redirect('single_key_point', chapter_number=1, point_number=1)
 
 def render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False):
     file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{key_point_number}.html")
@@ -38,24 +81,78 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
 
     if request.method == "POST":
         if "show_answer" in request.POST:
-            show_answer = True
+            show_answer = True  # ✅ Directly set, no redirect needed.
+
         elif "submit_question" in request.POST:
-            question_data = {"question": request.POST.get("question").strip(), "weight": 1.0}
+            question_data = {
+                "question": request.POST.get("question").strip(),
+                "weight": 1.0
+            }
             with open(qa_file_path, "w", encoding="utf-8") as f:
                 json.dump(question_data, f, indent=4)
             return redirect(request.path)
+
         elif "answer_correct" in request.POST or "answer_incorrect" in request.POST:
             if question_data:
-                question_data["weight"] *= 1 if "answer_correct" in request.POST else 2
+                if "answer_correct" in request.POST:
+                    question_data["weight"] = question_data["weight"]
+                elif "answer_incorrect" in request.POST:
+                    question_data["weight"] *= 2
+
                 with open(qa_file_path, "w", encoding="utf-8") as f:
                     json.dump(question_data, f, indent=4)
-            return move_to_next_key_point(request, chapter_number, key_point_number, is_random_across_chapters)
+
+            if is_random_across_chapters:
+                return redirect('random_file')
+            else:
+                return move_to_next_key_point(request, chapter_number, key_point_number, is_random_across_chapters)
 
     return render(request, "chapter_key_point.html", {
         "chapter_number": chapter_number,
         "key_point_number": key_point_number,
         "question_data": question_data,
         "content": content,
-        "show_answer": show_answer,
+        "show_answer": show_answer,  # ✅ This gets passed directly.
         "is_random_across_chapters": is_random_across_chapters,
     })
+
+def next_random_in_chapter(request, chapter_number):
+    """Pick another random point within the same chapter."""
+    key_points = get_files_in_chapter(chapter_number)
+
+    if not key_points:
+        return redirect('chapter_detail', chapter_number=chapter_number)
+
+    next_point_number = random.choice(key_points)
+
+    # ✅ Redirect to the new random point in the same chapter
+    return redirect('single_key_point', chapter_number=chapter_number, point_number=next_point_number)
+
+def next_random_across_chapters(request):
+    """Pick another random point across all chapters."""
+    all_points = [
+        (ch, kp) for ch in get_generated_chapters()
+        for kp in get_files_in_chapter(ch)
+    ]
+
+    if not all_points:
+        return redirect('index')
+
+    next_chapter, next_point = random.choices(
+        all_points,
+        weights=[get_point_weight(ch, kp) for ch, kp in all_points]
+    )[0]
+
+    return redirect('single_key_point', chapter_number=next_chapter, point_number=next_point)
+
+def get_point_weight(chapter_number, key_point_number):
+    """Get weight for a point, defaulting to 1 if no QA file exists."""
+    qa_file_path = get_qa_file_path(chapter_number, key_point_number)
+
+    if os.path.exists(qa_file_path):
+        with open(qa_file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            return data.get("weight", 1.0)
+
+    return 1.0  # Default weight
+
