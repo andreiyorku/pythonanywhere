@@ -1,18 +1,5 @@
 from django.urls import path
-from .views import (
-    html_input_view,
-    chapter_detail_view,
-    full_chapter_view,
-    key_points_view,
-    single_key_point_view,
-    random_key_point_view,
-    random_key_point_across_chapters_view,
-    add_key_point_view,
-    append_to_key_point_view,
-    all_key_points_combined_view,
-    sequential_key_points_view,  # ✅ Added to ensure it's accessible
-    chapter_editor_view,
-)
+from .views import *
 
 urlpatterns = [
 
