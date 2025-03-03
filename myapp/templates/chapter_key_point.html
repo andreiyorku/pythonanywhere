@@ -3,21 +3,22 @@
 <head>
     <title>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            font-size: 16px;
-            line-height: 1.6;
+            font-size: 18px; /* Larger default text */
+            line-height: 1.8;
             padding: 16px;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 2.5rem;
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
         p, div {
-            font-size: 1rem;
-            margin-bottom: 12px;
+            font-size: 1.2rem;
+            margin-bottom: 16px;
         }
         form {
             display: flex;
@@ -25,36 +26,38 @@
             gap: 12px;
             max-width: 500px;
             margin: 16px auto;
-            padding: 16px;
+            padding: 20px;
             background-color: #f0f0f0;
-            border-radius: 6px;
+            border-radius: 8px;
         }
         form input, form button {
-            font-size: 1rem;
+            font-size: 1.2rem;
             padding: 12px;
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
         form button {
             background-color: #007bff;
             color: white;
-            border: none;
-            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.2s;
         }
         form button:hover {
             background-color: #0056b3;
         }
         #answerContent {
             display: {% if show_answer %}block{% else %}none{% endif %};
-            margin-top: 15px;
+            margin-top: 16px;
         }
         #showAnswerButton button {
-            font-size: 1rem;
+            font-size: 1.2rem;
             padding: 12px 24px;
             cursor: pointer;
         }
         a {
             display: inline-block;
-            font-size: 1rem;
+            font-size: 1.2rem;
             margin-top: 12px;
             text-decoration: none;
             color: #007bff;
@@ -64,16 +67,17 @@
         }
         @media (max-width: 768px) {
             body {
-                font-size: 18px;
+                font-size: 20px;
             }
             h1 {
-                font-size: 1.5rem;
+                font-size: 2rem;
             }
             p, div, form input, form button, #showAnswerButton button, a {
-                font-size: 1.1rem;
+                font-size: 1.2rem;
             }
         }
     </style>
+
     <script>
         function showAnswer() {
             document.getElementById('answerContent').style.display = 'block';
@@ -82,6 +86,7 @@
     </script>
 </head>
 <body>
+
     <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
 
     {% if question_data %}
@@ -89,7 +94,7 @@
 
         <div id="answerContent">
             {{ content|safe }}
-            <form method="POST" style="font-size: 1.2rem; max-width: 500px; margin: 16px auto; padding: 16px; background-color: #f0f0f0; border-radius: 6px;">
+            <form method="POST">
                 {% csrf_token %}
                 <button type="submit" name="answer_correct">✅ Correct</button>
                 <button type="submit" name="answer_incorrect">❌ Incorrect</button>
@@ -103,14 +108,15 @@
     {% else %}
         <div>{{ content|safe }}</div>
         <h3>Add a Question for This Key Point</h3>
-        <form method="POST" style="font-size: 1.2rem; max-width: 500px; margin: 16px auto; padding: 16px; background-color: #f0f0f0; border-radius: 6px;">
+        <form method="POST">
             {% csrf_token %}
-            <input type="text" name="question" placeholder="Enter a question" required style="font-size: 1.2rem; padding: 12px; width: 100%; border: 1px solid #ccc; border-radius: 4px;" required>
-            <button type="submit" name="submit_question" style="font-size: 1.2rem; padding: 16px 24px;">💾 Save Question</button>
+            <input type="text" name="question" placeholder="Enter a question" required>
+            <button type="submit" name="submit_question">💾 Save Question</button>
         </form>
     {% endif %}
 
     <p><a href="{% url 'chapter_detail' chapter_number %}">📚 Back to Chapter</a></p>
     <p><a href="{% url 'index' %}">🏠 Back to Main Page</a></p>
+
 </body>
 </html>
