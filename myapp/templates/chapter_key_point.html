@@ -2,19 +2,7 @@
 <html lang="en">
 <head>
     <title>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</title>
-    <style>
-        #answerContent {
-            display: {% if show_answer %}block{% else %}none{% endif %};
-            margin-top: 15px;
-        }
-    </style>
-    <script>
-        function showAnswer() {
-            document.getElementById('answerContent').style.display = 'block';
-            document.getElementById('showAnswerButton').style.display = 'none';
-        }
-    </script>
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -27,59 +15,52 @@
             text-align: center;
             margin-bottom: 16px;
         }
-        .keypoint {
-            background-color: #f5f5f5;
-            padding: 12px;
-            border-radius: 6px;
+        p, div {
+            font-size: 1rem;
             margin-bottom: 12px;
         }
-        .keypoint p {
-            font-size: 1rem;
-        }
         form {
-            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             max-width: 500px;
             margin: 16px auto;
             padding: 16px;
             background-color: #f0f0f0;
             border-radius: 6px;
         }
-        form label {
+        form input, form button {
             font-size: 1rem;
-            display: block;
-            margin-bottom: 6px;
-        }
-        form input, form select, form textarea {
-            width: 100%;
             padding: 12px;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
         }
         form button {
-            width: 100%;
-            padding: 12px;
-            font-size: 1rem;
             background-color: #007bff;
-            color: #fff;
+            color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
         }
-        .nav-buttons {
-            text-align: center;
-            margin-top: 16px;
+        form button:hover {
+            background-color: #0056b3;
         }
-        .nav-buttons a {
-            display: inline-block;
-            padding: 12px 24px;
+        #answerContent {
+            display: {% if show_answer %}block{% else %}none{% endif %};
+            margin-top: 15px;
+        }
+        #showAnswerButton button {
             font-size: 1rem;
-            background-color: #007bff;
-            color: #fff;
+            padding: 12px 24px;
+            cursor: pointer;
+        }
+        a {
+            display: inline-block;
+            font-size: 1rem;
+            margin-top: 12px;
             text-decoration: none;
-            border-radius: 6px;
-            margin: 0 5px;
+            color: #007bff;
+        }
+        a:hover {
+            text-decoration: underline;
         }
         @media (max-width: 768px) {
             body {
@@ -88,15 +69,17 @@
             h1 {
                 font-size: 1.5rem;
             }
-            .keypoint p, form label, form input, form select, form textarea, form button {
+            p, div, form input, form button, #showAnswerButton button, a {
                 font-size: 1.1rem;
-            }
-            .nav-buttons a {
-                font-size: 1.1rem;
-                padding: 14px 28px;
             }
         }
     </style>
+    <script>
+        function showAnswer() {
+            document.getElementById('answerContent').style.display = 'block';
+            document.getElementById('showAnswerButton').style.display = 'none';
+        }
+    </script>
 </head>
 <body>
     <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
