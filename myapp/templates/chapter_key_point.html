@@ -8,18 +8,21 @@
         /* 🌐 Normal (desktop/laptop) styles */
         body {
             font-family: Arial, sans-serif;
-            font-size: 18px;
-            line-height: 1.8;
+            font-size: 16px; /* Base font size */
+            line-height: 1.6;
             padding: 16px;
         }
         h1 {
-            font-size: 2.5rem;
+            font-size: 2rem; /* 2x base size */
             text-align: center;
             margin-bottom: 20px;
         }
-
-        p, div, .question {
-            font-size: 1.2rem;  /* General font size for paragraphs and divs */
+        p, div {
+            font-size: 1rem;  /* Normal paragraph size */
+            margin-bottom: 16px;
+        }
+        .question {
+            font-size: 1.2rem;  /* Question text slightly larger than normal paragraphs */
             margin-bottom: 16px;
         }
 
@@ -35,7 +38,7 @@
         }
 
         form input, form button {
-            font-size: 1.2rem;
+            font-size: 1rem; /* Normal button and input size */
             padding: 12px;
             width: 100%;
             border: 1px solid #ccc;
@@ -59,14 +62,14 @@
         }
 
         #showAnswerButton button {
-            font-size: 1.2rem;
+            font-size: 1rem; /* Standard button size */
             padding: 12px 24px;
             cursor: pointer;
         }
 
         a {
             display: inline-block;
-            font-size: 1.2rem;
+            font-size: 1rem; /* Normal link size */
             margin-top: 12px;
             text-decoration: none;
             color: #007bff;
@@ -76,35 +79,34 @@
             text-decoration: underline;
         }
 
-        /* 📱 Mobile/Tablet (<=1200px) - 2x size */
+        /* 📱 Mobile/Tablet (<=1200px) - Moderate adjustments for better readability */
         @media (max-width: 1200px) {
             body {
-                font-size: 36px; /* 2x */
+                font-size: 18px; /* 1.125x size for mobile */
             }
 
             h1 {
-                font-size: 5rem; /* 2x */
+                font-size: 2.5rem; /* Slightly larger h1 */
             }
 
             p, div, a, .question {
-                font-size: 2.4rem; /* 2x */
+                font-size: 1.125rem; /* 1.125x for text to improve readability */
             }
 
             form {
-                gap: 24px;
-                padding: 24px;
+                gap: 16px;
+                padding: 16px;
                 max-width: 100%;
             }
 
             form input, form button {
-                font-size: 2.4rem;
-                padding: 24px;
-                border-width: 2px;
+                font-size: 1.125rem;
+                padding: 16px;
             }
 
             #showAnswerButton button {
-                font-size: 2.4rem;
-                padding: 24px 36px;
+                font-size: 1.125rem;
+                padding: 16px 32px;
             }
         }
     </style>
