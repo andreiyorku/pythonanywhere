@@ -22,10 +22,11 @@
             margin-bottom: 16px;
         }
         p.question {
-            font-size: 1.2rem;
+            font-size: 1.5rem;  /* Slightly bigger than normal text */
+            font-weight: bold;
         }
         p.question strong {
-            font-size: 1.2rem;
+            font-weight: bold;
         }
         form {
             display: flex;
@@ -73,7 +74,7 @@
             text-decoration: underline;
         }
 
-        /* 📱 Mobile (<=768px) - 3x text size */
+        /* 📱 Mobile (<=768px) - 3x size for everything including the question */
         @media (max-width: 768px) {
             body {
                 font-size: 54px; /* 3x */
@@ -85,10 +86,10 @@
                 font-size: 3.6rem; /* 3x */
             }
             p.question {
-                font-size: 3.6rem; /* 3x */
+                font-size: 4rem;  /* 3x and slightly emphasized */
             }
             p.question strong {
-                font-size: 3.6rem; /* 3x */
+                font-size: 4rem;
             }
             form {
                 gap: 36px;
