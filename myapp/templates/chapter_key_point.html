@@ -144,4 +144,12 @@
         <form method="POST">
             {% csrf_token %}
             <input type="text" name="question" placeholder="Enter a question" required>
-            <button type="submit" name="submit_question">💾 Save 
+            <button type="submit" name="submit_question">💾 Save Question</button>
+        </form>
+    {% endif %}
+
+    <p><a href="{% url 'chapter_detail' chapter_number %}">📚 Back to Chapter</a></p>
+    <p><a href="{% url 'index' %}">🏠 Back to Main Page</a></p>
+
+</body>
+</html>
