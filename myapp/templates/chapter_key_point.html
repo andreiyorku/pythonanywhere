@@ -79,34 +79,35 @@
             text-decoration: underline;
         }
 
-        /* 📱 Mobile/Tablet (<=1200px) - Moderate adjustments for better readability */
+        /* 📱 Mobile/Tablet (<=1200px) - 2x size */
         @media (max-width: 1200px) {
             body {
-                font-size: 18px; /* 1.125x size for mobile */
+                font-size: 32px; /* 2x size */
             }
 
             h1 {
-                font-size: 2.5rem; /* Slightly larger h1 */
+                font-size: 4rem; /* 2x size */
             }
 
             p, div, a, .question {
-                font-size: 1.125rem; /* 1.125x for text to improve readability */
+                font-size: 2rem; /* 2x for all text */
             }
 
             form {
-                gap: 16px;
-                padding: 16px;
+                gap: 24px;
+                padding: 24px;
                 max-width: 100%;
             }
 
             form input, form button {
-                font-size: 1.125rem;
-                padding: 16px;
+                font-size: 2rem;
+                padding: 24px;
+                border-width: 2px;
             }
 
             #showAnswerButton button {
-                font-size: 1.125rem;
-                padding: 16px 32px;
+                font-size: 2rem;
+                padding: 24px 36px;
             }
         }
     </style>
