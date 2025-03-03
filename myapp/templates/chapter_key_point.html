@@ -21,11 +21,11 @@
             font-size: 1.2rem;
             margin-bottom: 16px;
         }
-        p.question {
-            font-size: 1.5rem;  /* Slightly bigger than normal text */
-            font-weight: bold;
+        .question-wrapper {
+            font-size: 1.2rem;
+            margin-bottom: 16px;
         }
-        p.question strong {
+        .question-wrapper strong {
             font-weight: bold;
         }
         form {
@@ -74,7 +74,7 @@
             text-decoration: underline;
         }
 
-        /* 📱 Mobile (<=768px) - 3x size for everything including the question */
+        /* 📱 Mobile (<=768px) - 3x size for EVERYTHING, including the question and its label */
         @media (max-width: 768px) {
             body {
                 font-size: 54px; /* 3x */
@@ -82,14 +82,14 @@
             h1 {
                 font-size: 7.5rem; /* 3x */
             }
-            p, div {
+            p, div, a {
                 font-size: 3.6rem; /* 3x */
             }
-            p.question {
-                font-size: 4rem;  /* 3x and slightly emphasized */
+            .question-wrapper {
+                font-size: 3.6rem; /* 3x */
             }
-            p.question strong {
-                font-size: 4rem;
+            .question-wrapper strong {
+                font-size: 3.6rem; /* 3x */
             }
             form {
                 gap: 36px;
@@ -104,9 +104,6 @@
             #showAnswerButton button {
                 font-size: 3.6rem;
                 padding: 36px 48px;
-            }
-            a {
-                font-size: 3.6rem;
             }
         }
     </style>
@@ -123,9 +120,9 @@
     <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
 
     {% if question_data %}
-        <p class="question">
+        <div class="question-wrapper">
             <strong>Question:</strong> {{ question_data.question }}
-        </p>
+        </div>
 
         <div id="answerContent">
             {{ content|safe }}
