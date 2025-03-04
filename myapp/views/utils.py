@@ -97,7 +97,7 @@ def get_key_point_title(chapter_number, key_point_number):
 # - Moves to the next key point within the current chapter.
 # - If the chapter ends, redirects to the chapter overview.
 
-def move_to_next_key_point(request, chapter_number, key_point_number, is_random_across_chapters):
+def move_to_next_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False, is_random_in_chapter=False):
     if is_random_across_chapters:
         all_points = [
             (ch, kp)
@@ -109,6 +109,10 @@ def move_to_next_key_point(request, chapter_number, key_point_number, is_random_
 
         next_chapter, next_point = random.choice(all_points)
         return redirect('single_key_point', chapter_number=next_chapter, point_number=next_point)
+
+    elif is_random_in_chapter:
+        next_point = random.choice(get_files_in_chapter(chapter_number))
+        return redirect('single_key_point', chapter_number=chapter_number, point_number=next_point)
 
     else:
         next_point = key_point_number + 1
@@ -180,19 +184,19 @@ def process_bulk_chapter_content(bulk_content):
     chapter_number = int(chapter_match.group(1))
     ensure_chapter_folder_exists(chapter_number)
 
-    key_points = re.findall(r'<h2>(\d+)\. (.*?)</h2>\s*<p>(.*?)</p>', bulk_content, re.DOTALL)
+    # Extract all h1 (after the chapter title) and following p.
+    sections = re.findall(r'<h1>(.*?)</h1>\s*<p>(.*?)</p>', bulk_content, re.DOTALL)
 
-    if not key_points:
+    if not sections:
         return False, "No key points found in content."
 
-    for key_point in key_points:
-        key_point_number, title, content = key_point
+    for idx, (title, content) in enumerate(sections, start=1):
+        # Save both HTML and QA files
+        save_key_point_html(chapter_number, idx, title, content)
+        save_key_point_qa(chapter_number, idx, title)
 
-        # Save both HTML and QA files using the new helpers
-        save_key_point_html(chapter_number, key_point_number, title, content)
-        save_key_point_qa(chapter_number, key_point_number, title)
+    return True, f"Chapter {chapter_number} imported successfully with {len(sections)} key points."
 
-    return True, f"Chapter {chapter_number} imported successfully with {len(key_points)} key points."
 
 
 # ====================================

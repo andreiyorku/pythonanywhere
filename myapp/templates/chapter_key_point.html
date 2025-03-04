@@ -13,16 +13,16 @@
             padding: 16px;
         }
         h1 {
-            font-size: 2rem; /* 2x base size */
+            font-size: 2rem;
             text-align: center;
             margin-bottom: 20px;
         }
         p, div {
-            font-size: 1rem;  /* Normal paragraph size */
+            font-size: 1rem;
             margin-bottom: 16px;
         }
         p {
-            font-size: 1rem;  /* Normal paragraph size for both key point and question */
+            font-size: 1rem;
             margin-bottom: 16px;
         }
 
@@ -38,7 +38,7 @@
         }
 
         form input, form button {
-            font-size: 1rem; /* Normal button and input size */
+            font-size: 1rem;
             padding: 12px;
             width: 100%;
             border: 1px solid #ccc;
@@ -62,14 +62,14 @@
         }
 
         #showAnswerButton button {
-            font-size: 1rem; /* Standard button size */
+            font-size: 1rem;
             padding: 12px 24px;
             cursor: pointer;
         }
 
         a {
             display: inline-block;
-            font-size: 1rem; /* Normal link size */
+            font-size: 1rem;
             margin-top: 12px;
             text-decoration: none;
             color: #007bff;
@@ -82,29 +82,24 @@
         /* 📱 Mobile/Tablet (<=1200px) - 2x size */
         @media (max-width: 1200px) {
             body {
-                font-size: 32px; /* 2x size */
+                font-size: 32px;
             }
-
             h1 {
-                font-size: 4rem; /* 2x size */
+                font-size: 4rem;
             }
-
             p, div, a {
-                font-size: 2rem; /* 2x for all text */
+                font-size: 2rem;
             }
-
             form {
                 gap: 24px;
                 padding: 24px;
                 max-width: 100%;
             }
-
             form input, form button {
                 font-size: 2rem;
                 padding: 24px;
                 border-width: 2px;
             }
-
             #showAnswerButton button {
                 font-size: 2rem;
                 padding: 24px 36px;
@@ -121,38 +116,44 @@
 </head>
 <body>
 
-    <h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
+<h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
 
-    {% if question_data %}
-        <p>
-            Question: {{ question_data.question }}
-        </p>
+{% if question_data %}
+    <p>Question: {{ question_data.question }}</p>
 
-        <div id="answerContent">
-            <p>{{ content|safe }}</p>  <!-- Ensure key point content is also in a separate <p> -->
-            <form method="POST">
-                {% csrf_token %}
-                <button type="submit" name="answer_correct">✅ Correct</button>
-                <button type="submit" name="answer_incorrect">❌ Incorrect</button>
-            </form>
-        </div>
-
-        <div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
-            <button type="button" onclick="showAnswer()">❓ Show Answer</button>
-        </div>
-
-    {% else %}
-        <div>{{ content|safe }}</div>
-        <h3>Add a Question for This Key Point</h3>
-        <form method="POST">
+    <div id="answerContent">
+        <p>{{ content|safe }}</p>
+        <form method="POST"
+            {% if is_random_across_chapters %}
+                action="{% url 'random_file' %}"
+            {% elif is_random_in_chapter %}
+                action="{% url 'random_in_chapter' chapter_number=chapter_number %}"
+            {% else %}
+                action="{% url 'single_key_point' chapter_number=chapter_number point_number=key_point_number|add:1 %}"
+            {% endif %}
+        >
             {% csrf_token %}
-            <input type="text" name="question" placeholder="Enter a question" required>
-            <button type="submit" name="submit_question">💾 Save Question</button>
+            <button type="submit" name="answer_correct">✅ Correct</button>
+            <button type="submit" name="answer_incorrect">❌ Incorrect</button>
         </form>
-    {% endif %}
+    </div>
 
-    <p><a href="{% url 'chapter_detail' chapter_number %}">📚 Back to Chapter</a></p>
-    <p><a href="{% url 'index' %}">🏠 Back to Main Page</a></p>
+    <div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
+        <button type="button" onclick="showAnswer()">❓ Show Answer</button>
+    </div>
+
+{% else %}
+    <div>{{ content|safe }}</div>
+    <h3>Add a Question for This Key Point</h3>
+    <form method="POST" action="{% url 'single_key_point' chapter_number=chapter_number point_number=key_point_number %}">
+        {% csrf_token %}
+        <input type="text" name="question" placeholder="Enter a question" required>
+        <button type="submit" name="submit_question">💾 Save Question</button>
+    </form>
+{% endif %}
+
+<p><a href="{% url 'chapter_detail' chapter_number %}">📚 Back to Chapter</a></p>
+<p><a href="{% url 'index' %}">🏠 Back to Main Page</a></p>
 
 </body>
 </html>

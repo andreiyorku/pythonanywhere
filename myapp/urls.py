@@ -3,9 +3,13 @@ from .views import *
 
 urlpatterns = [
 
-    path('github-webhook/', github_webhook, name='github_webhook'),
-
     path('editor/', chapter_editor_view, name='chapter_editor'),
+    path('chapter/<int:chapter_number>/key-points/random/', random_key_point_view, name='random_key_point'),
+    path('chapter/<int:chapter_number>/key-points/random/next/', next_random_in_chapter, name='next_random_in_chapter'),
+    path('chapter/<int:chapter_number>/randominchapter/', random_in_chapter_view, name='random_in_chapter'),
+
+
+
 
     # ==========================
     # 1️⃣ HOMEPAGE / INDEX

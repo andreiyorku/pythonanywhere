@@ -3,14 +3,14 @@ import json
 import re
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from bs4 import BeautifulSoup
+
 
 from .utils import (
     CHAPTERS_DIR,
     get_generated_chapters,
     get_qa_file_path,
-    shift_chapters_up,
-    shift_key_points_up,
-    load_key_point,
+    process_bulk_chapter_content
 )
 
 # =========================
@@ -205,3 +205,76 @@ def shift_key_points_up(chapter_number, starting_point):
             if os.path.exists(old_qa):
                 os.rename(old_qa, new_qa)
 
+def load_key_point(request, chapter_number, key_point_number):
+    chapter_path = os.path.join(CHAPTERS_DIR, str(chapter_number))
+    file_path = os.path.join(chapter_path, f"{key_point_number}.html")
+    qa_file_path = get_qa_file_path(chapter_number, key_point_number)
+
+    title, content, question = "", "", ""
+
+    if os.path.exists(file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            soup = BeautifulSoup(f.read(), "html.parser")
+            heading = soup.find("h1")
+            title = heading.get_text(strip=True) if heading else ""
+            content = str(soup.body) if soup.body else str(soup)
+
+    if os.path.exists(qa_file_path):
+        with open(qa_file_path, "r", encoding="utf-8") as f:
+            qa_data = json.load(f)
+            question = qa_data.get("question", title)
+
+    return render(request, "chapter_editor.html", {
+        "chapter_number": chapter_number,
+        "key_point_number": key_point_number,
+        "title": title,
+        "content": content,
+        "question": question,
+    })
+
+def add_key_point_view(request):
+    if request.method == "POST":
+        chapter_number = int(request.POST.get("chapter_number"))
+        starting_point = int(request.POST.get("starting_point"))
+        title = request.POST.get("title").strip()
+        content = request.POST.get("content").strip()
+        images = request.FILES.getlist("images")
+
+        chapter_path = os.path.join(CHAPTERS_DIR, str(chapter_number))
+        os.makedirs(chapter_path, exist_ok=True)
+
+        all_files = sorted(
+            int(f.replace(".html", "")) for f in os.listdir(chapter_path) if f.endswith(".html")
+        )
+
+        # Shift existing files if adding at an existing position
+        if starting_point in all_files:
+            for old_number in reversed(all_files):
+                if old_number >= starting_point:
+                    os.rename(
+                        os.path.join(chapter_path, f"{old_number}.html"),
+                        os.path.join(chapter_path, f"{old_number+1}.html")
+                    )
+                    if os.path.exists(os.path.join(chapter_path, f"{old_number}.qa.json")):
+                        os.rename(
+                            os.path.join(chapter_path, f"{old_number}.qa.json"),
+                            os.path.join(chapter_path, f"{old_number+1}.qa.json")
+                        )
+
+        # Create the new HTML file
+        image_tags = save_uploaded_images(chapter_number, starting_point, images)
+
+        file_path = os.path.join(chapter_path, f"{starting_point}.html")
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(f"<h1>{title}</h1>\n<p>{content}</p>\n{image_tags}")
+
+        # 🔔 Automatically create the matching QA JSON file
+        qa_file_path = os.path.join(chapter_path, f"{starting_point}.qa.json")
+        qa_data = {
+            "question": title,  # Use the heading as the question
+            "weight": 1.0
+        }
+        with open(qa_file_path, "w", encoding="utf-8") as f:
+            json.dump(qa_data, f, indent=4)
+
+        return redirect('index')

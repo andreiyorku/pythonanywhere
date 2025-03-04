@@ -64,7 +64,7 @@ def all_key_points_combined_view(request):
 def sequential_key_points_view(request):
     return redirect('single_key_point', chapter_number=1, point_number=1)
 
-def render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False):
+def render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False, is_random_in_chapter=False):
     file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{key_point_number}.html")
     qa_file_path = get_qa_file_path(chapter_number, key_point_number)
 
@@ -74,14 +74,14 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
 
     question_data = None
     if os.path.exists(qa_file_path):
-        with open(qa_file_path, "r", encoding="utf-8") as f:
+        with open(qa_file_path, "r", encoding="utf-8", errors='replace') as f:
             question_data = json.load(f)
 
     show_answer = request.session.pop('show_answer', False)
 
     if request.method == "POST":
         if "show_answer" in request.POST:
-            show_answer = True  # ✅ Directly set, no redirect needed.
+            show_answer = True
 
         elif "submit_question" in request.POST:
             question_data = {
@@ -95,26 +95,34 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
         elif "answer_correct" in request.POST or "answer_incorrect" in request.POST:
             if question_data:
                 if "answer_correct" in request.POST:
-                    question_data["weight"] = question_data["weight"]
+                    question_data["weight"] = question_data["weight"]  # Optional: adjust weight logic
                 elif "answer_incorrect" in request.POST:
                     question_data["weight"] *= 2
 
                 with open(qa_file_path, "w", encoding="utf-8") as f:
                     json.dump(question_data, f, indent=4)
 
-            if is_random_across_chapters:
+            if is_random_in_chapter:
+                return move_to_next_random_in_chapter(request, chapter_number)
+
+            elif is_random_across_chapters:
                 return redirect('random_file')
+
             else:
-                return move_to_next_key_point(request, chapter_number, key_point_number, is_random_across_chapters)
+                return move_to_next_key_point(request, chapter_number, key_point_number)
 
     return render(request, "chapter_key_point.html", {
         "chapter_number": chapter_number,
         "key_point_number": key_point_number,
         "question_data": question_data,
         "content": content,
-        "show_answer": show_answer,  # ✅ This gets passed directly.
+        "show_answer": show_answer,
         "is_random_across_chapters": is_random_across_chapters,
+        "is_random_in_chapter": is_random_in_chapter,  # Add this line!
     })
+
+
+
 
 def next_random_in_chapter(request, chapter_number):
     """Pick another random point within the same chapter."""
@@ -156,3 +164,38 @@ def get_point_weight(chapter_number, key_point_number):
 
     return 1.0  # Default weight
 
+def random_in_chapter_view(request, chapter_number):
+    key_points = get_files_in_chapter(chapter_number)
+
+    if not key_points:
+        return redirect('chapter_detail', chapter_number=chapter_number)
+
+    # First time visiting the page (or reset if switching chapters), pick a random point
+    if (
+        'current_random_point' not in request.session or
+        request.session.get('current_random_chapter') != chapter_number
+    ):
+        next_point = weighted_random_point_in_chapter(chapter_number)
+        request.session['current_random_point'] = next_point
+        request.session['current_random_chapter'] = chapter_number
+    else:
+        next_point = request.session['current_random_point']
+
+    # Render the selected key point
+    return render_key_point(request, chapter_number, next_point, is_random_in_chapter=True)
+
+
+def move_to_next_random_in_chapter(request, chapter_number):
+    """After answering a question, move to the next random weighted point within this chapter."""
+    next_point = weighted_random_point_in_chapter(chapter_number)
+    request.session['current_random_point'] = next_point
+    request.session['current_random_chapter'] = chapter_number
+
+    return redirect('random_in_chapter', chapter_number=chapter_number)
+
+
+def weighted_random_point_in_chapter(chapter_number):
+    """Get a weighted random key point from a chapter."""
+    key_points = get_files_in_chapter(chapter_number)
+    weights = [get_point_weight(chapter_number, kp) for kp in key_points]
+    return random.choices(key_points, weights=weights)[0]
