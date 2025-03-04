@@ -15,6 +15,5 @@ jobs:
 
     - name: Trigger PythonAnywhere Reload
       run: |
-        curl -X POST "https://www.pythonanywhere.com/api/v0/user/andreiyorku/webapps/andreiyorku.pythonanywhere.com/reload/"
- \
+        curl -X POST "https://www.pythonanywhere.com/api/v0/user/andreiyorku/webapps/andreiyorku.pythonanywhere.com/reload/" \
           -H "Authorization: Token ${{ secrets.PYTHONANYWHERE_API_TOKEN }}"
