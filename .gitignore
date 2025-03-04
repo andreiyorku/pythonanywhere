@@ -1,0 +1,12 @@
+# Ignore compiled files
+__pycache__/
+
+# Ignore environment folders
+venv/
+env/
+
+# Ignore local configs
+*.local
+*.env
+
+# Ignore specific directories (adjust to your case)
