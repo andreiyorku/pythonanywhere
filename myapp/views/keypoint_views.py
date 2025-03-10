@@ -1,6 +1,7 @@
 import os
 import json
 import random
+import math
 from django.shortcuts import render, redirect
 from bs4 import BeautifulSoup
 from .utils import (
@@ -24,18 +25,172 @@ def single_key_point_view(request, chapter_number, point_number):
 def random_key_point_view(request, chapter_number):
     return single_key_point_view(request, chapter_number, random.choice(get_files_in_chapter(chapter_number)))
 
+import random
+import os
+import json
+from django.shortcuts import render, redirect
+
 def random_key_point_across_chapters_view(request):
-    all_points = [
-        (ch, kp) for ch in get_generated_chapters()
-        for kp in get_files_in_chapter(ch)
+    """
+    Weighted random selection of a keypoint across all chapters, using only 'weight' field.
+    """
+
+    chapters = [
+        get_files_in_chapter(ch)
+        for ch in get_generated_chapters()
     ]
-    if not all_points:
+
+    initial_relation = 4  # Later chapter points are 4x stronger initially
+    max_protection = 3    # Controlled degradation rounds
+
+    keypoints = []
+    for idx, chapter_keypoints in enumerate(chapters):
+        num_points = len(chapter_keypoints)
+        if num_points == 0:
+            continue
+        chapter_multiplier = 2 ** idx
+        base_weight = chapter_multiplier / num_points
+
+        for kp in chapter_keypoints:
+            qa_file_path = get_qa_file_path(idx, kp)
+            current_weight = base_weight  # Default starting weight
+
+            if os.path.exists(qa_file_path):
+                with open(qa_file_path, "r", encoding="utf-8-sig", errors='replace') as f:
+                    try:
+                        qa_data = json.load(f)
+                        current_weight = qa_data.get("weight", base_weight)
+                    except json.JSONDecodeError:
+                        pass
+
+            keypoints.append({
+                "text": kp,
+                "base_weight": base_weight,
+                "chapter_index": idx,
+                "weight": current_weight
+            })
+
+    if not keypoints:
         return render(request, "error.html", {"message": "No key points found."})
 
-    chapter_number, key_point_number = random.choice(all_points)
+    adjusted_weights = []
+    for kp in keypoints:
+        R = (initial_relation / 2) ** (1 / max_protection)
 
-    # ✅ Pass is_random_across_chapters=True
+        # Estimate correct count from weight:
+        try:
+            correct_count = math.log(kp['base_weight'] / kp['weight'], R)
+        except (ValueError, ZeroDivisionError):
+            correct_count = 0
+
+        if correct_count <= max_protection:
+            reduction_factor = R ** correct_count
+        else:
+            reduction_factor = (R ** max_protection) * (2 ** (correct_count - max_protection))
+
+        adjusted_weight = kp['base_weight'] / reduction_factor
+        adjusted_weights.append(adjusted_weight)
+
+    sampled_keypoint = random.choices(keypoints, weights=adjusted_weights, k=1)[0]
+    chapter_number = sampled_keypoint['chapter_index']
+    key_point_number = sampled_keypoint['text']
+
     return render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=True)
+
+    
+def render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False, is_random_in_chapter=False):
+    file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{key_point_number}.html")
+    qa_file_path = get_qa_file_path(chapter_number, key_point_number)
+
+    with open(file_path, "r", encoding="utf-8-sig") as f:
+        soup = BeautifulSoup(f.read(), "html.parser")
+        content = str(soup.body) if soup.body else str(soup)
+
+    question_data = None
+    if os.path.exists(qa_file_path):
+        with open(qa_file_path, "r", encoding="utf-8-sig", errors='replace') as f:
+            question_data = json.load(f)
+
+    show_answer = request.session.pop('show_answer', False)
+
+    if request.method == "POST":
+        if "show_answer" in request.POST:
+            show_answer = True
+
+        elif "submit_question" in request.POST:
+            question_data = {
+                "question": request.POST.get("question").strip(),
+                "weight": 1.0  # Initial weight, no 'correct_count'
+            }
+            with open(qa_file_path, "w", encoding="utf-8-sig") as f:
+                json.dump(question_data, f, indent=4)
+            return redirect(request.path)
+
+        elif "answer_correct" in request.POST or "answer_incorrect" in request.POST:
+            if question_data:
+                if "answer_correct" in request.POST:
+                    # Halve the weight when answered correctly
+                    question_data["weight"] = max(0.01, question_data["weight"] / 2)
+
+                with open(qa_file_path, "w", encoding="utf-8-sig") as f:
+                    json.dump(question_data, f, indent=4)
+
+            # Handle navigation
+            if is_random_in_chapter:
+                return move_to_next_random_in_chapter(request, chapter_number)
+            elif is_random_across_chapters:
+                return redirect('random_file')
+            else:
+                return move_to_next_key_point(request, chapter_number, key_point_number)
+
+    return render(request, "chapter_key_point.html", {
+        "chapter_number": chapter_number,
+        "key_point_number": key_point_number,
+        "question_data": question_data,
+        "content": content,
+        "show_answer": show_answer,
+        "is_random_across_chapters": is_random_across_chapters,
+        "is_random_in_chapter": is_random_in_chapter,
+    })
+
+
+    
+def move_to_next_random_in_chapter(request, chapter_number):
+    """After answering a question, move to the next random weighted point within this chapter."""
+    next_point = weighted_random_point_in_chapter(chapter_number)
+    request.session['current_random_point'] = next_point
+    request.session['current_random_chapter'] = chapter_number
+
+    return redirect('random_in_chapter', chapter_number=chapter_number)
+
+
+def weighted_random_point_in_chapter(chapter_number):
+    """Get a weighted random key point within a chapter."""
+    key_points = get_files_in_chapter(chapter_number)
+    weights = []
+    for kp in key_points:
+        qa_file_path = get_qa_file_path(chapter_number, kp)
+        correct_count = 0
+        if os.path.exists(qa_file_path):
+            with open(qa_file_path, "r", encoding="utf-8-sig", errors='replace') as f:
+                try:
+                    qa_data = json.load(f)
+                    correct_count = qa_data.get("correct_count", 0)
+                except json.JSONDecodeError:
+                    pass
+
+        base_weight = 1.0  # In-chapter equal weighting (adjust as needed)
+        R = (4 / 2) ** (1 / 3)  # Assuming same relation as cross-chapter
+        if correct_count <= 3:
+            reduction_factor = R ** correct_count
+        else:
+            reduction_factor = (R ** 3) * (2 ** (correct_count - 3))
+
+        weight = base_weight / reduction_factor
+        weights.append(weight)
+
+    return random.choices(key_points, weights=weights)[0]
+
 
 def all_key_points_combined_view(request):
     all_content = []
@@ -64,62 +219,7 @@ def all_key_points_combined_view(request):
 def sequential_key_points_view(request):
     return redirect('single_key_point', chapter_number=1, point_number=1)
 
-def render_key_point(request, chapter_number, key_point_number, is_random_across_chapters=False, is_random_in_chapter=False):
-    file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{key_point_number}.html")
-    qa_file_path = get_qa_file_path(chapter_number, key_point_number)
 
-    with open(file_path, "r", encoding="utf-8-sig") as f:
-        soup = BeautifulSoup(f.read(), "html.parser")
-        content = str(soup.body) if soup.body else str(soup)
-
-    question_data = None
-    if os.path.exists(qa_file_path):
-        with open(qa_file_path, "r", encoding="utf-8-sig", errors='replace') as f:
-            question_data = json.load(f)
-
-    show_answer = request.session.pop('show_answer', False)
-
-    if request.method == "POST":
-        if "show_answer" in request.POST:
-            show_answer = True
-
-        elif "submit_question" in request.POST:
-            question_data = {
-                "question": request.POST.get("question").strip(),
-                "weight": 1.0
-            }
-            with open(qa_file_path, "w", encoding="utf-8-sig") as f:
-                json.dump(question_data, f, indent=4)
-            return redirect(request.path)
-
-        elif "answer_correct" in request.POST or "answer_incorrect" in request.POST:
-            if question_data:
-                if "answer_correct" in request.POST:
-                    question_data["weight"] = question_data["weight"]  # Optional: adjust weight logic
-                elif "answer_incorrect" in request.POST:
-                    question_data["weight"] *= 2
-
-                with open(qa_file_path, "w", encoding="utf-8-sig") as f:
-                    json.dump(question_data, f, indent=4)
-
-            if is_random_in_chapter:
-                return move_to_next_random_in_chapter(request, chapter_number)
-
-            elif is_random_across_chapters:
-                return redirect('random_file')
-
-            else:
-                return move_to_next_key_point(request, chapter_number, key_point_number)
-
-    return render(request, "chapter_key_point.html", {
-        "chapter_number": chapter_number,
-        "key_point_number": key_point_number,
-        "question_data": question_data,
-        "content": content,
-        "show_answer": show_answer,
-        "is_random_across_chapters": is_random_across_chapters,
-        "is_random_in_chapter": is_random_in_chapter,  # Add this line!
-    })
 
 
 
@@ -185,17 +285,4 @@ def random_in_chapter_view(request, chapter_number):
     return render_key_point(request, chapter_number, next_point, is_random_in_chapter=True)
 
 
-def move_to_next_random_in_chapter(request, chapter_number):
-    """After answering a question, move to the next random weighted point within this chapter."""
-    next_point = weighted_random_point_in_chapter(chapter_number)
-    request.session['current_random_point'] = next_point
-    request.session['current_random_chapter'] = chapter_number
 
-    return redirect('random_in_chapter', chapter_number=chapter_number)
-
-
-def weighted_random_point_in_chapter(chapter_number):
-    """Get a weighted random key point from a chapter."""
-    key_points = get_files_in_chapter(chapter_number)
-    weights = [get_point_weight(chapter_number, kp) for kp in key_points]
-    return random.choices(key_points, weights=weights)[0]
