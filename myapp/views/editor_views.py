@@ -92,10 +92,10 @@ def save_key_point_from_request(request, chapter_number, key_point_number):
 
     html_path, qa_path = get_key_point_paths(chapter_number, key_point_number)
 
-    with open(html_path, "w", encoding="utf-8") as f:
+    with open(html_path, "w", encoding="utf-8-sig") as f:
         f.write(f"<h1>{title}</h1>\n{content}\n")
 
-    with open(qa_path, "w", encoding="utf-8") as f:
+    with open(qa_path, "w", encoding="utf-8-sig") as f:
         json.dump({"question": request.POST.get("question", title).strip(), "weight": 2**(chapter_number -1)}, f, indent=4)
 
 
@@ -115,7 +115,7 @@ def append_to_key_point_view(request):
         })
 
     content = build_append_content(request)
-    with open(html_path, "a", encoding="utf-8") as f:
+    with open(html_path, "a", encoding="utf-8-sig") as f:
         f.write("\n" + content)
 
     return redirect('index')
@@ -213,14 +213,14 @@ def load_key_point(request, chapter_number, key_point_number):
     title, content, question = "", "", ""
 
     if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8-sig") as f:
             soup = BeautifulSoup(f.read(), "html.parser")
             heading = soup.find("h1")
             title = heading.get_text(strip=True) if heading else ""
             content = str(soup.body) if soup.body else str(soup)
 
     if os.path.exists(qa_file_path):
-        with open(qa_file_path, "r", encoding="utf-8") as f:
+        with open(qa_file_path, "r", encoding="utf-8-sig") as f:
             qa_data = json.load(f)
             question = qa_data.get("question", title)
 
@@ -265,7 +265,7 @@ def add_key_point_view(request):
         image_tags = save_uploaded_images(chapter_number, starting_point, images)
 
         file_path = os.path.join(chapter_path, f"{starting_point}.html")
-        with open(file_path, "w", encoding="utf-8") as f:
+        with open(file_path, "w", encoding="utf-8-sig") as f:
             f.write(f"<h1>{title}</h1>\n<p>{content}</p>\n{image_tags}")
 
         # 🔔 Automatically create the matching QA JSON file
@@ -274,7 +274,7 @@ def add_key_point_view(request):
             "question": title,  # Use the heading as the question
             "weight": 1.0
         }
-        with open(qa_file_path, "w", encoding="utf-8") as f:
+        with open(qa_file_path, "w", encoding="utf-8-sig") as f:
             json.dump(qa_data, f, indent=4)
 
         return redirect('index')
