@@ -96,7 +96,7 @@ def save_key_point_from_request(request, chapter_number, key_point_number):
         f.write(f"<h1>{title}</h1>\n{content}\n")
 
     with open(qa_path, "w", encoding="utf-8") as f:
-        json.dump({"question": request.POST.get("question", title).strip(), "weight": 1.0}, f, indent=4)
+        json.dump({"question": request.POST.get("question", title).strip(), "weight": 2**(chapter_number -1)}, f, indent=4)
 
 
 # =========================
