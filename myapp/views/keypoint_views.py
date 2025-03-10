@@ -48,7 +48,7 @@ def all_key_points_combined_view(request):
 
         for point_number in key_points:
             file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{point_number}.html")
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, "r", encoding="utf-8-sig") as f:
                 soup = BeautifulSoup(f.read(), "html.parser")
 
             title = get_key_point_title(chapter_number, point_number)
@@ -68,13 +68,13 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
     file_path = os.path.join(CHAPTERS_DIR, str(chapter_number), f"{key_point_number}.html")
     qa_file_path = get_qa_file_path(chapter_number, key_point_number)
 
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, "r", encoding="utf-8-sig") as f:
         soup = BeautifulSoup(f.read(), "html.parser")
         content = str(soup.body) if soup.body else str(soup)
 
     question_data = None
     if os.path.exists(qa_file_path):
-        with open(qa_file_path, "r", encoding="utf-8", errors='replace') as f:
+        with open(qa_file_path, "r", encoding="utf-8-sig", errors='replace') as f:
             question_data = json.load(f)
 
     show_answer = request.session.pop('show_answer', False)
@@ -88,7 +88,7 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
                 "question": request.POST.get("question").strip(),
                 "weight": 1.0
             }
-            with open(qa_file_path, "w", encoding="utf-8") as f:
+            with open(qa_file_path, "w", encoding="utf-8-sig") as f:
                 json.dump(question_data, f, indent=4)
             return redirect(request.path)
 
@@ -99,7 +99,7 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
                 elif "answer_incorrect" in request.POST:
                     question_data["weight"] *= 2
 
-                with open(qa_file_path, "w", encoding="utf-8") as f:
+                with open(qa_file_path, "w", encoding="utf-8-sig") as f:
                     json.dump(question_data, f, indent=4)
 
             if is_random_in_chapter:
@@ -158,7 +158,7 @@ def get_point_weight(chapter_number, key_point_number):
     qa_file_path = get_qa_file_path(chapter_number, key_point_number)
 
     if os.path.exists(qa_file_path):
-        with open(qa_file_path, "r", encoding="utf-8") as f:
+        with open(qa_file_path, "r", encoding="utf-8-sig") as f:
             data = json.load(f)
             return data.get("weight", 1.0)
 
