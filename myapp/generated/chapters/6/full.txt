@@ -1,0 +1,221 @@
+<h1>Chapter 6</h1>
+
+<h1>Do Prices or Quantities Adjust?</h1>
+<p>
+<b>Unintended consequences</b> of government policies.<br>
+<b>When government fixes prices</b>, the smart choices of consumers and businesses are not coordinated.<br>
+<b>Quantities adjust</b> to whichever is less — <b>quantity supplied or quantity demanded</b>.
+</p>
+
+<h1>When Price Is Fixed Below Market-Clearing</h1>
+<p>
+<b>Shortages develop</b>. Quantity demanded > quantity supplied.<br>
+<b>Consumers are frustrated</b>.<br>
+<b>Quantity sold equals quantity supplied</b> only.
+</p>
+
+<h1>When Price Is Fixed Above Market-Clearing</h1>
+<p>
+<b>Surpluses develop</b>. Quantity supplied > quantity demanded.<br>
+<b>Businesses are frustrated</b>.<br>
+<b>Quantity sold equals quantity demanded</b> only.
+</p>
+
+<h1>Government Controls and Market Adjustments</h1>
+<p>
+<b>Governments can fix prices</b>, but they cannot force businesses or consumers to act at fixed prices.<br>
+<b>Businesses can reduce output</b> or move resources elsewhere.<br>
+<b>Consumers can reduce purchases</b> or buy something else.
+</p>
+
+<h1>Do Rent Controls Help the Homeless?</h1>
+<p>
+<b>Rent controls</b> fix rents below market-clearing levels, leading to apartment shortages.<br>
+<b>Rent controls</b> are an example of a <b>price ceiling</b>.
+</p>
+
+<h1>What Is a Price Ceiling?</h1>
+<p>
+A <b>price ceiling</b> is a maximum price set by the government, making it illegal to charge a higher price.
+</p>
+
+<h1>Robin Hood Principle and Rent Controls</h1>
+<p>
+<b>Rent controls</b> are sometimes justified by the <b>Robin Hood principle</b>.<br>
+The <b>Robin Hood principle</b> aims to <b>take from the rich (landlords)</b>.<br>
+The <b>Robin Hood principle</b> aims to <b>give to the poor (tenants)</b>.
+</p>
+
+<h1>Unintended Consequences of Rent Controls</h1>
+<p>
+<b>Housing shortages</b> occur, giving landlords more power over tenants.<br>
+<b>Well-off tenants benefit</b>. They are willing and able to pay market-clearing rents.<br>
+<b>Market inefficiency</b> occurs. Total surplus is reduced compared to a market-clearing scenario.
+</p>
+
+<h1>Alternative Policies to Help the Homeless</h1>
+<p>
+<b>Government income subsidies</b>.<br>
+<b>Government-supplied housing</b>.
+</p>
+
+<h1>Do Minimum Wages Help the Working Poor?</h1>
+<p>
+<b>Minimum wage laws</b> fix wages above market-clearing levels, leading to unemployment.<br>
+A <b>price floor</b> is a minimum price set by the government.
+</p>
+
+<h1>What Is a Price Floor?</h1>
+<p>
+Employers cannot legally pay below this rate.
+</p>
+
+<h1>What Is a Living Wage?</h1>
+<p>
+A <b>living wage</b> is estimated at <b>$25 per hour</b> in Canada.<br>
+A <b>living wage</b> allows an individual to live above the poverty line.
+</p>
+
+<h1>Unintended Consequences of Minimum Wage Laws: When Demand for Labor Is Inelastic</h1>
+<p>
+<b>Businesses have few substitutes</b> for workers.<br>
+<b>Job losses are small</b>.
+</p>
+
+<h1>Unintended Consequences of Minimum Wage Laws: When Demand for Labor Is Elastic</h1>
+<p>
+<b>Businesses can replace workers with machines</b>.<br>
+<b>Job losses are large</b>.
+</p>
+
+<h1>Do Minimum Wages Benefit the Working Poor?</h1>
+<p>
+<b>Minimum wages help the working poor</b> only if the gains of workers who keep their jobs with higher incomes outweigh the losses of workers who lose their jobs.
+</p>
+
+<h1>Income and Wage Effects</h1>
+<p>
+In <b>output markets</b>, Q × P = total revenue for businesses.<br>
+In <b>input markets</b>, Q × P = income for workers.
+</p>
+
+<h1>Components of Wage and Income Calculation</h1>
+<p>
+<b>Q</b> represents hours worked.<br>
+<b>P</b> represents wage rate.
+</p>
+
+<h1>Effect of Wage Increases on Income</h1>
+<p>
+If <b>labor demand is inelastic</b>, wage increases lead to higher total income.<br>
+If <b>labor demand is elastic</b>, wage increases lead to lower total income.
+</p>
+
+<h1>Alternative Policies to Help the Working Poor</h1>
+<p>
+<b>Training programs</b> can help unskilled workers gain higher-paying jobs.<br>
+<b>Wage supplements</b> can provide income support without distorting employment levels.<br>
+<b>Every policy has opportunity costs</b>.<br>
+<b>Unintended consequences must be considered</b> before implementation.
+</p>
+
+<h1>When Markets Work Well, Are They Fair? Trade-Offs Between Efficiency and Equity</h1>
+<p>
+<b>Well-functioning markets</b> are efficient but not always equitable.<br>
+<b>Government may intervene</b> to create more equitable outcomes, even at the cost of efficiency.
+</p>
+
+<h1>What Makes a Market Efficient?</h1>
+<p>
+<b>Businesses and consumers make smart choices</b>.<br>
+<b>Outputs are produced at the lowest cost</b>. Prices cover all opportunity costs of production.<br>
+<b>Consumers buy products and services</b> that provide the most value per dollar. Marginal benefit > price.
+</p>
+
+<h1>Who Is Excluded from Efficient Market Outcomes?</h1>
+<p>
+<b>Consumers who do not buy</b> at equilibrium prices fall into two categories.
+</p>
+
+<h1>Unwilling Consumers</h1>
+<p>
+<b>They do not buy</b> because marginal benefit is less than price.<br>
+This is true even if they can afford it.
+</p>
+
+<h1>Unable Consumers</h1>
+<p>
+<b>They do not buy</b> because they cannot afford the product.<br>
+This is true even if the marginal benefit is greater than the price.
+</p>
+
+<h1>Market vs. Government Healthcare Trade-Offs</h1>
+<p>
+<b>Markets</b> operating without government intervention result in efficient resource allocation.<br>
+<b>Markets</b> operating without government intervention create potential inequalities in access to essential services.
+</p>
+
+<h1>Comparing U.S. and Canadian Healthcare</h1>
+<p>
+<b>Canadian government healthcare is more equitable</b>.<br>
+<b>Canadian government healthcare is less efficient</b>. It faces waiting lists and resource allocation issues.<br>
+<b>U.S.-style private healthcare is more efficient</b>.<br>
+<b>U.S.-style private healthcare is less equitable</b>. Some individuals cannot afford care.
+</p>
+
+<h1>Healthcare Waiting Lists</h1>
+<p>
+<b>Healthcare waiting lists</b> are a form of quantity adjustment when prices are fixed too low.
+</p>
+
+<h1>Choosing Between Efficiency and Equity</h1>
+<p>
+<b>Once you choose to support a political position or social goal based on your values</b>, positive economic thinking helps identify the smartest choices to efficiently achieve that goal.
+</p>
+
+<h1>Types of Economic Statements</h1>
+<p>
+There are two types of economic statements.
+</p>
+
+<h1>Positive (or Empirical) Statements</h1>
+<p>
+<b>Describe what is</b>.<br>
+<b>Can be evaluated as true or false</b> based on facts.
+</p>
+
+<h1>Normative Statements</h1>
+<p>
+<b>Describe what should be</b>.<br>
+<b>Involve value judgments</b> and cannot be evaluated as true or false.
+</p>
+
+<h1>Understanding Equity in Economics: Equal Outcomes</h1>
+<p>
+<b>At the end, everyone receives the same amount</b>.
+</p>
+
+<h1>Understanding Equity in Economics: Equal Opportunities</h1>
+<p>
+<b>At the start, everyone has the same opportunities</b>.<br>
+<b>Equal Opportunities</b> allows different outcomes depending on individual choices and effort.
+</p>
+
+<h1>The Politics of Equity: Comparing Political Perspectives on Equity: Equal Outcomes (Left-Wing Perspective)</h1>
+<p>
+<b>Supports income redistribution</b> toward equality.<br>
+<b>Skeptical about the fairness</b> of equal opportunities.<br>
+<b>Prioritizes equity</b> over efficiency.
+</p>
+
+<h1>The Politics of Equity: Comparing Political Perspectives on Equity: Equal Opportunities (Right-Wing Perspective)</h1>
+<p>
+<b>Believes unequal outcomes</b> are a fair result of personal differences.<br>
+<b>Prioritizes efficiency</b> over equal outcomes.
+</p>
+
+<h1>Final Thought: What Economics Can and Cannot Do for You</h1>
+<p>
+<b>For any policy choice, weigh benefits against opportunity costs.</b>
+</p>
+

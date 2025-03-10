@@ -1,0 +1,125 @@
+<h1>What Accountants Miss</h1>
+<p>
+<b>Accounting profits</b> equal revenues minus all obvious costs, including depreciation.<br>
+But <b>accounting profits miss</b> the hidden, implicit <b>opportunity costs</b> of a business owner’s time and money.
+</p>
+
+
+<h1>Accounting Profits and Hidden Opportunity Costs</h1>
+<p>
+<b>Explicit costs</b> — costs a business pays directly.<br>
+Accountants count all explicit business costs and include <b>depreciation</b>.<br>
+<b>Depreciation</b> is the decrease in the value of equipment over time because of wear and tear and because it becomes obsolete.<br>
+<b>Yearly depreciation cost</b> is the price of equipment divided by the number of years it lasts.<br>
+<b>Accounting profits = Revenues − Explicit Costs</b> (including depreciation).<br>
+Must include <b>compensation for risk</b>.
+</p>
+
+<h1>Implicit Costs</h1>
+<p>
+<b>Implicit costs</b> — hidden opportunity costs of what a business owner could earn elsewhere with time and money invested.<br>
+<b>Opportunity cost of time</b> — best alternative use of a business owner’s time.<br>
+<b>Opportunity cost of money</b> — best alternative use of a business owner’s money invested in the business.<br>
+Must include <b>compensation for risk</b>.
+</p>
+
+<h1>Risk Compensation and Attitudes Toward Risk</h1>
+<p>
+<b>Risk compensation</b> depends on attitudes toward risk.<br>
+<b>Risk-loving investor</b> does not require much compensation for taking risks.<br>
+<b>Risk-averse (risk-avoiding) investor</b> requires high compensation for taking risks.
+</p>
+
+<h1>What Economists Find: Normal Profits and Economic Profits</h1>
+<p>
+<b>Smart business decisions</b> return at least <b>normal profits</b> — what a business owner could earn from the best alternative uses of their time and money.<br>
+There are <b>economic profits</b> over and above normal profits when revenues are greater than all opportunity costs of production, including hidden opportunity costs.
+</p>
+
+<h1>Normal Profits</h1>
+<p>
+<b>Normal profits</b> — compensation for a business owner’s time and money.<br>
+<b>Normal profits</b> are also the sum of implicit costs (hidden opportunity costs).<br>
+<b>Normal profits</b> are what a business owner must earn to do as well as the best alternative use of time and money.<br>
+<b>Normal profits</b> are average profits in other industries with comparable risk.
+</p>
+
+<h1>Economic Profits</h1>
+<p>
+<b>Economic profits = Revenues − all Opportunity Costs</b>.<br>
+<b>Economic profits = Revenues − (Explicit Costs + Implicit Costs)</b>.<br>
+<b>Economic profits = Revenues − (Explicit Costs + Normal Profits)</b>.<br>
+Economists subtract implicit costs when calculating economic profits.<br>
+<b>Economic profits</b> are less than accounting profits.
+</p>
+
+<h1>Economic Losses</h1>
+<p>
+<b>Economic losses</b> — negative economic profits.<br>
+If revenues are less than all opportunity costs, it is not a smart decision.<br>
+The business owner would be better off in alternative uses of time and money.<br>
+With <b>economic losses</b>, the business owner is earning less than normal profits.<br>
+Earning less than average profits in other industries.
+</p>
+
+<h1>Red Light, Green Light: How Economic Profits Direct the Invisible Hand</h1>
+<p>
+The simplest rule for smart business decisions is <b>“Choose only when economic profits are positive.”</b><br>
+When businesses pursue economic profits, markets produce the products and services consumers want.
+</p>
+
+<h1>Alternative Profit Scenarios for Wahid’s Web Wonders</h1>
+<p>
+<b>Scenario 1 — Economic losses</b> — businesses contract and leave industry, supply decreases, pushing prices up, until prices just cover opportunity costs of production, economic profits = zero.<br>
+<b>Economic losses are Red Light.</b><br>
+<b>Scenario 2 — Economic Breakeven point</b> — businesses just earning normal profits. Market equilibrium with zero economic profits or losses. No tendency for change.<br>
+<b>Breakeven point is Yellow Light.</b><br>
+<b>Scenario 3 — Economic profits</b> — businesses expand and enter industry, supply increases, pushing prices down, until prices just cover all opportunity costs of production, economic profits = zero.<br>
+<b>Positive Economic Profit.</b><br>
+<b>Economic profits are Green Light.</b>
+</p>
+
+<h1>How Economic Profits Direct the Invisible Hand</h1>
+<p>Price consumers willing and able to pay just covers businesses’ opportunity costs of production, including normal profits.
+</p>
+<h1>How Economic Profits Direct the Invisible Hand: Short-run market equilibrium</h1>
+<p>quantity demanded equals quantity supplied, but economic losses or profits lead to changes in supply.</p>
+<h1>How Economic Profits Direct the Invisible Hand: Long-run market equilibrium</h1>
+<p>quantity demanded equals quantity supplied, economic profits = zero, no tendency for change.</p>
+
+
+<h1>Difference Between Short-Run and Long-Run Market Equilibrium</h1>
+<p>
+The difference between short-run and long-run market equilibrium is the additional time it takes for supply changes to adjust economic profits to zero.<br>
+Economic profits or losses are the key signal directing businesses to produce the products and services consumers want.<br>
+Changes in economic profits cause changes in supply, changing prices, moving industry from short-run market equilibrium to long-run market equilibrium.
+</p>
+
+<h1>Why Are Additional Workers Less Productive? Short-Run Costs and Diminishing Marginal Productivity</h1>
+<p>
+Two microeconomic planning periods are the short run (some inputs are fixed, other inputs variable) and the long run (when all inputs are variable).<br>
+In the short run, diminishing marginal productivity causes marginal costs to increase as output increases.
+</p>
+
+<h1>Short-Run Costs and Diminishing Marginal Productivity</h1>
+<p>
+<b>Short run</b> — in microeconomics, a planning period for businesses where the quantities of some inputs are fixed while the quantities of other inputs are variable.<br>
+<b>Long run</b> — in microeconomics, a planning period for businesses where the quantities of all inputs are variable.<br>
+<b>Fixed costs</b> — do not change with the quantity of output produced.<br>
+<b>Variable costs</b> — change with changes in the quantity of output produced.<br>
+<b>Total cost = Fixed costs + Variable costs</b>.
+</p>
+
+<h1>Total Product and Marginal Product: Total product</h1>
+<p>total output labour produces when working with all fixed inputs.</p>
+<h1>Total Product and Marginal Product: Marginal product</h1>
+<p>additional output gained from adding one more unit of labour.</p>
+<h1>Total Product and Marginal Product: Diminishing marginal productivity</h1>
+<p>as you add more of a variable input to fixed inputs, the marginal product of the variable input eventually diminishes.
+</p>
+
+<h1>Short-Run Costs and Diminishing Marginal Productivity</h1>
+<p>
+<b>Diminishing marginal productivity</b> causes marginal costs to increase as output increases.<br>
+<b>Marginal cost</b> is the most important cost concept shared by all businesses for profit-maximizing.
+</p>
