@@ -1,0 +1,104 @@
+<h1>Chapter 9</h1>
+
+<h1>What motivates businesses to seek monopoly power, and what limits them?</h1>
+<p>Businesses aim for monopoly’s economic profits and price-making power. Competitors usually push businesses toward the normal profits and price-taking of perfect competition.</p>
+
+<h1>What is a monopoly, and how does its demand curve look?</h1>
+<p>Monopoly — only seller of product or service; no close substitutes available. Demand curve is steep and inelastic. Market power — business’s ability to set prices. Price maker — monopoly with maximum power to set prices.</p>
+
+<h1>Can monopolies charge any price they want?</h1>
+<p>Businesses can set any price, but cannot force consumers to buy. Even monopoly price makers must live by law of demand.</p>
+
+<h1>What is an oligopoly, and who are some examples?</h1>
+<p>Oligopoly — few big sellers control most of the market. Price makers, but not as much pricing power as a monopolist. Example: Gaming hardware market (Microsoft, Sony, Nintendo).</p>
+
+<h1>What is monopolistic competition, and how is it different?</h1>
+<p>Monopolistic competition — many small businesses make similar, but slightly differentiated, products or services. Combination of monopoly and perfect competition. Some slight pricing power from product differentiation. Examples: Restaurants, tattoo parlours, dry cleaners, hair salons.</p>
+
+<h1>What did Adam Smith say about monopoly and competition pricing?</h1>
+<p>"The price of monopoly is... the highest which can be squeezed out of the buyers, or which... they will consent to give. The natural price, or the price of free competition, on the contrary, ... is the lowest which the sellers can commonly afford to take, and at the same time continue their business." — Adam Smith, The Wealth of Nations, 1776</p>
+
+<h1>What factors affect a business’s pricing power in its market?</h1>
+<p>Pricing power depends on competitiveness of a business’s market structure:  
+- Available substitutes  
+- Number of competitors  
+- Barriers to entry of new competitors  
+- Elasticity of demand</p>
+
+<h1>What are the main characteristics that influence competition and pricing power?</h1>
+<p>- Available substitutes  
+- Number of competitors  
+- Barriers to entry of new competitors</p>
+
+<h1>What happens to pricing power when markets are broadly defined?</h1>
+<p>- More substitutes and competitors  
+- More elastic demand  
+- Less pricing power</p>
+
+<h1>What happens to pricing power when markets are narrowly defined?</h1>
+<p>- Fewer substitutes and competitors  
+- More inelastic demand  
+- More pricing power</p>
+
+<h1>How does product differentiation impact competition and pricing power?</h1>
+<p>Attempt to distinguish product or service from competitors. Reduces competition and substitutes, increases pricing power. Can be actual differences or perceived differences.  
+- Fewer competitors = more price power  
+- More competitors = less price power</p>
+
+<h1>What barriers prevent new competitors from entering a market?</h1>
+<p>Legal or economic barriers preventing new competitors:  
+- Legal barriers: Patents and copyrights — exclusive rights to sell or license creations  
+- Economic barriers: Economies of scale — average total cost of producing decreases as quantity increases  
+Average Total Cost = total cost per unit of output</p>
+
+<h1>How does elasticity of demand relate to pricing power?</h1>
+<p>Higher pricing power = more inelastic demand:  
+- Consumers have few substitutes or strong brand loyalty  
+Lower pricing power = more elastic demand:  
+- Consumers have many substitutes or weak brand loyalty  
+General rule:  
+- Higher pricing power = more inelastic demand  
+- Lower pricing power = more elastic demand</p>
+
+<h1>How do market structures range from monopoly to perfect competition?</h1>
+<p>From monopoly to perfect competition:  
+- Pricing power: price maker → price taker  
+- Available substitutes: none → many  
+- Number of sellers: one → many  
+- Entry barriers: high → low  
+- Elasticity of demand: low → high</p>
+
+<h1>How do businesses compete for economic profits and market power?</h1>
+<p>Businesses actively compete for monopoly’s economic profits and pricing power. Creative destruction drives out businesses that do not respond well and improves productivity and living standards.</p>
+
+<h1>What are the strategies businesses use to compete?</h1>
+<p>- Cutting costs  
+- Improving quality and product innovation  
+- Advertising and brand loyalty  
+- Eliminating competition  
+- Building barriers to entry</p>
+
+<h1>How does a market economy enable competition?</h1>
+<p>Market economy provides extraordinary economic freedom to make business decisions, invest, spend, and choose occupations. As sellers, businesses must play by market’s competitive rules.</p>
+
+<h1>What is creative destruction?</h1>
+<p>Creative destruction — competitive innovations generate profits, improve living standards, but destroy less productive products and methods.</p>
+
+<h1>What happened to Blacks photography retailer, and why?</h1>
+<p>"Photography retailer Blacks is closing all of its 59 stores, victim of a fast-changing digital industry and high-quality smartphone cameras and Instagram posts." "With smartphones, Canadians are taking more photos than ever before but having fewer of them printed commercially, hurting businesses such as Blacks." "The shutdown of the stores... will leave 485 employees without jobs."</p>
+
+<h1>What did Marx admire about capitalism?</h1>
+<p>"The bourgeoisie, during its rule of scarce one hundred years, has created more massive and more colossal productive forces than have all preceding generations together." — Karl Marx and Friedrich Engels, The Communist Manifesto, 1848</p>
+
+<h1>How do businesses compare marginal revenue and marginal cost to maximize profits?</h1>
+<p>For maximum economic profits, smart businesses choose actions when marginal revenue (MR) > marginal cost (MC).</p>
+
+<h1>What is the first step in setting prices to maximize profits?</h1>
+<p>- Estimate marginal revenue and marginal costs  
+- Set the highest price allowing highest quantity sold, where MR > MC</p>
+
+<h1>How does marginal revenue work in different market structures?</h1>
+<p>Marginal revenue — additional revenue from selling one more unit. Marginal revenue depends on market structure and price taker/maker status. Marginal revenue = price for price-taking businesses in perfect competition.</p>
+
+<h1>How do marginal costs behave as businesses increase output?</h1>
+<p>As output increases, marginal cost increases for businesses near capacity or with costlier inputs. Diminishing returns — as output increases, productivity decreases, raising marginal costs. Businesses operating near capacity, or shifting to more expensive inputs, have increasing marginal costs to increase output. As output increases, marginal cost is usually constant for businesses not near capacity.</p>
