@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dynamic Sidebar</title>
+    <link rel="stylesheet" href="{% static 'MyManager/styles.css' %}">
+</head>
+<body>
+
+    <div class="container">
+        <div class="sidebar">
+			<ul id="dynamic-menu">
+				<!-- ✅ Accordion Item styled like a menu item -->
+				<li class="accordion-item">
+					<div class="accordion-title" onclick="toggleAccordion()">
+						School Courses <span style="float: right;">▼</span>
+					</div>
+					<ul id="accordion-submenu" style="display: none; padding-left: 10px;">
+						<!-- Dynamic submenu items load here -->
+					</ul>
+				</li>
+
+				<li><a href="#">Projects</a></li>
+				<li><a href="#">Life</a></li>
+				<li><a href="#">Ideas</a></li>
+			</ul>
+		</div>
+    </div>
+
+    <script src="{% static 'MyManager/menu.js' %}"></script>
+</body>
+</html>

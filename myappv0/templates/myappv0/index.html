@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>MyApp Main Page</title>    
+</head>
+<body>
+	<h1>MyApp Main Page</h1>
+	<h2>Navigation</h2>
+	<ul>
+		<li><a href="{% url 'random_file' %}">🎲 Random Key Point Across All Chapters</a></li>
+		<li><a href="{% url 'import_page' %}">Import Chapter</a></li>
+	</ul>
+	<h2>Chapters</h2>
+	<ul>
+		{% for chapter_number, title in chapters %}
+			<li><a href="{% url 'full_chapter' chapter_number %}">{{ title }}</a></li>
+		{% endfor %}
+	</ul>
+</body>
+</html>

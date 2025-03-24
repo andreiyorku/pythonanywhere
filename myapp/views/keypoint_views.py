@@ -25,11 +25,6 @@ def single_key_point_view(request, chapter_number, point_number):
 def random_key_point_view(request, chapter_number):
     return single_key_point_view(request, chapter_number, random.choice(get_files_in_chapter(chapter_number)))
 
-import random
-import os
-import json
-from django.shortcuts import render, redirect
-
 def random_key_point_across_chapters_view(request):
     """
     Weighted random selection of a keypoint across all chapters, using only 'weight' field.
@@ -143,7 +138,7 @@ def render_key_point(request, chapter_number, key_point_number, is_random_across
             else:
                 return move_to_next_key_point(request, chapter_number, key_point_number)
 
-    return render(request, "chapter_key_point.html", {
+    return render(request, "myapp/chapter_key_point.html", {
         "chapter_number": chapter_number,
         "key_point_number": key_point_number,
         "question_data": question_data,

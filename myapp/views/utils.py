@@ -39,13 +39,21 @@ def get_generated_chapters():
 # Each file represents one key point (e.g., "1.html", "2.html").
 # Returns a sorted list of key point numbers as integers.
 
+#def get_files_in_chapter(chapter_number):
+    #chapter_path = os.path.join(CHAPTERS_DIR, str(chapter_number))
+    #return sorted([
+        #int(f.replace(".html", ""))
+        #for f in os.listdir(chapter_path)
+        #if f.endswith(".html")
+    #])
+    
 def get_files_in_chapter(chapter_number):
     chapter_path = os.path.join(CHAPTERS_DIR, str(chapter_number))
-    return sorted([
-        int(f.replace(".html", ""))
-        for f in os.listdir(chapter_path)
-        if f.endswith(".html")
-    ])
+    keypoints = set()
+    for f in os.listdir(chapter_path):
+        if f.endswith('.html') or f.endswith('.qa'):
+            keypoints.add(int(f.split('.')[0]))  # get number before extension
+    return sorted(list(keypoints))
 
 
 # ====================================

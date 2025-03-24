@@ -1,0 +1,90 @@
+.sidebar {
+    width: 80px;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 20px;
+    height: 100vh;  /* Full height */
+    position: fixed;
+    overflow-y: auto;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+}
+
+.sidebar ul li a:hover,
+.accordion-title:hover {
+    background-color: #34495e;
+}
+
+/* ✅ Accordion title styled like normal menu items */
+.accordion-title {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* ✅ Ensure accordion submenu spacing looks clean */
+#accordion-submenu {
+    list-style-type: none;
+    padding-left: 10px;
+    margin: 0;
+}
+
+#accordion-submenu li {
+    margin-bottom: 10px;
+}
+
+#accordion-submenu li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+}
+
+#accordion-submenu li a:hover {
+    background-color: #34495e;
+    padding-left: 10px;
+    transition: 0.3s;
+}
+
+/* ✅ General layout */
+.container {
+    display: flex;
+    min-height: 100vh; /* Full height layout */
+}
+
+.content-wrapper {
+    flex-grow: 1;
+    position: relative;  /* Needed for the fixed background layering */
+    margin-left: 120px;  /* Account for sidebar width + padding */
+}
+
+.fixed-background {
+    position: fixed;
+    padding: 20px;
+    height: 100vh;
+    background-color: #f4f4f4;  /* ✅ Background stays fixed */
+    z-index: -1;  /* ✅ Stays behind the content */
+    left: 120px;           /* ✅ Starts right after the sidebar */
+    right: 10px;           /* ✅ Leaves 10px gap before the right edge */
+    box-sizing: border-box; /* ✅ Makes sure padding doesn't break layout */
+}
+
+.content {
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}

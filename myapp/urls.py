@@ -14,7 +14,7 @@ urlpatterns = [
     # ==========================
     # 1️⃣ HOMEPAGE / INDEX
     # ==========================
-    path('', html_input_view, name='index'),
+    path('', html_input_view, name='myapp_old'),
 
     # ==========================
     # 2️⃣ CHAPTER VIEWS

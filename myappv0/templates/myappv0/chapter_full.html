@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Full Chapter: {{ chapter_name }}</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script type="text/javascript" id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+    <h1>Full Chapter: {{ chapter_name }}</h1>
+
+    {% if error %}
+        <p>{{ error }}</p>
+    {% else %}
+        <div style="border: 1px solid #ccc; padding: 10px;">
+            {{ full_content|safe }}
+        </div>
+    {% endif %}
+
+    <br>
+    <a href="{% url 'myapp'  %}">📚 Back to MyApp Main</a>
+
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</title>
+    <style>
+        #answerContent {
+            display: {% if show_answer %}block{% else %}none{% endif %};
+            margin-top: 16px;
+        }
+
+        #showAnswerButton button {
+            font-size: 1rem;
+            padding: 12px 24px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        // ✅ Keep JS to show answer
+        function showAnswer() {
+            document.getElementById('answerContent').style.display = 'block';
+            document.getElementById('showAnswerButton').style.display = 'none';
+        }
+    </script>
+</head>
+<body>
+
+<h1>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h1>
+
+<!-- ✅ Properly render extracted heading as question -->
+<p>Question: {{ question_text }}</p>
+
+<!-- ✅ Answer content without repeating heading -->
+<div id="answerContent">
+    <p>{{ content|safe }}</p>
+	<p><strong>Answered Correctly:</strong> {{ correct_count }} times</p>
+    <!-- ✅ Form for answering (POST request) -->
+    <form method="POST">
+        {% csrf_token %}
+		<input type="hidden" name="chapter_number" value="{{ chapter_number }}">
+		<input type="hidden" name="key_point_number" value="{{ key_point_number }}">
+        <button type="submit" name="answer_correct">✅ Correct</button>
+        <button type="submit" name="answer_incorrect">❌ Incorrect</button>
+    </form>
+</div>
+
+<!-- ✅ JS-based Show Answer button (no POST here) -->
+<div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
+    <button type="button" onclick="showAnswer()">❓ Show Answer</button>
+</div>
+
+<!-- Link to return to Main Page -->
+<p><a href="{% url 'myapp' %}">🏠 Back to Main Page</a></p>
+
+</body>
+</html>

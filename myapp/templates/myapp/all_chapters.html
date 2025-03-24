@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>All Chapters</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            padding: 16px;
+        }
+        h1 {
+            font-size: 2rem;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        .chapter-item {
+            margin-bottom: 8px;
+        }
+        .chapter-item a {
+            display: block;
+            padding: 12px 16px;
+            background-color: #f5f5f5;
+            text-decoration: none;
+            color: #333;
+            border-radius: 6px;
+            font-size: 1rem;
+            text-align: center;
+        }
+        .chapter-item a:hover {
+            background-color: #e0e0e0;
+        }
+        @media (max-width: 768px) {
+            body {
+                font-size: 18px;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .chapter-item a {
+                font-size: 1.1rem;
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>All Chapters</h1>
+
+{% for chapter in chapters %}
+<div class="chapter-item">
+    <a href="{% url 'chapter' chapter.id %}">{{ chapter.title }}</a>
+</div>
+{% endfor %}
+
+</body>
+</html>

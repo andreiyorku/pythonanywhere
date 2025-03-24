@@ -1,0 +1,12 @@
+{% if is_random %}
+    <p><a href="{% url 'random_key_point' chapter_name %}">🎲 Show Another Random Point</a></p>
+{% else %}
+    <p>
+        {% if current > 0 %}
+            <a href="{% url 'single_key_point' chapter_name current|add:"-1" %}">⬅️ Previous</a>
+        {% endif %}
+        {% if current < total|add:"-1" %}
+            <a href="{% url 'single_key_point' chapter_name current|add:"1" %}">➡️ Next</a>
+        {% endif %}
+    </p>
+{% endif %}

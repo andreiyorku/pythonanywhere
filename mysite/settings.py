@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-6n=g#qv%cgq6x0b+ujerkr3p_kss+=tu0cpi=3*^t-s!1fi)5+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['andreiyorku.pythonanywhere.com','127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['andreiyorku.pythonanywhere.com','10.0.0.19',]
         
 
 
@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp',
+    'myappv0',
+    'MyManager'
 ]
 
 MIDDLEWARE = [
@@ -57,9 +59,10 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, "mysite", "templates")],
         'APP_DIRS': True,
         'OPTIONS': {
+            'debug': True,
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
@@ -79,7 +82,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, "db.sqlite3"),  # ✅ CORRECT
+        'NAME': os.path.join(BASE_DIR, "myapp_db.sqlite3"),  # ✅ CORRECT
     }
 }
 
@@ -138,5 +141,5 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Global static files
     os.path.join(BASE_DIR, 'myapp/static'),  # App-specific static files
-    os.path.join(BASE_DIR, 'myapp', 'generated')
+    os.path.join(BASE_DIR, 'MyManager/static'),  # App-specific static files
 ]
