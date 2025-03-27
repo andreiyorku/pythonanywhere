@@ -88,3 +88,12 @@
     position: relative;
     z-index: 1;
 }
+
+.dashboard-content-box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}

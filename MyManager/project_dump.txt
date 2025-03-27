@@ -1,0 +1,789 @@
+﻿
+
+=========================
+>>> .\urls.py
+=========================
+from django.urls import path
+from .views import *
+
+#from django.conf.urls.static import static
+
+urlpatterns = [
+    path('', dashboard_view, name='MyManager'),
+    path('dashboard/', dashboard_view, name='dashboard'),
+    path('api/courses_menu/', menu_courses_api, name='courses_menu_api'),
+    path('api/random_keypoint/', random_keypoint_api, name='random_keypoint_api'),
+    path('api/chapters_by_course/', chapters_by_course_api, name='chapters_by_course_api'),
+    path('api/filter_options/', filter_options_api, name='filter_options_api'),
+    path('api/save_filters/', save_filter_settings_api),
+]
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\randomized_keypoints_views.py
+=========================
+import sqlite3
+import random
+from django.shortcuts import render, redirect
+from django.conf import settings
+from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
+EXCLUDED_CHAPTERS = []
+INCLUDED_CHAPTERS = [12, 13]
+
+def get_chapters_ordered():
+    chapters = cache.get('chapters_ordered')
+    if not chapters:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT chapter_number FROM chapter ORDER BY chapter_number ASC')
+            chapters = [row[0] for row in cursor.fetchall()]
+            cache.set('chapters_ordered', chapters, 60 * 60)
+    return chapters
+
+def get_keypoints_in_chapter(chapter_number):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('SELECT id FROM chapter WHERE chapter_number = ?', (chapter_number,))
+        chapter_row = cursor.fetchone()
+        if not chapter_row:
+            return []
+        chapter_id = chapter_row[0]
+        cursor.execute('''
+            SELECT id, chapter_id, number_of_correct
+            FROM keypoint
+            WHERE chapter_id = ?
+            ORDER BY id ASC
+        ''', (chapter_id,))
+        keypoints = cursor.fetchall()
+    return keypoints, chapter_id
+
+# âœ… Used by dashboard and random view
+def get_random_key_point_context(selected_chapters=None, weight_mode="early"):
+    chapters = get_chapters_ordered()
+    all_keypoints = []
+
+    # âœ… Apply filters
+    filtered_chapters = [ch for ch in chapters if ch not in EXCLUDED_CHAPTERS]
+    if selected_chapters:
+        filtered_chapters = [ch for ch in filtered_chapters if ch in selected_chapters]
+    elif INCLUDED_CHAPTERS:
+        filtered_chapters = [ch for ch in filtered_chapters if ch in INCLUDED_CHAPTERS]
+
+    total_chapters = len(filtered_chapters)
+
+    for idx, chapter_number in enumerate(filtered_chapters):
+        keypoints, chapter_id = get_keypoints_in_chapter(chapter_number)
+        num_keypoints = len(keypoints)
+        if num_keypoints == 0:
+            continue
+
+        # âœ… Weighted logic based on position and mode
+        if weight_mode == "early":
+            chapter_weight = 2 ** (total_chapters - idx - 1)
+        elif weight_mode == "late":
+            chapter_weight = 2 ** idx
+        elif weight_mode == "middle":
+            mid = (total_chapters - 1) / 2
+            dist = abs(idx - mid)
+            chapter_weight = 1 / (dist + 1)
+        elif weight_mode == "edges":
+            mid = (total_chapters - 1) / 2
+            dist = abs(idx - mid)
+            chapter_weight = dist + 1
+        else:
+            chapter_weight = 1  # default if mode unrecognized
+
+        base_weight = chapter_weight / num_keypoints
+
+        for kp_id, kp_chapter_id, correct_count in keypoints:
+            adj_weight = base_weight / (2 ** correct_count)
+            all_keypoints.append({
+                "chapter_number": chapter_number,
+                "chapter_id": kp_chapter_id,
+                "key_point_id": kp_id,
+                "adjusted_weight": adj_weight
+            })
+
+    if not all_keypoints:
+        return None
+
+    weights = [kp['adjusted_weight'] for kp in all_keypoints]
+    return random.choices(all_keypoints, weights=weights, k=1)[0]
+
+
+# Optional standalone route
+def random_key_point_across_chapters_view(request):
+    from .randomized_keypoints_views import render_key_point
+    selected = get_random_key_point_context()
+    if not selected:
+        return render(request, "error.html", {"message": "No key points found."})
+
+    return render_key_point(
+        request,
+        selected['chapter_number'],
+        selected['key_point_id'],
+        chapter_id=selected['chapter_id'],
+        is_random_across_chapters=True
+    )
+
+# Shared rendering logic (used by dashboard)
+def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
+                     is_random_across_chapters=False, is_random_in_chapter=False):
+    #print("ðŸ“Œ Rendering KeyPoint ID:", key_point_id)
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT header, body, number_of_correct, chapter_id
+            FROM keypoint
+            WHERE id = ?
+        ''', (key_point_id,))
+        row = cursor.fetchone()
+
+    if not row:
+        return render(request, "error.html", {"message": "Key point not found."})
+
+    header, body, correct_count, db_chapter_id = row
+    show_answer = request.session.pop('show_answer', False)
+
+    if chapter_id is None:
+        chapter_id = db_chapter_id
+
+    if request.method == "POST":
+        key_point_id = int(request.POST.get("key_point_number", key_point_id))
+        chapter_number = int(request.POST.get("chapter_number", chapter_number))
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            if "answer_correct" in request.POST:
+                cursor.execute('''
+                    UPDATE keypoint
+                    SET number_of_correct = number_of_correct + 1
+                    WHERE id = ?
+                ''', (key_point_id,))
+                conn.commit()
+
+                if is_random_across_chapters:
+                    return redirect('random_file')
+                else:
+                    return redirect(request.path)
+
+            elif "answer_incorrect" in request.POST and is_random_across_chapters:
+                return redirect('random_file')
+
+            elif "show_answer" in request.POST:
+                show_answer = True
+
+    return {
+        "chapter_number": chapter_number,
+        "key_point_number": key_point_id,
+        "question_text": header,
+        "content": body if body else "<p>No content available</p>",
+        "correct_count": correct_count,
+        "show_answer": show_answer,
+        "is_random_across_chapters": is_random_across_chapters,
+        "is_random_in_chapter": is_random_in_chapter,
+    }
+
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+
+def random_keypoint_api(request):
+    
+
+    if request.method == "POST":
+        key_point_id = int(request.POST.get("key_point_number", 0))
+        answer_type = request.POST.get("answer")
+
+        # Update correct count if answered
+        if answer_type == "correct" and key_point_id:
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    UPDATE keypoint
+                    SET number_of_correct = number_of_correct + 1
+                    WHERE id = ?
+                ''', (key_point_id,))
+                conn.commit()
+
+        # âœ… Extract filters from request
+        weight_mode = request.POST.get("weight_mode", "early")
+        selected_chapters = request.POST.getlist("selected_chapters")
+        selected_chapters = [int(ch) for ch in selected_chapters] if selected_chapters else []
+
+        # âœ… Use filters when generating the keypoint
+        selected = get_random_key_point_context(
+            selected_chapters=selected_chapters,
+            weight_mode=weight_mode
+        )
+
+        if not selected:
+            return JsonResponse({'html': '<p>No key points found.</p>'})
+
+        context = render_key_point(
+            request,
+            selected['chapter_number'],
+            selected['key_point_id'],
+            chapter_id=selected['chapter_id'],
+            is_random_across_chapters=True
+        )
+
+        if hasattr(context, 'status_code'):
+            return JsonResponse({'html': '<p>Error loading key point.</p>'})
+        #print("ðŸ§  Sending keypoint:", context["key_point_number"])
+        html = render_to_string("MyManager/components/keypoint_display.html", context, request=request)
+        return JsonResponse({'html': html})
+
+from django.http import JsonResponse
+import sqlite3
+
+def chapters_by_course_api(request):
+    selected_courses = request.GET.getlist('courses[]')  # JS will send courses[] as list
+    chapter_numbers = []
+
+    if not selected_courses:
+        return JsonResponse({"chapters": []})
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        placeholders = ",".join(["?"] * len(selected_courses))
+        cursor.execute(f"""
+            SELECT DISTINCT c.chapter_number
+            FROM chapter c
+            JOIN courses cr ON c.course_id = cr.id
+            WHERE cr.name IN ({placeholders})
+            ORDER BY c.chapter_number ASC
+        """, selected_courses)
+        chapter_numbers = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse({"chapters": chapter_numbers})
+
+def filter_options_api(request):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM courses")
+        courses = [row[0] for row in cursor.fetchall()]
+        cursor.execute("SELECT chapter_number FROM chapter ORDER BY chapter_number ASC")
+        chapters = [row[0] for row in cursor.fetchall()]
+    return JsonResponse({"courses": courses, "chapters": chapters})
+
+@csrf_exempt
+def save_filter_settings_api(request):
+    if request.method == "POST":
+        user_id = request.user.id if request.user.is_authenticated else 0  # 0 = anonymous fallback
+
+        courses = request.POST.getlist("selected_courses[]")
+        chapters = request.POST.getlist("selected_chapters[]")
+        mode = request.POST.get("weight_mode", "early")
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT user_id FROM filter_settings WHERE user_id = ?", (user_id,))
+            exists = cursor.fetchone()
+
+            if exists:
+                cursor.execute("""
+                    UPDATE filter_settings
+                    SET selected_courses = ?, selected_chapters = ?, weight_mode = ?
+                    WHERE user_id = ?
+                """, (json.dumps(courses), json.dumps(chapters), mode, user_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO filter_settings (user_id, selected_courses, selected_chapters, weight_mode)
+                    VALUES (?, ?, ?, ?)
+                """, (user_id, json.dumps(courses), json.dumps(chapters), mode))
+
+            conn.commit()
+
+        return JsonResponse({"status": "saved"})
+
+    return JsonResponse({"error": "bad request"}, status=400)
+
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\__init__.py
+=========================
+import sqlite3
+from django.conf import settings
+from django.shortcuts import render as django_render
+from . import *
+
+from django.http import JsonResponse
+from django.db import connection
+
+from .randomized_keypoints_views import *  # âœ… added
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
+# âœ… Keeps your wrapper
+def render(request, html_file, context=None):
+    return django_render(request, 'MyManager/' + html_file, context=context)
+
+
+# âœ… Updated dashboard view, adds keypoint logic
+def dashboard_view(request):
+    selected = get_random_key_point_context()
+
+    if not selected:
+        return render(request, 'dashboard.html', {
+            'key_point_error': "No key points found.",
+            'saved_filters': {}  # still pass something so JS doesn't break
+        })
+
+    keypoint_context = render_key_point(
+        request,
+        selected['chapter_number'],
+        selected['key_point_id'],
+        chapter_id=selected['chapter_id'],
+        is_random_across_chapters=True
+    )
+
+    # If response (like redirect), return directly
+    if hasattr(keypoint_context, 'status_code'):
+        return keypoint_context
+
+    # âœ… Add saved filters to the context
+    saved_filters = {}
+    if request.user.is_authenticated:
+        saved_filters = get_user_filter_settings(request.user.id)
+
+    keypoint_context['saved_filters'] = saved_filters
+
+    return django_render(request, 'MyManager/dashboard.html', keypoint_context)
+
+
+# âœ… untouched
+def menu_courses_api(request):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT name, url FROM courses")
+        rows = cursor.fetchall()
+
+    data = [{"title": row[0], "url": row[1]} for row in rows]
+    return JsonResponse(data, safe=False)
+    
+import json
+import sqlite3
+
+def get_user_filter_settings(user_id):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT selected_courses, selected_chapters, weight_mode FROM filter_settings WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+
+    if row:
+        return {
+            "selected_courses": json.loads(row[0]) if row[0] else [],
+            "selected_chapters": json.loads(row[1]) if row[1] else [],
+            "weight_mode": row[2] or "early"
+        }
+    return {}
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\base.html
+=========================
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Dynamic Sidebar{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'MyManager/styles.css' %}">
+</head>
+<body>
+
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul id="dynamic-menu">
+            <li class="accordion-item">
+                <div class="accordion-title" onclick="toggleAccordion()">
+                    School Courses <span style="float: right;">â–¼</span>
+                </div>
+                <ul id="accordion-submenu" style="display: none; padding-left: 10px;">
+                    <!-- Submenu items injected by JS -->
+                </ul>
+            </li>
+            <li><a href="#">Projects</a></li>
+            <li><a href="#">Life</a></li>
+            <li><a href="#">Ideas</a></li>
+        </ul>
+    </div>
+
+    <!-- Main content structure -->
+    <div class="content-wrapper">
+        <div class="fixed-background"></div>
+
+        <div class="content">
+            {% block content %}
+            <!-- Dynamic content appears here -->
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'MyManager/menu.js' %}"></script>
+</body>
+</html>
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\dashboard.html
+=========================
+{% extends "MyManager/base.html" %}
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>ðŸŽ² Random Content</h1>
+
+<!-- ðŸŽ›ï¸ Filter Button -->
+<button onclick="toggleFilterPopup()">âš™ï¸ Filter Keypoint Settings</button>
+
+<!-- ðŸ§° Filter Popup -->
+<!-- ðŸ§° Filter Popup -->
+<div id="filterPopup" style="display: none; ...">
+    <h3>ðŸ” Filter Random Keypoints</h3>
+
+    <label><strong>Weight Mode:</strong></label>
+    <select id="weightMode">
+        <option value="early">Early Chapters Heavier</option>
+        <option value="late">Later Chapters Heavier</option>
+        <option value="middle">Middle Heaviest</option>
+        <option value="edges">Edges Heaviest</option>
+    </select>
+
+    <br><br>
+
+    <!-- âœ… Add course checkboxes -->
+    <label><strong>Select Courses:</strong></label><br>
+    <div id="courseCheckboxes">
+        <em>Loading courses...</em>
+    </div>
+
+    <br>
+
+    <!-- âœ… Keep chapter checkboxes -->
+    <label><strong>Select Chapters:</strong></label><br>
+    <div id="chapterCheckboxes">
+        <em>Loading chapters...</em>
+    </div>
+
+    <br>
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="toggleFilterPopup()">Close</button>
+</div>
+
+
+<div class="dashboard-content-box">
+    {% include "MyManager/components/keypoint_display.html" %}
+</div>
+
+<script src="{% static 'MyManager/dashboard.js' %}"></script>
+{% endblock %}
+
+<script>
+const savedFilters = {{ saved_filters|safe }};
+</script>
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\components\keypoint_display.html
+=========================
+{% if key_point_error %}
+    <p style="color: red;">{{ key_point_error }}</p>
+{% else %}
+    <h2>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h2>
+
+    <p><strong>Question:</strong> {{ question_text }}</p>
+
+    <div id="answerContent" style="display: {% if show_answer %}block{% else %}none{% endif %}; margin-top: 16px;">
+		<p>{{ content|safe }}</p>
+		<p><strong>Answered Correctly:</strong> {{ correct_count }} times</p>
+
+		<div class="button-row">
+			<button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">âœ… Correct</button>
+			<button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">âŒ Incorrect</button>
+		</div>
+
+	</div>
+
+	<div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
+		<button onclick="document.getElementById('answerContent').style.display='block'; this.style.display='none';">â“ Show Answer</button>
+	</div>
+	
+	
+{% endif %}
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\dashboard.js
+=========================
+let filterOptions = {
+    weight_mode: "early",
+    selected_chapters: []
+};
+
+function toggleFilterPopup() {
+    const popup = document.getElementById("filterPopup");
+    popup.style.display = popup.style.display === "none" ? "block" : "none";
+}
+
+function applyFilters() {
+    const selectedMode = document.getElementById("weightMode").value;
+    const chapterCheckboxes = document.querySelectorAll("#chapterCheckboxes input:checked");
+    const selectedChapters = Array.from(chapterCheckboxes).map(cb => parseInt(cb.value));
+
+    const courseCheckboxes = document.querySelectorAll("#courseCheckboxes input:checked");
+    const selectedCourses = Array.from(courseCheckboxes).map(cb => cb.value);
+
+    filterOptions.weight_mode = selectedMode;
+    filterOptions.selected_chapters = selectedChapters;
+    filterOptions.selected_courses = selectedCourses;
+
+    // âœ… Send filter to backend for saving
+    const saveData = new FormData();
+    filterOptions.selected_chapters.forEach(ch => saveData.append("selected_chapters[]", ch));
+    filterOptions.selected_courses.forEach(c => saveData.append("selected_courses[]", c));
+    saveData.append("weight_mode", filterOptions.weight_mode);
+
+    fetch("/MyManager/api/save_filters/", {
+        method: "POST",
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: saveData
+    });
+
+    toggleFilterPopup();
+    submitAnswer("filter_only", 0);  // Trigger a new keypoint
+}
+
+
+function submitAnswer(type, keyPointId) {
+    const formData = new FormData();
+    formData.append("key_point_number", keyPointId);
+    formData.append("answer", type);
+
+    // Send filter options with every request
+    formData.append("weight_mode", filterOptions.weight_mode);
+    filterOptions.selected_chapters.forEach(chap => {
+        formData.append("selected_chapters", chap);
+    });
+
+    fetch("/MyManager/api/random_keypoint/", {
+        method: "POST",
+        headers: { 'X-CSRFToken': getCSRFToken() },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.querySelector(".dashboard-content-box").innerHTML = data.html;
+    });
+}
+
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return value;
+    }
+}
+
+function loadFilterOptions() {
+    fetch("/MyManager/api/filter_options/")
+        .then(response => response.json())
+        .then(data => {
+            // Courses
+            const courseContainer = document.getElementById("courseCheckboxes");
+            courseContainer.innerHTML = "";
+            data.courses.forEach(course => {
+                const checkbox = document.createElement("label");
+                checkbox.innerHTML = `<input type="checkbox" value="${course}" onchange="updateChapters()"> ${course}`;
+                courseContainer.appendChild(checkbox);
+                courseContainer.appendChild(document.createElement("br"));
+            });
+
+            // Initial chapter load (empty or all)
+            updateChapters();
+        })
+        .catch(() => {
+            document.getElementById("chapterCheckboxes").innerHTML = "<p style='color:red'>Failed to load options.</p>";
+        });
+}
+
+function updateChapters() {
+    const selectedCourses = Array.from(document.querySelectorAll("#courseCheckboxes input:checked"))
+        .map(cb => cb.value);
+
+    const params = new URLSearchParams();
+    selectedCourses.forEach(c => params.append("courses[]", c));
+
+    fetch(`/MyManager/api/chapters_by_course/?${params.toString()}`)
+        .then(response => response.json())
+        .then(data => {
+            const chapterContainer = document.getElementById("chapterCheckboxes");
+            chapterContainer.innerHTML = "";
+            data.chapters.forEach(ch => {
+                const checkbox = document.createElement("label");
+                checkbox.innerHTML = `<input type="checkbox" value="${ch}"> Chapter ${ch}`;
+                chapterContainer.appendChild(checkbox);
+                chapterContainer.appendChild(document.createElement("br"));
+            });
+        });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadFilterOptions();
+
+    if (savedFilters?.selected_chapters?.length > 0) {
+        filterOptions = savedFilters;
+        applyFilters();
+    } else {
+        document.getElementById("filterPopup").style.display = "block";
+    }
+});
+
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("answer-button")) {
+        const type = e.target.getAttribute("data-answer");
+        const kpId = parseInt(e.target.getAttribute("data-kp"));
+        submitAnswer(type, kpId);
+    }
+});
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\menu.js
+=========================
+console.log("menu.js loaded");
+
+// âœ… Fetch only the courses and load into the accordion submenu
+function loadCoursesIntoAccordion() {
+    console.log("Fetching courses...");
+    fetch('/MyManager/api/courses_menu/')  // <-- Adjust this if your courses API is different
+        .then(response => response.json())
+        .then(data => {
+            console.log("Courses data:", data);
+            const submenu = document.getElementById('accordion-submenu');
+            submenu.innerHTML = '';
+            data.forEach(course => {
+                submenu.innerHTML += `<li><a href="${course.url}">${course.title}</a></li>`;
+            });
+        })
+        .catch(error => console.error('Error loading courses:', error));
+}
+
+// âœ… Toggle accordion open/close
+function toggleAccordion() {
+    const submenu = document.getElementById('accordion-submenu');
+    submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadCoursesIntoAccordion();              // âœ… Initial load of courses
+    setInterval(loadCoursesIntoAccordion, 5000);  // Optional: Refresh every 5 sec
+});
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\styles.css
+=========================
+.sidebar {
+    width: 80px;
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    padding: 20px;
+    height: 100vh;  /* Full height */
+    position: fixed;
+    overflow-y: auto;
+}
+
+.sidebar ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar ul li {
+    margin-bottom: 15px;
+}
+
+.sidebar ul li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+}
+
+.sidebar ul li a:hover,
+.accordion-title:hover {
+    background-color: #34495e;
+}
+
+/* âœ… Accordion title styled like normal menu items */
+.accordion-title {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+}
+
+/* âœ… Ensure accordion submenu spacing looks clean */
+#accordion-submenu {
+    list-style-type: none;
+    padding-left: 10px;
+    margin: 0;
+}
+
+#accordion-submenu li {
+    margin-bottom: 10px;
+}
+
+#accordion-submenu li a {
+    color: #ecf0f1;
+    text-decoration: none;
+    display: block;
+}
+
+#accordion-submenu li a:hover {
+    background-color: #34495e;
+    padding-left: 10px;
+    transition: 0.3s;
+}
+
+/* âœ… General layout */
+.container {
+    display: flex;
+    min-height: 100vh; /* Full height layout */
+}
+
+.content-wrapper {
+    flex-grow: 1;
+    position: relative;  /* Needed for the fixed background layering */
+    margin-left: 120px;  /* Account for sidebar width + padding */
+}
+
+.fixed-background {
+    position: fixed;
+    padding: 20px;
+    height: 100vh;
+    background-color: #f4f4f4;  /* âœ… Background stays fixed */
+    z-index: -1;  /* âœ… Stays behind the content */
+    left: 120px;           /* âœ… Starts right after the sidebar */
+    right: 10px;           /* âœ… Leaves 10px gap before the right edge */
+    box-sizing: border-box; /* âœ… Makes sure padding doesn't break layout */
+}
+
+.content {
+    padding: 20px;
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-content-box {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 25px;
+    margin-top: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}

@@ -1,0 +1,24 @@
+{% if key_point_error %}
+    <p style="color: red;">{{ key_point_error }}</p>
+{% else %}
+    <h2>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h2>
+
+    <p><strong>Question:</strong> {{ question_text }}</p>
+
+    <div id="answerContent" style="display: {% if show_answer %}block{% else %}none{% endif %}; margin-top: 16px;">
+		<p>{{ content|safe }}</p>
+		<p><strong>Answered Correctly:</strong> {{ correct_count }} times</p>
+
+		<div class="button-row">
+			<button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">✅ Correct</button>
+			<button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">❌ Incorrect</button>
+		</div>
+
+	</div>
+
+	<div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
+		<button onclick="document.getElementById('answerContent').style.display='block'; this.style.display='none';">❓ Show Answer</button>
+	</div>
+	
+	
+{% endif %}

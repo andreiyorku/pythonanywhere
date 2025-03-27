@@ -61,7 +61,7 @@ def process_bulk_chapter_content(bulk_content):
         cursor.execute("PRAGMA foreign_keys = ON")
 
         # Get any existing course_id to satisfy NOT NULL constraint
-        cursor.execute("SELECT id FROM course LIMIT 1")
+        cursor.execute("SELECT id FROM courses LIMIT 1")
         course_row = cursor.fetchone()
         if not course_row:
             print("No course found in database. Cannot create chapter.")

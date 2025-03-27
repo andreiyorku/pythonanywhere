@@ -7,8 +7,8 @@ from django.core.cache import cache
 DB_PATH = settings.DATABASES['default']['NAME']
 
 # Chapters to exclude from random selection (e.g., Chapter 12)
-EXCLUDED_CHAPTERS = [12]
-
+EXCLUDED_CHAPTERS = []
+INCLUDED_CHAPTERS = [12, 13]
 # ======================================
 # Fetch all chapters ordered by chapter_number (RAW SQL + caching)
 # ======================================
@@ -55,8 +55,12 @@ def random_key_point_across_chapters_view(request):
     chapters = get_chapters_ordered()
     all_keypoints = []
 
-    # ✅ Exclude chapters from random selection
+    # ✅ Exclude chapters first
     filtered_chapters = [ch for ch in chapters if ch not in EXCLUDED_CHAPTERS]
+
+    # ✅ Then apply included chapter filter, if any
+    if INCLUDED_CHAPTERS:
+        filtered_chapters = [ch for ch in filtered_chapters if ch in INCLUDED_CHAPTERS]
 
     for idx, chapter_number in enumerate(filtered_chapters):
         keypoints, chapter_id = get_keypoints_in_chapter(chapter_number)
@@ -71,7 +75,7 @@ def random_key_point_across_chapters_view(request):
             adj_weight = base_weight / (2 ** correct_count)
             all_keypoints.append({
                 "chapter_number": chapter_number,
-                "chapter_id": kp_chapter_id,   # ✅ Correctly storing chapter_id here
+                "chapter_id": kp_chapter_id,
                 "key_point_id": kp_id,
                 "adjusted_weight": adj_weight
             })
@@ -88,9 +92,10 @@ def random_key_point_across_chapters_view(request):
         request,
         selected['chapter_number'],
         selected['key_point_id'],
-        chapter_id=selected['chapter_id'],  # ✅ Passing chapter_id forward
+        chapter_id=selected['chapter_id'],
         is_random_across_chapters=True
     )
+
 
 # ======================================
 # Render Key Point from DB (RAW SQL)

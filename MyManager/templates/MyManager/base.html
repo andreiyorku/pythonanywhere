@@ -3,31 +3,41 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dynamic Sidebar</title>
+    <title>{% block title %}Dynamic Sidebar{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'MyManager/styles.css' %}">
 </head>
 <body>
 
-    <div class="container">
-        <div class="sidebar">
-			<ul id="dynamic-menu">
-				<!-- ✅ Accordion Item styled like a menu item -->
-				<li class="accordion-item">
-					<div class="accordion-title" onclick="toggleAccordion()">
-						School Courses <span style="float: right;">▼</span>
-					</div>
-					<ul id="accordion-submenu" style="display: none; padding-left: 10px;">
-						<!-- Dynamic submenu items load here -->
-					</ul>
-				</li>
-
-				<li><a href="#">Projects</a></li>
-				<li><a href="#">Life</a></li>
-				<li><a href="#">Ideas</a></li>
-			</ul>
-		</div>
+<div class="container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <ul id="dynamic-menu">
+            <li class="accordion-item">
+                <div class="accordion-title" onclick="toggleAccordion()">
+                    School Courses <span style="float: right;">▼</span>
+                </div>
+                <ul id="accordion-submenu" style="display: none; padding-left: 10px;">
+                    <!-- Submenu items injected by JS -->
+                </ul>
+            </li>
+            <li><a href="#">Projects</a></li>
+            <li><a href="#">Life</a></li>
+            <li><a href="#">Ideas</a></li>
+        </ul>
     </div>
 
-    <script src="{% static 'MyManager/menu.js' %}"></script>
+    <!-- Main content structure -->
+    <div class="content-wrapper">
+        <div class="fixed-background"></div>
+
+        <div class="content">
+            {% block content %}
+            <!-- Dynamic content appears here -->
+            {% endblock %}
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'MyManager/menu.js' %}"></script>
 </body>
 </html>

@@ -1,8 +1,56 @@
 {% extends "MyManager/base.html" %}
+{% load static %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>Dashboard</h1>
-<p>Welcome to your dashboard.</p>
+<h1>🎲 Random Content</h1>
+
+<!-- 🎛️ Filter Button -->
+<button onclick="toggleFilterPopup()">⚙️ Filter Keypoint Settings</button>
+
+<!-- 🧰 Filter Popup -->
+<!-- 🧰 Filter Popup -->
+<div id="filterPopup" style="display: none; ...">
+    <h3>🔍 Filter Random Keypoints</h3>
+
+    <label><strong>Weight Mode:</strong></label>
+    <select id="weightMode">
+        <option value="early">Early Chapters Heavier</option>
+        <option value="late">Later Chapters Heavier</option>
+        <option value="middle">Middle Heaviest</option>
+        <option value="edges">Edges Heaviest</option>
+    </select>
+
+    <br><br>
+
+    <!-- ✅ Add course checkboxes -->
+    <label><strong>Select Courses:</strong></label><br>
+    <div id="courseCheckboxes">
+        <em>Loading courses...</em>
+    </div>
+
+    <br>
+
+    <!-- ✅ Keep chapter checkboxes -->
+    <label><strong>Select Chapters:</strong></label><br>
+    <div id="chapterCheckboxes">
+        <em>Loading chapters...</em>
+    </div>
+
+    <br>
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="toggleFilterPopup()">Close</button>
+</div>
+
+
+<div class="dashboard-content-box">
+    {% include "MyManager/components/keypoint_display.html" %}
+</div>
+
+<script src="{% static 'MyManager/dashboard.js' %}"></script>
 {% endblock %}
+
+<script>
+const savedFilters = {{ saved_filters|safe }};
+</script>
