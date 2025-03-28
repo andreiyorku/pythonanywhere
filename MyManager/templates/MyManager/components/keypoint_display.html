@@ -1,24 +1,30 @@
-{% if key_point_error %}
-    <p style="color: red;">{{ key_point_error }}</p>
-{% else %}
-    <h2>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h2>
+<div class="keypoint-box">
+    <h2>📘 Chapter {{ chapter_number }} — Key Point {{ key_point_number }}</h2>
 
-    <p><strong>Question:</strong> {{ question_text }}</p>
+    <div class="keypoint-header">
+        <strong>🧠 {{ question_text }}</strong>
+    </div>
 
-    <div id="answerContent" style="display: {% if show_answer %}block{% else %}none{% endif %}; margin-top: 16px;">
-		<p>{{ content|safe }}</p>
-		<p><strong>Answered Correctly:</strong> {{ correct_count }} times</p>
+    {% if show_answer %}
+        <!-- ✅ Show full body if flag is on -->
+        <div class="keypoint-body">
+            {{ content|safe }}
+        </div>
+    {% else %}
+        <!-- 🔘 Show "Show Answer" button instead -->
+        <div class="keypoint-body">
+            <button class="answer-button" data-answer="show_answer" data-kp="{{ key_point_number }}">👁️ Show Answer</button>
+        </div>
+    {% endif %}
 
-		<div class="button-row">
-			<button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">✅ Correct</button>
-			<button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">❌ Incorrect</button>
-		</div>
+    {% if show_answer %}
+    <div class="keypoint-actions">
+        <button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">✅ Correct</button>
+        <button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">❌ Incorrect</button>
+    </div>
+    {% endif %}
 
-	</div>
-
-	<div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
-		<button onclick="document.getElementById('answerContent').style.display='block'; this.style.display='none';">❓ Show Answer</button>
-	</div>
-	
-	
-{% endif %}
+    <div class="keypoint-meta">
+        <p>✅ Correct count: {{ correct_count }}</p>
+    </div>
+</div>

@@ -16,13 +16,36 @@ def render(request, html_file, context=None):
 
 
 # ✅ Updated dashboard view, adds keypoint logic
+import sqlite3
+import json
+from django.conf import settings
+from .randomized_keypoints_views import get_random_key_point_context, render_key_point
+from django.shortcuts import render as django_render
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
 def dashboard_view(request):
-    selected = get_random_key_point_context()
+    user_id = request.user.id if request.user.is_authenticated else 0
+
+    # Load filters from DB
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT selected_chapters, weight_mode FROM filter_settings WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+
+    if row:
+        selected_chapters = json.loads(row[0])
+        weight_mode = row[1]
+    else:
+        selected_chapters = []
+        weight_mode = "early"
+
+    # Fetch a random keypoint based on filters
+    selected = get_random_key_point_context(selected_chapters, weight_mode)
 
     if not selected:
-        return render(request, 'dashboard.html', {
-            'key_point_error': "No key points found.",
-            'saved_filters': {}  # still pass something so JS doesn't break
+        return django_render(request, "MyManager/dashboard.html", {
+            "key_point_error": "No key points found."
         })
 
     keypoint_context = render_key_point(
@@ -33,18 +56,12 @@ def dashboard_view(request):
         is_random_across_chapters=True
     )
 
-    # If response (like redirect), return directly
+    # If a redirect or error occurred
     if hasattr(keypoint_context, 'status_code'):
         return keypoint_context
 
-    # ✅ Add saved filters to the context
-    saved_filters = {}
-    if request.user.is_authenticated:
-        saved_filters = get_user_filter_settings(request.user.id)
+    return django_render(request, "MyManager/dashboard.html", keypoint_context)
 
-    keypoint_context['saved_filters'] = saved_filters
-
-    return django_render(request, 'MyManager/dashboard.html', keypoint_context)
 
 
 # ✅ untouched

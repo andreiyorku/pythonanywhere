@@ -13,10 +13,112 @@ urlpatterns = [
     path('dashboard/', dashboard_view, name='dashboard'),
     path('api/courses_menu/', menu_courses_api, name='courses_menu_api'),
     path('api/random_keypoint/', random_keypoint_api, name='random_keypoint_api'),
-    path('api/chapters_by_course/', chapters_by_course_api, name='chapters_by_course_api'),
-    path('api/filter_options/', filter_options_api, name='filter_options_api'),
-    path('api/save_filters/', save_filter_settings_api),
+
 ]
+
+from .views.filter_api import (
+    filter_options_api,
+    chapters_by_course_api,
+    save_filter_settings_api,
+)
+
+urlpatterns += [
+    path("api/filter_options/", filter_options_api),
+    path("api/chapters_by_course/", chapters_by_course_api),
+    path("api/save_filters/", save_filter_settings_api),
+]
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\filter_api.py
+=========================
+# views/filter_api.py (or inside randomized_keypoints_views.py)
+
+import sqlite3
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
+# âœ… Get available courses
+@csrf_exempt
+def filter_options_api(request):
+    user_id = request.user.id if request.user.is_authenticated else 0
+    saved_filters = {
+        "selected_courses": [],
+        "selected_chapters": [],
+        "weight_mode": "early"
+    }
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT name FROM courses ORDER BY name ASC")
+        courses = [row[0] for row in cursor.fetchall()]
+
+        # Load saved filter if exists
+        cursor.execute("SELECT selected_courses, selected_chapters, weight_mode FROM filter_settings WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if row:
+            saved_filters = {
+                "selected_courses": json.loads(row[0]),
+                "selected_chapters": json.loads(row[1]),
+                "weight_mode": row[2]
+            }
+
+    return JsonResponse({"courses": courses, "saved_filters": saved_filters})
+
+# âœ… Get chapters grouped by course name
+@csrf_exempt
+def chapters_by_course_api(request):
+    selected = request.GET.getlist("courses[]")
+    result = {}
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        for course_name in selected:
+            cursor.execute("""
+                SELECT ch.chapter_number
+                FROM chapter ch
+                JOIN courses c ON ch.course_id = c.id
+                WHERE c.name = ?
+                ORDER BY ch.chapter_number
+            """, (course_name,))
+            result[course_name] = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse({"chapters_by_course": result})
+
+# âœ… Save filter state
+@csrf_exempt
+def save_filter_settings_api(request):
+    if request.method == "POST":
+        user_id = request.user.id if request.user.is_authenticated else 0  # 0 = anonymous
+        selected_courses = request.POST.getlist("selected_courses[]")
+        selected_chapters = request.POST.getlist("selected_chapters[]")
+        weight_mode = request.POST.get("weight_mode", "early")
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id FROM filter_settings WHERE user_id = ?", (user_id,))
+            exists = cursor.fetchone()
+
+            if exists:
+                cursor.execute("""
+                    UPDATE filter_settings
+                    SET selected_courses = ?, selected_chapters = ?, weight_mode = ?
+                    WHERE user_id = ?
+                """, (json.dumps(selected_courses), json.dumps(selected_chapters), weight_mode, user_id))
+            else:
+                cursor.execute("""
+                    INSERT INTO filter_settings (user_id, selected_courses, selected_chapters, weight_mode)
+                    VALUES (?, ?, ?, ?)
+                """, (user_id, json.dumps(selected_courses), json.dumps(selected_chapters), weight_mode))
+
+            conn.commit()
+
+        return JsonResponse({"status": "saved"})
+
+    return JsonResponse({"error": "invalid request"}, status=400)
 
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\randomized_keypoints_views.py
@@ -29,21 +131,7 @@ from django.core.cache import cache
 from django.views.decorators.csrf import csrf_exempt
 import json
 
-
 DB_PATH = settings.DATABASES['default']['NAME']
-
-EXCLUDED_CHAPTERS = []
-INCLUDED_CHAPTERS = [12, 13]
-
-def get_chapters_ordered():
-    chapters = cache.get('chapters_ordered')
-    if not chapters:
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            cursor.execute('SELECT chapter_number FROM chapter ORDER BY chapter_number ASC')
-            chapters = [row[0] for row in cursor.fetchall()]
-            cache.set('chapters_ordered', chapters, 60 * 60)
-    return chapters
 
 def get_keypoints_in_chapter(chapter_number):
     with sqlite3.connect(DB_PATH) as conn:
@@ -63,51 +151,55 @@ def get_keypoints_in_chapter(chapter_number):
     return keypoints, chapter_id
 
 # âœ… Used by dashboard and random view
-def get_random_key_point_context(selected_chapters=None, weight_mode="early"):
-    chapters = get_chapters_ordered()
+def get_random_key_point_context(selected_chapters=None, weight_mode="early", course_chapter_map=None):
     all_keypoints = []
 
-    # âœ… Apply filters
-    filtered_chapters = [ch for ch in chapters if ch not in EXCLUDED_CHAPTERS]
-    if selected_chapters:
-        filtered_chapters = [ch for ch in filtered_chapters if ch in selected_chapters]
-    elif INCLUDED_CHAPTERS:
-        filtered_chapters = [ch for ch in filtered_chapters if ch in INCLUDED_CHAPTERS]
+    if not course_chapter_map:
+        return None  # no valid data
 
-    total_chapters = len(filtered_chapters)
+    num_courses = len(course_chapter_map)
+    if num_courses == 0:
+        return None
 
-    for idx, chapter_number in enumerate(filtered_chapters):
-        keypoints, chapter_id = get_keypoints_in_chapter(chapter_number)
-        num_keypoints = len(keypoints)
-        if num_keypoints == 0:
+    for course_name, chapter_list in course_chapter_map.items():
+        total_chapters = len(chapter_list)
+        if total_chapters == 0:
             continue
 
-        # âœ… Weighted logic based on position and mode
-        if weight_mode == "early":
-            chapter_weight = 2 ** (total_chapters - idx - 1)
-        elif weight_mode == "late":
-            chapter_weight = 2 ** idx
-        elif weight_mode == "middle":
-            mid = (total_chapters - 1) / 2
-            dist = abs(idx - mid)
-            chapter_weight = 1 / (dist + 1)
-        elif weight_mode == "edges":
-            mid = (total_chapters - 1) / 2
-            dist = abs(idx - mid)
-            chapter_weight = dist + 1
-        else:
-            chapter_weight = 1  # default if mode unrecognized
+        course_weight = 1 / num_courses
 
-        base_weight = chapter_weight / num_keypoints
+        for idx, chapter_number in enumerate(chapter_list):
+            keypoints, chapter_id = get_keypoints_in_chapter(chapter_number)
+            num_keypoints = len(keypoints)
+            if num_keypoints == 0:
+                continue
 
-        for kp_id, kp_chapter_id, correct_count in keypoints:
-            adj_weight = base_weight / (2 ** correct_count)
-            all_keypoints.append({
-                "chapter_number": chapter_number,
-                "chapter_id": kp_chapter_id,
-                "key_point_id": kp_id,
-                "adjusted_weight": adj_weight
-            })
+            # Chapter position weight
+            if weight_mode == "early":
+                chapter_weight = 2 ** (total_chapters - idx - 1)
+            elif weight_mode == "late":
+                chapter_weight = 2 ** idx
+            elif weight_mode == "middle":
+                mid = (total_chapters - 1) / 2
+                dist = abs(idx - mid)
+                chapter_weight = 1 / (dist + 1)
+            elif weight_mode == "edges":
+                mid = (total_chapters - 1) / 2
+                dist = abs(idx - mid)
+                chapter_weight = dist + 1
+            else:
+                chapter_weight = 1
+
+            base_weight = (course_weight * chapter_weight) / num_keypoints
+
+            for kp_id, kp_chapter_id, correct_count in keypoints:
+                adj_weight = base_weight / (2 ** correct_count)
+                all_keypoints.append({
+                    "chapter_number": chapter_number,
+                    "chapter_id": kp_chapter_id,
+                    "key_point_id": kp_id,
+                    "adjusted_weight": adj_weight
+                })
 
     if not all_keypoints:
         return None
@@ -116,20 +208,6 @@ def get_random_key_point_context(selected_chapters=None, weight_mode="early"):
     return random.choices(all_keypoints, weights=weights, k=1)[0]
 
 
-# Optional standalone route
-def random_key_point_across_chapters_view(request):
-    from .randomized_keypoints_views import render_key_point
-    selected = get_random_key_point_context()
-    if not selected:
-        return render(request, "error.html", {"message": "No key points found."})
-
-    return render_key_point(
-        request,
-        selected['chapter_number'],
-        selected['key_point_id'],
-        chapter_id=selected['chapter_id'],
-        is_random_across_chapters=True
-    )
 
 # Shared rendering logic (used by dashboard)
 def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
@@ -192,15 +270,18 @@ def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
 
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
+import sqlite3, json
+from django.conf import settings
 
+
+@csrf_exempt
 def random_keypoint_api(request):
-    
-
     if request.method == "POST":
         key_point_id = int(request.POST.get("key_point_number", 0))
         answer_type = request.POST.get("answer")
 
-        # Update correct count if answered
+        # Optional: update correctness count
         if answer_type == "correct" and key_point_id:
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
@@ -211,12 +292,12 @@ def random_keypoint_api(request):
                 ''', (key_point_id,))
                 conn.commit()
 
-        # âœ… Extract filters from request
+        # Gather filters from POST
         weight_mode = request.POST.get("weight_mode", "early")
-        selected_chapters = request.POST.getlist("selected_chapters")
-        selected_chapters = [int(ch) for ch in selected_chapters] if selected_chapters else []
+        selected_chapters = request.POST.getlist("selected_chapters[]")
+        selected_chapters = list(map(int, selected_chapters))
 
-        # âœ… Use filters when generating the keypoint
+        # Get random keypoint context using your logic
         selected = get_random_key_point_context(
             selected_chapters=selected_chapters,
             weight_mode=weight_mode
@@ -234,76 +315,12 @@ def random_keypoint_api(request):
         )
 
         if hasattr(context, 'status_code'):
-            return JsonResponse({'html': '<p>Error loading key point.</p>'})
-        #print("ðŸ§  Sending keypoint:", context["key_point_number"])
+            return JsonResponse({'html': '<p>Error rendering key point.</p>'})
+
         html = render_to_string("MyManager/components/keypoint_display.html", context, request=request)
         return JsonResponse({'html': html})
 
-from django.http import JsonResponse
-import sqlite3
-
-def chapters_by_course_api(request):
-    selected_courses = request.GET.getlist('courses[]')  # JS will send courses[] as list
-    chapter_numbers = []
-
-    if not selected_courses:
-        return JsonResponse({"chapters": []})
-
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        placeholders = ",".join(["?"] * len(selected_courses))
-        cursor.execute(f"""
-            SELECT DISTINCT c.chapter_number
-            FROM chapter c
-            JOIN courses cr ON c.course_id = cr.id
-            WHERE cr.name IN ({placeholders})
-            ORDER BY c.chapter_number ASC
-        """, selected_courses)
-        chapter_numbers = [row[0] for row in cursor.fetchall()]
-
-    return JsonResponse({"chapters": chapter_numbers})
-
-def filter_options_api(request):
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM courses")
-        courses = [row[0] for row in cursor.fetchall()]
-        cursor.execute("SELECT chapter_number FROM chapter ORDER BY chapter_number ASC")
-        chapters = [row[0] for row in cursor.fetchall()]
-    return JsonResponse({"courses": courses, "chapters": chapters})
-
-@csrf_exempt
-def save_filter_settings_api(request):
-    if request.method == "POST":
-        user_id = request.user.id if request.user.is_authenticated else 0  # 0 = anonymous fallback
-
-        courses = request.POST.getlist("selected_courses[]")
-        chapters = request.POST.getlist("selected_chapters[]")
-        mode = request.POST.get("weight_mode", "early")
-
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT user_id FROM filter_settings WHERE user_id = ?", (user_id,))
-            exists = cursor.fetchone()
-
-            if exists:
-                cursor.execute("""
-                    UPDATE filter_settings
-                    SET selected_courses = ?, selected_chapters = ?, weight_mode = ?
-                    WHERE user_id = ?
-                """, (json.dumps(courses), json.dumps(chapters), mode, user_id))
-            else:
-                cursor.execute("""
-                    INSERT INTO filter_settings (user_id, selected_courses, selected_chapters, weight_mode)
-                    VALUES (?, ?, ?, ?)
-                """, (user_id, json.dumps(courses), json.dumps(chapters), mode))
-
-            conn.commit()
-
-        return JsonResponse({"status": "saved"})
-
-    return JsonResponse({"error": "bad request"}, status=400)
+    return JsonResponse({"error": "Invalid method"}, status=405)
 
 
 =========================
@@ -327,13 +344,36 @@ def render(request, html_file, context=None):
 
 
 # âœ… Updated dashboard view, adds keypoint logic
+import sqlite3
+import json
+from django.conf import settings
+from .randomized_keypoints_views import get_random_key_point_context, render_key_point
+from django.shortcuts import render as django_render
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
 def dashboard_view(request):
-    selected = get_random_key_point_context()
+    user_id = request.user.id if request.user.is_authenticated else 0
+
+    # Load filters from DB
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT selected_chapters, weight_mode FROM filter_settings WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+
+    if row:
+        selected_chapters = json.loads(row[0])
+        weight_mode = row[1]
+    else:
+        selected_chapters = []
+        weight_mode = "early"
+
+    # Fetch a random keypoint based on filters
+    selected = get_random_key_point_context(selected_chapters, weight_mode)
 
     if not selected:
-        return render(request, 'dashboard.html', {
-            'key_point_error': "No key points found.",
-            'saved_filters': {}  # still pass something so JS doesn't break
+        return django_render(request, "MyManager/dashboard.html", {
+            "key_point_error": "No key points found."
         })
 
     keypoint_context = render_key_point(
@@ -344,18 +384,12 @@ def dashboard_view(request):
         is_random_across_chapters=True
     )
 
-    # If response (like redirect), return directly
+    # If a redirect or error occurred
     if hasattr(keypoint_context, 'status_code'):
         return keypoint_context
 
-    # âœ… Add saved filters to the context
-    saved_filters = {}
-    if request.user.is_authenticated:
-        saved_filters = get_user_filter_settings(request.user.id)
+    return django_render(request, "MyManager/dashboard.html", keypoint_context)
 
-    keypoint_context['saved_filters'] = saved_filters
-
-    return django_render(request, 'MyManager/dashboard.html', keypoint_context)
 
 
 # âœ… untouched
@@ -428,6 +462,7 @@ def get_user_filter_settings(user_id):
 </div>
 
 <script src="{% static 'MyManager/menu.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>
 
@@ -442,146 +477,296 @@ def get_user_filter_settings(user_id):
 {% block content %}
 <h1>ðŸŽ² Random Content</h1>
 
-<!-- ðŸŽ›ï¸ Filter Button -->
-<button onclick="toggleFilterPopup()">âš™ï¸ Filter Keypoint Settings</button>
+<!-- ðŸ“¦ Button to open the filter popup -->
+<button onclick="filterManager.show()">âš™ï¸ Filter Settings</button>
 
-<!-- ðŸ§° Filter Popup -->
-<!-- ðŸ§° Filter Popup -->
-<div id="filterPopup" style="display: none; ...">
-    <h3>ðŸ” Filter Random Keypoints</h3>
-
-    <label><strong>Weight Mode:</strong></label>
-    <select id="weightMode">
-        <option value="early">Early Chapters Heavier</option>
-        <option value="late">Later Chapters Heavier</option>
-        <option value="middle">Middle Heaviest</option>
-        <option value="edges">Edges Heaviest</option>
-    </select>
-
-    <br><br>
-
-    <!-- âœ… Add course checkboxes -->
-    <label><strong>Select Courses:</strong></label><br>
-    <div id="courseCheckboxes">
-        <em>Loading courses...</em>
-    </div>
-
-    <br>
-
-    <!-- âœ… Keep chapter checkboxes -->
-    <label><strong>Select Chapters:</strong></label><br>
-    <div id="chapterCheckboxes">
-        <em>Loading chapters...</em>
-    </div>
-
-    <br>
-    <button onclick="applyFilters()">Apply Filters</button>
-    <button onclick="toggleFilterPopup()">Close</button>
-</div>
-
+{% include "MyManager/components/filter_popup.html" %}
 
 <div class="dashboard-content-box">
-    {% include "MyManager/components/keypoint_display.html" %}
+    <!-- Random keypoint will load here via AJAX -->
 </div>
-
-<script src="{% static 'MyManager/dashboard.js' %}"></script>
 {% endblock %}
 
+{% block extra_scripts %}
+<script src="{% static 'MyManager/filter.js' %}"></script>
+<script src="{% static 'MyManager/keypoint.js' %}"></script>
 <script>
-const savedFilters = {{ saved_filters|safe }};
+	console.log("ðŸ‘€ inline test script triggered");
 </script>
+{% endblock %}
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\components\filter_popup.html
+=========================
+<!-- templates/MyManager/components/filter_popup.html -->
+<div id="filterPopup"style="display: none;">
+  <div class="filter-popup-inner">
+    <h2>ðŸŽ›ï¸ Filter Keypoint Settings</h2>
+
+    <!-- Course Selector -->
+    <div>
+      <h3>Select Course(s)</h3>
+      <div id="courseCheckboxes">
+        <!-- JS will populate with checkbox list -->
+      </div>
+    </div>
+
+    <!-- Weight Mode Dropdown -->
+    <div style="margin-top: 20px;">
+      <h3>Weight Distribution</h3>
+      <select id="weightMode">
+        <option value="early">Heavier toward earlier chapters</option>
+        <option value="late">Heavier toward later chapters</option>
+        <option value="middle">Heavier in the middle</option>
+        <option value="edges">Heavier at edges</option>
+      </select>
+    </div>
+
+    <!-- Dynamic Chapter Lists -->
+    <div id="chapterContainer" class="chapter-grid">
+      <!-- JS will populate each course's chapter list here -->
+    </div>
+
+    <!-- Apply Button -->
+    <div style="margin-top: 20px;">
+      <button onclick="filterManager.applyFilters()">âœ… Apply Filters</button>
+    </div>
+  </div>
+</div>
 
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\components\keypoint_display.html
 =========================
-{% if key_point_error %}
-    <p style="color: red;">{{ key_point_error }}</p>
-{% else %}
-    <h2>Chapter {{ chapter_number }} - Key Point {{ key_point_number }}</h2>
+<div class="keypoint-box">
+    <h2>ðŸ“˜ Chapter {{ chapter_number }} â€” Key Point {{ key_point_number }}</h2>
 
-    <p><strong>Question:</strong> {{ question_text }}</p>
+    <div class="keypoint-header">
+        <strong>ðŸ§  {{ question_text }}</strong>
+    </div>
 
-    <div id="answerContent" style="display: {% if show_answer %}block{% else %}none{% endif %}; margin-top: 16px;">
-		<p>{{ content|safe }}</p>
-		<p><strong>Answered Correctly:</strong> {{ correct_count }} times</p>
+    <div class="keypoint-body">
+        {{ content|safe }}
+    </div>
 
-		<div class="button-row">
-			<button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">âœ… Correct</button>
-			<button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">âŒ Incorrect</button>
-		</div>
+    <div class="keypoint-actions">
+        <button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">âœ… Correct</button>
+        <button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">âŒ Incorrect</button>
+    </div>
 
-	</div>
-
-	<div id="showAnswerButton" {% if show_answer %}style="display:none"{% endif %}>
-		<button onclick="document.getElementById('answerContent').style.display='block'; this.style.display='none';">â“ Show Answer</button>
-	</div>
-	
-	
-{% endif %}
+    <div class="keypoint-meta">
+        <p>âœ… Correct count: {{ correct_count }}</p>
+    </div>
+</div>
 
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\dashboard.js
 =========================
-let filterOptions = {
-    weight_mode: "early",
-    selected_chapters: []
+
+
+//function getCSRFToken() {
+    //const cookies = document.cookie.split(';');
+    //for (let cookie of cookies) {
+        //const [name, value] = cookie.trim().split('=');
+       // if (name === 'csrftoken') return value;
+    //}
+//}
+
+//document.addEventListener("click", function (e) {
+    ///if (e.target.classList.contains("answer-button")) {
+        //const type = e.target.getAttribute("data-answer");
+        //const kpId = parseInt(e.target.getAttribute("data-kp"));
+        //submitAnswer(type, kpId);
+    //}
+//});
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\filter.js
+=========================
+console.log("ðŸ“¦ filter.js loaded");
+
+
+const filterManager = {
+    filters: {
+        selected_courses: [],
+        selected_chapters: [],
+        weight_mode: "early"
+    },
+
+    init() {
+		fetch("/MyManager/api/filter_options/")
+			.then(response => response.json())
+			.then(data => {
+				const { courses, saved_filters } = data;
+
+				this.filters = {
+					selected_courses: saved_filters.selected_courses || [],
+					selected_chapters: (saved_filters.selected_chapters || []).map(Number),
+					weight_mode: saved_filters.weight_mode || "early"
+				};
+
+				this.renderCourses(courses);
+
+				const hasValidFilters =
+					this.filters.selected_courses.length > 0 &&
+					this.filters.selected_chapters.length > 0;
+
+				// â³ Wait until submit handler is registered
+				if (hasValidFilters) {
+					console.log("âœ… Filters found, waiting to apply...");
+					this._deferredApply = true; // flag to apply once ready
+				} else {
+					this.show();
+				}
+			})
+			.catch((err) => {
+				console.warn("âš ï¸ Filter load failed:", err);
+				this.show();
+			});
+	},
+
+
+    renderCourses(courses) {
+		const container = document.getElementById("courseCheckboxes");
+		container.innerHTML = "";
+
+		courses.forEach(course => {
+			const isChecked = this.filters.selected_courses.includes(course);
+			const label = document.createElement("label");
+			label.innerHTML = `<input type="checkbox" value="${course}" ${isChecked ? 'checked' : ''} onchange="filterManager.loadChapters()"> ${course}`;
+			container.appendChild(label);
+			container.appendChild(document.createElement("br"));
+		});
+
+		// âœ… Now load chapters based on selected courses
+		this.loadChapters();
+	},
+
+    loadChapters() {
+		const selectedCourses = Array.from(document.querySelectorAll("#courseCheckboxes input:checked"))
+			.map(cb => cb.value);
+
+		this.filters.selected_courses = selectedCourses;
+
+		const params = new URLSearchParams();
+		selectedCourses.forEach(c => params.append("courses[]", c));
+
+		fetch(`/MyManager/api/chapters_by_course/?${params.toString()}`)
+			.then(response => response.json())
+			.then(data => {
+				const container = document.getElementById("chapterContainer");
+				container.innerHTML = "";
+
+				const chapterGroups = data.chapters_by_course;
+				const groupWrapper = document.createElement("div");
+				groupWrapper.style.display = "flex";
+				groupWrapper.style.gap = "30px";
+
+				for (const course in chapterGroups) {
+					const box = document.createElement("div");
+					box.classList.add("chapter-section");
+
+					const title = document.createElement("h4");
+					title.textContent = course;
+					box.appendChild(title);
+
+					chapterGroups[course].forEach(ch => {
+						const isChecked = this.filters.selected_chapters.includes(parseInt(ch));
+						const label = document.createElement("label");
+						label.innerHTML = `<input type="checkbox" value="${ch}" ${isChecked ? 'checked' : ''}> Chapter ${ch}`;
+						box.appendChild(label);
+						box.appendChild(document.createElement("br"));
+					});
+
+
+					groupWrapper.appendChild(box);
+				}
+
+				container.appendChild(groupWrapper);
+
+				// âœ… Restore weight mode selection (only once chapters are rendered)
+				document.getElementById("weightMode").value = this.filters.weight_mode || "early";
+			});
+	},
+
+
+    saveFilters() {
+        const selectedChapters = Array.from(document.querySelectorAll("#chapterContainer input:checked"))
+            .map(cb => parseInt(cb.value));
+        const selectedMode = document.getElementById("weightMode").value;
+
+        this.filters.selected_chapters = selectedChapters;
+        this.filters.weight_mode = selectedMode;
+
+        const formData = new FormData();
+        this.filters.selected_courses.forEach(c => formData.append("selected_courses[]", c));
+        this.filters.selected_chapters.forEach(ch => formData.append("selected_chapters[]", ch));
+        formData.append("weight_mode", selectedMode);
+
+        fetch("/MyManager/api/save_filters/", {
+            method: "POST",
+            headers: { 'X-CSRFToken': getCSRFToken() },
+            body: formData
+        });
+    },
+
+    applyFilters(skipSave = false) {
+		console.log("Applying filters...")
+        if (!skipSave) this.saveFilters();
+        this.hide();
+		if (typeof submitAnswer === "function") {
+			console.log("ðŸ“£ Calling submitAnswer from filterManager");
+			this._submitAnswer("filter_applied", 0);  // âœ… âœ… âœ… CORRECTED LINE
+		} else {
+			console.warn("â— submitAnswer not available during filter apply");
+		}
+
+
+    },
+
+    show() {
+		console.warn("ðŸ“£ filterManager.show() CALLED!");
+		document.getElementById("filterPopup").style.display = "block";
+	},
+
+
+    hide() {
+        document.getElementById("filterPopup").style.display = "none";
+    },
+	
+	setSubmitHandler(fn) {
+		this._submitAnswer = fn;
+
+		if (this._deferredApply) {
+			console.log("ðŸš€ submitAnswer registered â€” applying filters now...");
+			this.applyFilters(true);  // âœ… Only now that it's safe
+			this._deferredApply = false;
+		}
+	},
+
 };
 
-function toggleFilterPopup() {
-    const popup = document.getElementById("filterPopup");
-    popup.style.display = popup.style.display === "none" ? "block" : "none";
+// CSRF token helper
+function getCSRFToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'csrftoken') return value;
+    }
+    return '';
 }
 
-function applyFilters() {
-    const selectedMode = document.getElementById("weightMode").value;
-    const chapterCheckboxes = document.querySelectorAll("#chapterCheckboxes input:checked");
-    const selectedChapters = Array.from(chapterCheckboxes).map(cb => parseInt(cb.value));
+// âœ… Initialize on page load
+document.addEventListener("DOMContentLoaded", () => {
+    if (typeof filterManager !== "undefined") {
+        filterManager.init();
+    }
+});
 
-    const courseCheckboxes = document.querySelectorAll("#courseCheckboxes input:checked");
-    const selectedCourses = Array.from(courseCheckboxes).map(cb => cb.value);
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\keypoint.js
+=========================
+console.log("ðŸ“Œ keypoint.js loaded");
 
-    filterOptions.weight_mode = selectedMode;
-    filterOptions.selected_chapters = selectedChapters;
-    filterOptions.selected_courses = selectedCourses;
-
-    // âœ… Send filter to backend for saving
-    const saveData = new FormData();
-    filterOptions.selected_chapters.forEach(ch => saveData.append("selected_chapters[]", ch));
-    filterOptions.selected_courses.forEach(c => saveData.append("selected_courses[]", c));
-    saveData.append("weight_mode", filterOptions.weight_mode);
-
-    fetch("/MyManager/api/save_filters/", {
-        method: "POST",
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: saveData
-    });
-
-    toggleFilterPopup();
-    submitAnswer("filter_only", 0);  // Trigger a new keypoint
-}
-
-
-function submitAnswer(type, keyPointId) {
-    const formData = new FormData();
-    formData.append("key_point_number", keyPointId);
-    formData.append("answer", type);
-
-    // Send filter options with every request
-    formData.append("weight_mode", filterOptions.weight_mode);
-    filterOptions.selected_chapters.forEach(chap => {
-        formData.append("selected_chapters", chap);
-    });
-
-    fetch("/MyManager/api/random_keypoint/", {
-        method: "POST",
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.querySelector(".dashboard-content-box").innerHTML = data.html;
-    });
-}
 
 function getCSRFToken() {
     const cookies = document.cookie.split(';');
@@ -589,69 +774,49 @@ function getCSRFToken() {
         const [name, value] = cookie.trim().split('=');
         if (name === 'csrftoken') return value;
     }
+    return '';
 }
 
-function loadFilterOptions() {
-    fetch("/MyManager/api/filter_options/")
-        .then(response => response.json())
-        .then(data => {
-            // Courses
-            const courseContainer = document.getElementById("courseCheckboxes");
-            courseContainer.innerHTML = "";
-            data.courses.forEach(course => {
-                const checkbox = document.createElement("label");
-                checkbox.innerHTML = `<input type="checkbox" value="${course}" onchange="updateChapters()"> ${course}`;
-                courseContainer.appendChild(checkbox);
-                courseContainer.appendChild(document.createElement("br"));
-            });
+function submitAnswer(answerType, keyPointId) {
+	console.log("ðŸŽ¯ Inside submitAnswer()", answerType, keyPointId);  // âœ… debug here
+	
+	
+	const formData = new FormData();
+	formData.append("key_point_number", keyPointId);
+	formData.append("answer", answerType);
 
-            // Initial chapter load (empty or all)
-            updateChapters();
-        })
-        .catch(() => {
-            document.getElementById("chapterCheckboxes").innerHTML = "<p style='color:red'>Failed to load options.</p>";
-        });
+	formData.append("weight_mode", filterManager.filters.weight_mode);
+	filterManager.filters.selected_chapters.forEach(ch => {
+		formData.append("selected_chapters[]", ch);
+	});
+
+	fetch("/MyManager/api/random_keypoint/", {
+		method: "POST",
+		headers: { "X-CSRFToken": getCSRFToken() },
+		body: formData
+	})
+	.then(response => response.json())
+	.then(data => {
+		console.log("ðŸ§± Keypoint HTML received:", data.html);
+
+		const box = document.querySelector(".dashboard-content-box");
+		if (box) {
+			box.innerHTML = data.html;
+			console.log("âœ… Injected into .dashboard-content-box");
+		} else {
+			console.warn("â— .dashboard-content-box not found in DOM");
+		}
+	});
+
+	
+	
 }
 
-function updateChapters() {
-    const selectedCourses = Array.from(document.querySelectorAll("#courseCheckboxes input:checked"))
-        .map(cb => cb.value);
-
-    const params = new URLSearchParams();
-    selectedCourses.forEach(c => params.append("courses[]", c));
-
-    fetch(`/MyManager/api/chapters_by_course/?${params.toString()}`)
-        .then(response => response.json())
-        .then(data => {
-            const chapterContainer = document.getElementById("chapterCheckboxes");
-            chapterContainer.innerHTML = "";
-            data.chapters.forEach(ch => {
-                const checkbox = document.createElement("label");
-                checkbox.innerHTML = `<input type="checkbox" value="${ch}"> Chapter ${ch}`;
-                chapterContainer.appendChild(checkbox);
-                chapterContainer.appendChild(document.createElement("br"));
-            });
-        });
+// âœ… Register the function with the filter manager
+if (typeof filterManager !== "undefined") {
+	filterManager.setSubmitHandler(submitAnswer);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadFilterOptions();
-
-    if (savedFilters?.selected_chapters?.length > 0) {
-        filterOptions = savedFilters;
-        applyFilters();
-    } else {
-        document.getElementById("filterPopup").style.display = "block";
-    }
-});
-
-document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("answer-button")) {
-        const type = e.target.getAttribute("data-answer");
-        const kpId = parseInt(e.target.getAttribute("data-kp"));
-        submitAnswer(type, kpId);
-    }
-});
 
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\menu.js
