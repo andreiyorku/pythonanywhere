@@ -1,0 +1,30 @@
+@media (max-width: 768px) {
+    body {
+        font-size: 32px;
+    }
+
+    h1 {
+        font-size: 4rem;
+    }
+
+    p, div, a {
+        font-size: 2rem;
+    }
+
+    form {
+        gap: 24px;
+        padding: 24px;
+        max-width: 100%;
+    }
+
+    form input, form button {
+        font-size: 2rem;
+        padding: 24px;
+        border-width: 2px;
+    }
+
+    #showAnswerButton button {
+        font-size: 2rem;
+        padding: 24px 36px;
+    }
+}
