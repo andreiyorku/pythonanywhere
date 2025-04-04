@@ -1,30 +1,31 @@
-<div class="keypoint-box">
-    <h2>📘 Chapter {{ chapter_number }} — Key Point {{ key_point_number }}</h2>
+﻿<div class="keypoint-box">
+    <h2>Chapter {{ chapter_number }} Key Point {{ key_point_number }}</h2>
 
     <div class="keypoint-header">
-        <strong>🧠 {{ question_text }}</strong>
+        <strong>{{ question_text }}</strong>
     </div>
 
     {% if show_answer %}
-        <!-- ✅ Show full body if flag is on -->
+        <!-- Show full body if flag is on -->
         <div class="keypoint-body">
             {{ content|safe }}
         </div>
     {% else %}
-        <!-- 🔘 Show "Show Answer" button instead -->
+        <!-- Show "Show Answer" button instead -->
         <div class="keypoint-body">
-            <button class="answer-button" data-answer="show_answer" data-kp="{{ key_point_number }}">👁️ Show Answer</button>
+            <button class="answer-button" data-answer="show_answer" data-kp="{{ key_point_number }}">Show Answer</button>
         </div>
     {% endif %}
 
     {% if show_answer %}
     <div class="keypoint-actions">
-        <button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">✅ Correct</button>
-        <button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">❌ Incorrect</button>
+        <button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">Correct</button>
+        <button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">Incorrect</button>
     </div>
     {% endif %}
 
     <div class="keypoint-meta">
-        <p>✅ Correct count: {{ correct_count }}</p>
+        <p>Correct count: {{ correct_count }}</p>
     </div>
 </div>
+

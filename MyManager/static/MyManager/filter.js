@@ -1,4 +1,4 @@
-console.log("📦 filter.js loaded");
+﻿console.log("filter.js loaded");
 
 const filterManager = {
     filters: {
@@ -8,7 +8,7 @@ const filterManager = {
     },
 
     init() {
-        console.log("🧪 filterManager.init() running...");
+        console.log("filterManager.init() running...");
 
         fetch("/MyManager/api/filter_options/")
             .then(response => response.json())
@@ -21,24 +21,24 @@ const filterManager = {
                     weight_mode: saved_filters.weight_mode || "early"
                 };
 
-                console.log("✅ Loaded filters:", this.filters);
+                console.log("Loaded filters:", this.filters);
 
                 const hasValidFilters =
                     this.filters.selected_courses.length > 0 &&
                     this.filters.selected_chapters.length > 0;
 
                 if (hasValidFilters) {
-					console.log("✅ Filters valid, applying immediately on load...");
+					console.log("Filters valid, applying immediately on load...");
 					setTimeout(() => this.applyFilters(true), 100);  // slight delay to ensure DOM readiness
 				} else {
-                    console.log("❌ Filters missing or incomplete, showing popup...");
+                    console.log("Filters missing or incomplete, showing popup...");
                     this.show();
                 }
 
                 this.renderCourses(courses);
             })
             .catch(err => {
-                console.warn("⚠️ Failed to load filters:", err);
+                console.warn("Failed to load filters:", err);
                 this.show();
             });
     },
@@ -124,19 +124,19 @@ const filterManager = {
     },
 
     applyFilters(skipSave = false) {
-        console.log("📤 applyFilters called (skipSave:", skipSave, ")");
+        console.log("applyFilters called (skipSave:", skipSave, ")");
         if (!skipSave) this.saveFilters();
         this.hide();
 
         if (typeof this._submitAnswer === "function") {
             this._submitAnswer("filter_applied", 0);
         } else {
-            console.warn("⚠️ No submitAnswer registered");
+            console.warn("No submitAnswer registered");
         }
     },
 
     show() {
-        console.warn("📣 filterManager.show() CALLED!");
+        console.warn("filterManager.show() CALLED!");
         document.getElementById("filterPopup").style.display = "block";
     },
 
@@ -146,10 +146,10 @@ const filterManager = {
 
     setSubmitHandler(fn) {
         this._submitAnswer = fn;
-        console.log("✅ submitAnswer registered");
+        console.log("submitAnswer registered");
 
         if (this._deferredApply) {
-            console.log("🚀 deferred apply triggered");
+            console.log("deferred apply triggered");
             this.applyFilters(true);
             this._deferredApply = false;
         }
@@ -166,14 +166,15 @@ function getCSRFToken() {
     return '';
 }
 
-// ✅ Register after DOM + keypoint.js fully loaded
+// âœ… Register after DOM + keypoint.js fully loaded
 document.addEventListener("DOMContentLoaded", () => {
     const retry = setInterval(() => {
         if (typeof filterManager !== "undefined" && typeof submitAnswer === "function") {
-            console.log("🔗 Found submitAnswer — registering...");
+            console.log("Found submitAnswer registering...");
             filterManager.setSubmitHandler(submitAnswer);
             filterManager.init();
             clearInterval(retry);
         }
     }, 100);
 });
+

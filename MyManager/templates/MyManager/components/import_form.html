@@ -1,0 +1,55 @@
+﻿<div class="dashboard-content-box">
+    <h1>ðŸ“¥ Import Content</h1>
+
+    <!-- ðŸ”˜ Content Context Selector -->
+    <label for="contentSelector">Select Content Context (School / Project):</label>
+    <select id="contentSelector">
+        <option disabled selected>Choose...</option>
+        {% for project in available_projects %}
+            <option value="{{ project }}">{{ project }}</option>
+        {% endfor %}
+        <option value="new">âž• New Project</option>
+    </select>
+
+    <!-- âž• New Project Textbox -->
+    <div id="newProjectNameWrapper" style="display:none;">
+        <label>New Project Name:</label>
+        <input type="text" id="newProjectName" placeholder="Enter new project name">
+    </div>
+
+    <!-- ðŸ“š Course Selector -->
+    <div id="courseSelectorWrapper" style="display:none;">
+        <label for="courseSelector">Select Course:</label>
+        <select id="courseSelector">
+            <option disabled selected>Choose a course...</option>
+        </select>
+
+        <div id="newCourseNameWrapper" style="display:none;">
+            <label>New Course Name:</label>
+            <input type="text" id="newCourseName" placeholder="Enter new course name">
+        </div>
+    </div>
+
+    <!-- ðŸ“– Chapter Selector -->
+    <div id="chapterSelectorWrapper" style="display:none;">
+        <label for="chapterSelector">Select Chapter:</label>
+        <select id="chapterSelector">
+            <option disabled selected>Choose a chapter...</option>
+        </select>
+
+        <div id="newChapterNameWrapper" style="display:none;">
+            <label>New Chapter Name:</label>
+            <input type="text" id="newChapterName" placeholder="Enter new chapter name">
+        </div>
+    </div>
+
+    <!-- ðŸ“ Bulk HTML Area -->
+    <div>
+        <label for="bulkHtmlInput">Paste Chapter Keypoints HTML:</label>
+        <textarea id="bulkHtmlInput" placeholder="Use <h1> for header, <p> for body"></textarea>
+    </div>
+
+    <!-- ðŸš€ Submit -->
+    <button id="importSubmitButton">ðŸš€ Submit Import</button>
+</div>
+

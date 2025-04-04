@@ -1,4 +1,4 @@
-
+﻿
 
 //function getCSRFToken() {
     //const cookies = document.cookie.split(';');
@@ -15,3 +15,4 @@
         //submitAnswer(type, kpId);
     //}
 //});
+

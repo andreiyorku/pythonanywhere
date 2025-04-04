@@ -1,7 +1,7 @@
-<!-- templates/MyManager/components/filter_popup.html -->
+﻿<!-- templates/MyManager/components/filter_popup.html -->
 <div id="filterPopup"style="display: none;">
   <div class="filter-popup-inner">
-    <h2>🎛️ Filter Keypoint Settings</h2>
+    <h2>Filter Keypoint Settings</h2>
 
     <!-- Course Selector -->
     <div>
@@ -19,6 +19,7 @@
         <option value="late">Heavier toward later chapters</option>
         <option value="middle">Heavier in the middle</option>
         <option value="edges">Heavier at edges</option>
+		<option value="custom_split_middle_range">ECON Custom</option>
       </select>
     </div>
 
@@ -29,7 +30,8 @@
 
     <!-- Apply Button -->
     <div style="margin-top: 20px;">
-      <button onclick="filterManager.applyFilters()">✅ Apply Filters</button>
+      <button onclick="filterManager.applyFilters()">Apply Filters</button>
     </div>
   </div>
 </div>
+

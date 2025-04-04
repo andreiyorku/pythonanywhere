@@ -1,25 +1,32 @@
-{% extends "MyManager/base.html" %}
+﻿{% extends "MyManager/base.html" %}
 {% load static %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<h1>🎲 Random Content</h1>
+<h1>Random Content</h1>
 
-<!-- 📦 Button to open the filter popup -->
-<button onclick="filterManager.show()">⚙️ Filter Settings</button>
+<!-- ðŸ“¦ Button to open the filter popup -->
+<button onclick="filterManager.show()">Filter Settings</button>
 
 {% include "MyManager/components/filter_popup.html" %}
 
 <div class="dashboard-content-box">
     <!-- Random keypoint will load here via AJAX -->
 </div>
+
+<h1>Bulk Import</h1>
+{% include "MyManager/components/import_panel.html" %}
+
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{% static 'MyManager/filter.js' %}"></script>
 <script src="{% static 'MyManager/keypoint.js' %}"></script>
+<script src="{% static 'MyManager/importManager.js' %}"></script>
 <script>
-	console.log("👀 inline test script triggered");
+	console.log("inline test script triggered");
 </script>
 {% endblock %}
+

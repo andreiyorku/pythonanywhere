@@ -28,6 +28,21 @@ urlpatterns += [
     path("api/save_filters/", save_filter_settings_api),
 ]
 
+from .views import import_views
+
+urlpatterns += [
+    path('api/import/fetch_contexts/', import_views.import_fetch_contexts, name='import_fetch_contexts'),
+    path('api/import/bulk_submit/', import_views.import_bulk_content, name='import_bulk_content'),
+]
+
+from MyManager.views.import_api import get_courses_api, get_chapters_api, submit_import_api
+
+urlpatterns += [
+    path("api/import/get_courses/", get_courses_api),
+    path("api/import/get_chapters/", get_chapters_api),
+    path("api/import/submit/", submit_import_api),
+]
+
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\filter_api.py
 =========================
@@ -121,6 +136,243 @@ def save_filter_settings_api(request):
     return JsonResponse({"error": "invalid request"}, status=400)
 
 =========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\import_api.py
+=========================
+import os
+import re
+import sqlite3
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
+@csrf_exempt
+def get_courses_api(request):
+    project = request.GET.get("project")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+
+        if project == "school":
+            cursor.execute("SELECT name FROM courses")
+        else:
+            cursor.execute("""
+                SELECT c.name
+                FROM courses c
+                JOIN projects p ON c.project_id = p.id
+                WHERE p.name = ?
+            """, (project,))
+        
+        courses = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse({"courses": courses})
+
+
+
+@csrf_exempt
+def get_chapters_api(request):
+    course_name = request.GET.get("course", "")
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT chapter.title
+            FROM chapter
+            JOIN courses ON chapter.course_id = courses.id
+            WHERE courses.name = ?
+        ''', (course_name,))
+        chapters = [{"title": row[0]} for row in cursor.fetchall()]
+    return JsonResponse({"chapters": chapters})
+
+
+@csrf_exempt
+def submit_import_api(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+
+    context = request.POST.get("content_context")
+    new_project = request.POST.get("new_project", "").strip()
+    course_name = request.POST.get("course")
+    new_course = request.POST.get("new_course", "").strip()
+    chapter = request.POST.get("chapter")
+    new_chapter = request.POST.get("new_chapter", "").strip()
+    html = request.POST.get("bulk_html", "")
+
+    # Determine actual context
+    context = new_project if context == "new" else context
+    course_name = new_course if course_name == "new" else course_name
+    chapter_name = new_chapter if chapter == "new" else chapter
+
+    if not all([context, course_name, chapter_name, html]):
+        return JsonResponse({"error": "Missing required fields."}, status=400)
+
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA foreign_keys = ON")
+
+            # Insert project if needed
+            cursor.execute("INSERT OR IGNORE INTO project (name) VALUES (?)", (context,))
+
+            # Get or insert course
+            cursor.execute("SELECT id FROM courses WHERE name = ?", (course_name,))
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute("INSERT INTO courses (name) VALUES (?)", (course_name,))
+                course_id = cursor.lastrowid
+            else:
+                course_id = row[0]
+
+            # Get or insert chapter
+            cursor.execute("""
+                SELECT id FROM chapter WHERE title = ? AND course_id = ?
+            """, (chapter_name, course_id))
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute("""
+                    INSERT INTO chapter (title, course_id, chapter_number, project_context)
+                    VALUES (?, ?, ?, ?)
+                """, (chapter_name, course_id, int(re.findall(r'\d+', chapter_name)[0]), context))
+                chapter_id = cursor.lastrowid
+            else:
+                chapter_id = row[0]
+
+            # Extract keypoints
+            keypoints = re.findall(r"<h1>(.*?)</h1>\s*<p>(.*?)</p>", html, re.DOTALL)
+            for header, body in keypoints:
+                cursor.execute("""
+                    INSERT INTO keypoint (chapter_id, header, body, number_of_correct)
+                    VALUES (?, ?, ?, 0)
+                """, (chapter_id, header.strip(), body.strip()))
+
+            conn.commit()
+        return JsonResponse({"status": "success", "message": f"{len(keypoints)} keypoints imported into {chapter_name}."})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\import_views.py
+=========================
+import json
+import sqlite3
+import re
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+
+DB_PATH = settings.DATABASES['default']['NAME']
+
+
+@csrf_exempt
+def import_fetch_contexts(request):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+
+        # Get projects
+        cursor.execute("SELECT name FROM projects")
+        projects = [row[0] for row in cursor.fetchall()]
+
+        # Get courses
+        cursor.execute("SELECT name FROM courses")
+        courses = [row[0] for row in cursor.fetchall()]
+
+        # Get chapters
+        cursor.execute("SELECT title FROM chapter")
+        chapters = [row[0] for row in cursor.fetchall()]
+
+    return JsonResponse({
+        "projects": projects,
+        "courses": courses,
+        "chapters": chapters
+    })
+
+
+@csrf_exempt
+def import_bulk_content(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    project = request.POST.get("project_name", "").strip()
+    course = request.POST.get("course_name", "").strip()
+    chapter = request.POST.get("chapter_name", "").strip()
+    raw_html = request.POST.get("bulk_html", "").strip()
+
+    print("ðŸš¨ Received import POST:")
+    print("  Project:", project)
+    print("  Course:", course)
+    print("  Chapter (title):", chapter)
+    print("  Bulk HTML:", raw_html[:100], "..." if raw_html else "")
+
+    if not all([project, course, raw_html]):
+        return JsonResponse({"error": "Missing fields for school import"}, status=400)
+
+    keypoints = re.findall(r'<h1>(.*?)</h1>\s*<p>(.*?)</p>', raw_html, re.DOTALL)
+    if not keypoints:
+        return JsonResponse({"error": "No valid keypoints found"}, status=400)
+
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+
+            if project == "SCHOOL_CONTEXT":
+                # âœ… School logic (not tied to project table)
+                cursor.execute("SELECT id FROM courses WHERE name = ?", (course,))
+                row = cursor.fetchone()
+                if row:
+                    course_id = row[0]
+                    print("âœ… Found course:", course_id)
+                else:
+                    cursor.execute("INSERT INTO courses (name) VALUES (?)", (course,))
+                    course_id = cursor.lastrowid
+                    print("ðŸ†• Created course:", course_id)
+
+                # Chapter title logic
+                cursor.execute("SELECT id FROM chapter WHERE title = ? AND course_id = ?", (chapter, course_id))
+                row = cursor.fetchone()
+                if row:
+                    chapter_id = row[0]
+                    print("âœ… Appending to existing chapter:", chapter_id)
+                else:
+                    cursor.execute("INSERT INTO chapter (title, course_id, chapter_number) VALUES (?, ?, ?)", (chapter, course_id, 0))
+                    chapter_id = cursor.lastrowid
+                    print("ðŸ†• Created chapter:", chapter_id)
+
+                for idx, (header, body) in enumerate(keypoints, start=1):
+                    print(f"âž• Inserting Keypoint {idx} into Chapter {chapter_id}: {header.strip()}")
+                    cursor.execute("""
+                        INSERT INTO keypoint (chapter_id, header, body, number_of_correct)
+                        VALUES (?, ?, ?, 0)
+                    """, (chapter_id, header.strip(), body.strip()))
+
+                conn.commit()
+                return JsonResponse({
+                    "success": True,
+                    "message": f"âœ… {len(keypoints)} keypoints saved to chapter '{chapter}'."
+                })
+
+            else:
+                # ðŸ—‚ï¸ Project context - no chapter/keypoint logic yet
+                cursor.execute("SELECT id FROM projects WHERE name = ?", (project,))
+                row = cursor.fetchone()
+                if not row:
+                    cursor.execute("INSERT INTO projects (name) VALUES (?)", (project,))
+                    print("ðŸ†• Created standalone project:", project)
+
+                return JsonResponse({
+                    "success": True,
+                    "message": f"âœ… Project '{project}' created or already exists (no keypoints added)."
+                })
+
+    except sqlite3.Error as e:
+        print("âŒ SQLite error:", str(e))
+        return JsonResponse({"error": f"Database error: {str(e)}"}, status=500)
+
+
+
+
+=========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\views\randomized_keypoints_views.py
 =========================
 import sqlite3
@@ -152,6 +404,8 @@ def get_keypoints_in_chapter(chapter_number):
 
 # âœ… Used by dashboard and random view
 def get_random_key_point_context(selected_chapters=None, weight_mode="early", course_chapter_map=None):
+    print("ðŸ [get_random_key_point_context] Called with filters:", selected_chapters, weight_mode)
+    
     all_keypoints = []
 
     if not course_chapter_map:
@@ -200,22 +454,28 @@ def get_random_key_point_context(selected_chapters=None, weight_mode="early", co
                     "key_point_id": kp_id,
                     "adjusted_weight": adj_weight
                 })
-
+    
     if not all_keypoints:
+        print("âŒ No keypoints found after applying filters.")
         return None
 
     weights = [kp['adjusted_weight'] for kp in all_keypoints]
-    return random.choices(all_keypoints, weights=weights, k=1)[0]
+    selected = random.choices(all_keypoints, weights=weights, k=1)[0]
 
+    print("âœ… [get_random_key_point_context] Selected keypoint ID:", selected['key_point_id'])
+    return selected
 
 
 # Shared rendering logic (used by dashboard)
 def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
-                     is_random_across_chapters=False, is_random_in_chapter=False):
-    #print("ðŸ“Œ Rendering KeyPoint ID:", key_point_id)
+                     is_random_across_chapters=False, is_random_in_chapter=False,
+                     force_show_answer=False):
+    print("ðŸ§© [render_key_point] Rendering keypoint ID:", key_point_id)
 
     with sqlite3.connect(DB_PATH) as conn:
         cursor = conn.cursor()
+
+        # âœ… Get actual keypoint details
         cursor.execute('''
             SELECT header, body, number_of_correct, chapter_id
             FROM keypoint
@@ -223,43 +483,24 @@ def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
         ''', (key_point_id,))
         row = cursor.fetchone()
 
-    if not row:
-        return render(request, "error.html", {"message": "Key point not found."})
+        if not row:
+            print("âŒ Keypoint not found with ID:", key_point_id)
+            return render(request, "error.html", {"message": "Key point not found."})
 
-    header, body, correct_count, db_chapter_id = row
-    show_answer = request.session.pop('show_answer', False)
+        header, body, correct_count, db_chapter_id = row
+
+    # ðŸ”„ NEW: toggle show_answer via POST value
+    show_answer = False
+    if request.method == "POST":
+        if request.POST.get("answer") == "show_answer":
+            show_answer = force_show_answer or request.session.pop('show_answer', False)
 
     if chapter_id is None:
         chapter_id = db_chapter_id
 
-    if request.method == "POST":
-        key_point_id = int(request.POST.get("key_point_number", key_point_id))
-        chapter_number = int(request.POST.get("chapter_number", chapter_number))
-
-        with sqlite3.connect(DB_PATH) as conn:
-            cursor = conn.cursor()
-            if "answer_correct" in request.POST:
-                cursor.execute('''
-                    UPDATE keypoint
-                    SET number_of_correct = number_of_correct + 1
-                    WHERE id = ?
-                ''', (key_point_id,))
-                conn.commit()
-
-                if is_random_across_chapters:
-                    return redirect('random_file')
-                else:
-                    return redirect(request.path)
-
-            elif "answer_incorrect" in request.POST and is_random_across_chapters:
-                return redirect('random_file')
-
-            elif "show_answer" in request.POST:
-                show_answer = True
-
-    return {
+    final_context = {
         "chapter_number": chapter_number,
-        "key_point_number": key_point_id,
+        "key_point_number": key_point_id,  # âœ… this is the real DB ID
         "question_text": header,
         "content": body if body else "<p>No content available</p>",
         "correct_count": correct_count,
@@ -267,6 +508,13 @@ def render_key_point(request, chapter_number, key_point_id, chapter_id=None,
         "is_random_across_chapters": is_random_across_chapters,
         "is_random_in_chapter": is_random_in_chapter,
     }
+
+    print("ðŸ“¦ [render_key_point] Final context includes key_point_number =", final_context['key_point_number'])
+    return final_context
+
+
+
+
 
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -281,8 +529,41 @@ def random_keypoint_api(request):
         key_point_id = int(request.POST.get("key_point_number", 0))
         answer_type = request.POST.get("answer")
 
-        # Optional: update correctness count
+        print("ðŸ“¥ [random_keypoint_api] POST received with key_point_number =", key_point_id)
+
+        # âœ… Special case: just reveal the answer without changing keypoint
+        if answer_type == "show_answer" and key_point_id:
+            print("ðŸ‘ï¸ Show Answer triggered for keypoint ID:", key_point_id)
+
+            # ðŸ§  Fetch chapter number from DB for display
+            with sqlite3.connect(DB_PATH) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT ch.chapter_number
+                    FROM chapter ch
+                    JOIN keypoint kp ON kp.chapter_id = ch.id
+                    WHERE kp.id = ?
+                ''', (key_point_id,))
+                chapter_row = cursor.fetchone()
+
+            if not chapter_row:
+                return JsonResponse({'html': '<p>Error: Chapter not found for keypoint.</p>'})
+
+            chapter_number = chapter_row[0]
+
+            context = render_key_point(
+                request,
+                chapter_number=chapter_number,
+                key_point_id=key_point_id,
+                is_random_across_chapters=True,
+                force_show_answer=True  # âœ… Flag to force answer display
+            )
+            html = render_to_string("MyManager/components/keypoint_display.html", context, request=request)
+            return JsonResponse({'html': html})
+
+        # âœ… Increment correct count if needed
         if answer_type == "correct" and key_point_id:
+            print("ðŸ“Œ Processing answer:", answer_type, "for KP:", key_point_id)
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
@@ -292,15 +573,38 @@ def random_keypoint_api(request):
                 ''', (key_point_id,))
                 conn.commit()
 
-        # Gather filters from POST
+        # âœ… Get filters
         weight_mode = request.POST.get("weight_mode", "early")
         selected_chapters = request.POST.getlist("selected_chapters[]")
         selected_chapters = list(map(int, selected_chapters))
 
-        # Get random keypoint context using your logic
+        # ðŸ§  Map selected chapters per course
+        user_id = request.user.id if request.user.is_authenticated else 0
+        course_chapter_map = {}
+
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT selected_courses FROM filter_settings WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+
+            if row:
+                selected_courses = json.loads(row[0])
+                for course in selected_courses:
+                    cursor.execute('''
+                        SELECT ch.chapter_number
+                        FROM chapter ch
+                        JOIN courses c ON ch.course_id = c.id
+                        WHERE c.name = ? AND ch.chapter_number IN ({})
+
+                    '''.format(','.join('?' * len(selected_chapters))), [course] + selected_chapters)
+
+                    course_chapter_map[course] = [r[0] for r in cursor.fetchall()]
+
+        # ðŸŽ¯ Get a new keypoint based on current filters
         selected = get_random_key_point_context(
             selected_chapters=selected_chapters,
-            weight_mode=weight_mode
+            weight_mode=weight_mode,
+            course_chapter_map=course_chapter_map
         )
 
         if not selected:
@@ -318,9 +622,13 @@ def random_keypoint_api(request):
             return JsonResponse({'html': '<p>Error rendering key point.</p>'})
 
         html = render_to_string("MyManager/components/keypoint_display.html", context, request=request)
+        print("ðŸ“¤ [random_keypoint_api] Sending rendered keypoint:", context['key_point_number'])
         return JsonResponse({'html': html})
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+
 
 
 =========================
@@ -428,6 +736,8 @@ def get_user_filter_settings(user_id):
     <meta charset="UTF-8">
     <title>{% block title %}Dynamic Sidebar{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'MyManager/styles.css' %}">
+	<link rel="stylesheet" href="{% static 'MyManager/minila_times.css' %}">
+	
 </head>
 <body>
 
@@ -485,11 +795,17 @@ def get_user_filter_settings(user_id):
 <div class="dashboard-content-box">
     <!-- Random keypoint will load here via AJAX -->
 </div>
+
+<h1>ðŸ“¥ Bulk Import</h1>
+{% include "MyManager/components/import_panel.html" %}
+
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script src="{% static 'MyManager/filter.js' %}"></script>
 <script src="{% static 'MyManager/keypoint.js' %}"></script>
+<script src="{% static 'MyManager/importManager.js' %}"></script>
 <script>
 	console.log("ðŸ‘€ inline test script triggered");
 </script>
@@ -529,9 +845,101 @@ def get_user_filter_settings(user_id):
 
     <!-- Apply Button -->
     <div style="margin-top: 20px;">
-      <button onclick="filterManager.applyFilters()">âœ… Apply Filters</button>
+      <button onclick="applyFilters()">âœ… Apply Filters</button>
     </div>
   </div>
+</div>
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\components\import_form.html
+=========================
+<div class="dashboard-content-box">
+    <h1>ðŸ“¥ Import Content</h1>
+
+    <!-- ðŸ”˜ Content Context Selector -->
+    <label for="contentSelector">Select Content Context (School / Project):</label>
+    <select id="contentSelector">
+        <option disabled selected>Choose...</option>
+        {% for project in available_projects %}
+            <option value="{{ project }}">{{ project }}</option>
+        {% endfor %}
+        <option value="new">âž• New Project</option>
+    </select>
+
+    <!-- âž• New Project Textbox -->
+    <div id="newProjectNameWrapper" style="display:none;">
+        <label>New Project Name:</label>
+        <input type="text" id="newProjectName" placeholder="Enter new project name">
+    </div>
+
+    <!-- ðŸ“š Course Selector -->
+    <div id="courseSelectorWrapper" style="display:none;">
+        <label for="courseSelector">Select Course:</label>
+        <select id="courseSelector">
+            <option disabled selected>Choose a course...</option>
+        </select>
+
+        <div id="newCourseNameWrapper" style="display:none;">
+            <label>New Course Name:</label>
+            <input type="text" id="newCourseName" placeholder="Enter new course name">
+        </div>
+    </div>
+
+    <!-- ðŸ“– Chapter Selector -->
+    <div id="chapterSelectorWrapper" style="display:none;">
+        <label for="chapterSelector">Select Chapter:</label>
+        <select id="chapterSelector">
+            <option disabled selected>Choose a chapter...</option>
+        </select>
+
+        <div id="newChapterNameWrapper" style="display:none;">
+            <label>New Chapter Name:</label>
+            <input type="text" id="newChapterName" placeholder="Enter new chapter name">
+        </div>
+    </div>
+
+    <!-- ðŸ“ Bulk HTML Area -->
+    <div>
+        <label for="bulkHtmlInput">Paste Chapter Keypoints HTML:</label>
+        <textarea id="bulkHtmlInput" placeholder="Use <h1> for header, <p> for body"></textarea>
+    </div>
+
+    <!-- ðŸš€ Submit -->
+    <button id="importSubmitButton">ðŸš€ Submit Import</button>
+</div>
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\templates\MyManager\components\import_panel.html
+=========================
+<div class="dashboard-content-box">	
+	<div class="import-panel">
+
+		<!-- Content Selector (School/Project/New) -->
+		<label>Content Context:</label>
+		<select id="contentSelector">
+			<option value="">-- Select --</option>
+			<option value="school">ðŸ« School</option>
+			<option value="existing_project">ðŸ“ Existing Project</option>
+			<option value="new_project">ðŸ†• New Project</option>
+		</select>
+
+		<!-- Dynamic section will appear here -->
+		<div id="contentContextContainer"></div>
+
+		<!-- Course Selector -->
+		<div id="courseSelectorContainer" style="margin-top: 20px;"></div>
+
+		<!-- Chapter Selector -->
+		<div id="chapterSelectorContainer" style="margin-top: 20px;"></div>
+
+		<!-- HTML Paste Area -->
+		<label for="bulkContentInput">Paste Keypoints HTML:</label><br>
+		<textarea id="bulkContentInput" placeholder="<h1>Title</h1><p>Paragraph...</p>" style="width: 100%; min-height: 150px;"></textarea><br><br>
+
+		<button onclick="importManager.submit()">ðŸš€ Import Keypoints</button>
+
+		<div id="importStatus"></div>
+	</div>
 </div>
 
 =========================
@@ -544,14 +952,24 @@ def get_user_filter_settings(user_id):
         <strong>ðŸ§  {{ question_text }}</strong>
     </div>
 
-    <div class="keypoint-body">
-        {{ content|safe }}
-    </div>
+    {% if show_answer %}
+        <!-- âœ… Show full body if flag is on -->
+        <div class="keypoint-body">
+            {{ content|safe }}
+        </div>
+    {% else %}
+        <!-- ðŸ”˜ Show "Show Answer" button instead -->
+        <div class="keypoint-body">
+            <button class="answer-button" data-answer="show_answer" data-kp="{{ key_point_number }}">ðŸ‘ï¸ Show Answer</button>
+        </div>
+    {% endif %}
 
+    {% if show_answer %}
     <div class="keypoint-actions">
         <button class="answer-button" data-answer="correct" data-kp="{{ key_point_number }}">âœ… Correct</button>
         <button class="answer-button" data-answer="incorrect" data-kp="{{ key_point_number }}">âŒ Incorrect</button>
     </div>
+    {% endif %}
 
     <div class="keypoint-meta">
         <p>âœ… Correct count: {{ correct_count }}</p>
@@ -584,7 +1002,6 @@ def get_user_filter_settings(user_id):
 =========================
 console.log("ðŸ“¦ filter.js loaded");
 
-
 const filterManager = {
     filters: {
         selected_courses: [],
@@ -593,101 +1010,100 @@ const filterManager = {
     },
 
     init() {
-		fetch("/MyManager/api/filter_options/")
-			.then(response => response.json())
-			.then(data => {
-				const { courses, saved_filters } = data;
+        console.log("ðŸ§ª filterManager.init() running...");
 
-				this.filters = {
-					selected_courses: saved_filters.selected_courses || [],
-					selected_chapters: (saved_filters.selected_chapters || []).map(Number),
-					weight_mode: saved_filters.weight_mode || "early"
-				};
+        fetch("/MyManager/api/filter_options/")
+            .then(response => response.json())
+            .then(data => {
+                const { courses, saved_filters } = data;
 
-				this.renderCourses(courses);
+                this.filters = {
+                    selected_courses: saved_filters.selected_courses || [],
+                    selected_chapters: (saved_filters.selected_chapters || []).map(Number),
+                    weight_mode: saved_filters.weight_mode || "early"
+                };
 
-				const hasValidFilters =
-					this.filters.selected_courses.length > 0 &&
-					this.filters.selected_chapters.length > 0;
+                console.log("âœ… Loaded filters:", this.filters);
 
-				// â³ Wait until submit handler is registered
-				if (hasValidFilters) {
-					console.log("âœ… Filters found, waiting to apply...");
-					this._deferredApply = true; // flag to apply once ready
+                const hasValidFilters =
+                    this.filters.selected_courses.length > 0 &&
+                    this.filters.selected_chapters.length > 0;
+
+                if (hasValidFilters) {
+					console.log("âœ… Filters valid, applying immediately on load...");
+					setTimeout(() => this.applyFilters(true), 100);  // slight delay to ensure DOM readiness
 				} else {
-					this.show();
-				}
-			})
-			.catch((err) => {
-				console.warn("âš ï¸ Filter load failed:", err);
-				this.show();
-			});
-	},
+                    console.log("âŒ Filters missing or incomplete, showing popup...");
+                    this.show();
+                }
 
+                this.renderCourses(courses);
+            })
+            .catch(err => {
+                console.warn("âš ï¸ Failed to load filters:", err);
+                this.show();
+            });
+    },
 
     renderCourses(courses) {
-		const container = document.getElementById("courseCheckboxes");
-		container.innerHTML = "";
+        const container = document.getElementById("courseCheckboxes");
+        container.innerHTML = "";
 
-		courses.forEach(course => {
-			const isChecked = this.filters.selected_courses.includes(course);
-			const label = document.createElement("label");
-			label.innerHTML = `<input type="checkbox" value="${course}" ${isChecked ? 'checked' : ''} onchange="filterManager.loadChapters()"> ${course}`;
-			container.appendChild(label);
-			container.appendChild(document.createElement("br"));
-		});
+        courses.forEach(course => {
+            const isChecked = this.filters.selected_courses.includes(course);
+            const label = document.createElement("label");
+            label.innerHTML = `<input type="checkbox" value="${course}" ${isChecked ? 'checked' : ''} onchange="filterManager.loadChapters()"> ${course}`;
+            container.appendChild(label);
+            container.appendChild(document.createElement("br"));
+        });
 
-		// âœ… Now load chapters based on selected courses
-		this.loadChapters();
-	},
+        this.loadChapters();
+    },
 
     loadChapters() {
-		const selectedCourses = Array.from(document.querySelectorAll("#courseCheckboxes input:checked"))
-			.map(cb => cb.value);
+        const selectedCourses = Array.from(document.querySelectorAll("#courseCheckboxes input:checked"))
+            .map(cb => cb.value);
 
-		this.filters.selected_courses = selectedCourses;
+        this.filters.selected_courses = selectedCourses;
 
-		const params = new URLSearchParams();
-		selectedCourses.forEach(c => params.append("courses[]", c));
+        const params = new URLSearchParams();
+        selectedCourses.forEach(c => params.append("courses[]", c));
 
-		fetch(`/MyManager/api/chapters_by_course/?${params.toString()}`)
-			.then(response => response.json())
-			.then(data => {
-				const container = document.getElementById("chapterContainer");
-				container.innerHTML = "";
+        fetch(`/MyManager/api/chapters_by_course/?${params.toString()}`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById("chapterContainer");
+                container.innerHTML = "";
 
-				const chapterGroups = data.chapters_by_course;
-				const groupWrapper = document.createElement("div");
-				groupWrapper.style.display = "flex";
-				groupWrapper.style.gap = "30px";
+                const chapterGroups = data.chapters_by_course;
+                const groupWrapper = document.createElement("div");
+                groupWrapper.style.display = "flex";
+                groupWrapper.style.gap = "30px";
 
-				for (const course in chapterGroups) {
-					const box = document.createElement("div");
-					box.classList.add("chapter-section");
+                for (const course in chapterGroups) {
+                    const box = document.createElement("div");
+                    box.classList.add("chapter-section");
 
-					const title = document.createElement("h4");
-					title.textContent = course;
-					box.appendChild(title);
+                    const title = document.createElement("h4");
+                    title.textContent = course;
+                    box.appendChild(title);
 
-					chapterGroups[course].forEach(ch => {
-						const isChecked = this.filters.selected_chapters.includes(parseInt(ch));
-						const label = document.createElement("label");
-						label.innerHTML = `<input type="checkbox" value="${ch}" ${isChecked ? 'checked' : ''}> Chapter ${ch}`;
-						box.appendChild(label);
-						box.appendChild(document.createElement("br"));
-					});
+                    chapterGroups[course].forEach(ch => {
+                        const isChecked = this.filters.selected_chapters.includes(parseInt(ch));
+                        const label = document.createElement("label");
+                        label.innerHTML = `<input type="checkbox" value="${ch}" ${isChecked ? 'checked' : ''}> Chapter ${ch}`;
+                        box.appendChild(label);
+                        box.appendChild(document.createElement("br"));
+                    });
 
+                    groupWrapper.appendChild(box);
+                }
 
-					groupWrapper.appendChild(box);
-				}
+                container.appendChild(groupWrapper);
 
-				container.appendChild(groupWrapper);
-
-				// âœ… Restore weight mode selection (only once chapters are rendered)
-				document.getElementById("weightMode").value = this.filters.weight_mode || "early";
-			});
-	},
-
+                document.getElementById("weightMode").value = this.filters.weight_mode || "early";
+            });
+    },
 
     saveFilters() {
         const selectedChapters = Array.from(document.querySelectorAll("#chapterContainer input:checked"))
@@ -710,42 +1126,39 @@ const filterManager = {
     },
 
     applyFilters(skipSave = false) {
-		console.log("Applying filters...")
+        console.log("ðŸ“¤ applyFilters called (skipSave:", skipSave, ")");
         if (!skipSave) this.saveFilters();
         this.hide();
-		if (typeof submitAnswer === "function") {
-			console.log("ðŸ“£ Calling submitAnswer from filterManager");
-			this._submitAnswer("filter_applied", 0);  // âœ… âœ… âœ… CORRECTED LINE
-		} else {
-			console.warn("â— submitAnswer not available during filter apply");
-		}
 
-
+        if (typeof this._submitAnswer === "function") {
+            this._submitAnswer("filter_applied", 0);
+        } else {
+            console.warn("âš ï¸ No submitAnswer registered");
+        }
     },
 
     show() {
-		console.warn("ðŸ“£ filterManager.show() CALLED!");
-		document.getElementById("filterPopup").style.display = "block";
-	},
-
+        console.warn("ðŸ“£ filterManager.show() CALLED!");
+        document.getElementById("filterPopup").style.display = "block";
+    },
 
     hide() {
         document.getElementById("filterPopup").style.display = "none";
     },
-	
-	setSubmitHandler(fn) {
-		this._submitAnswer = fn;
 
-		if (this._deferredApply) {
-			console.log("ðŸš€ submitAnswer registered â€” applying filters now...");
-			this.applyFilters(true);  // âœ… Only now that it's safe
-			this._deferredApply = false;
-		}
-	},
+    setSubmitHandler(fn) {
+        this._submitAnswer = fn;
+        console.log("âœ… submitAnswer registered");
 
+        if (this._deferredApply) {
+            console.log("ðŸš€ deferred apply triggered");
+            this.applyFilters(true);
+            this._deferredApply = false;
+        }
+    },
 };
 
-// CSRF token helper
+// CSRF
 function getCSRFToken() {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
@@ -755,11 +1168,224 @@ function getCSRFToken() {
     return '';
 }
 
-// âœ… Initialize on page load
+// âœ… Register after DOM + keypoint.js fully loaded
 document.addEventListener("DOMContentLoaded", () => {
-    if (typeof filterManager !== "undefined") {
-        filterManager.init();
-    }
+    const retry = setInterval(() => {
+        if (typeof filterManager !== "undefined" && typeof submitAnswer === "function") {
+            console.log("ðŸ”— Found submitAnswer â€” registering...");
+            filterManager.setSubmitHandler(submitAnswer);
+            filterManager.init();
+            clearInterval(retry);
+        }
+    }, 100);
+});
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\importManager.js
+=========================
+console.log("ðŸ“¥ importManager.js loaded");
+
+const importManager = {
+	init() {
+		console.log("ðŸ“¥ Initializing importManager...");
+		this.bindEvents();
+	},
+
+	bindEvents() {
+		document.getElementById("contentSelector").addEventListener("change", (e) =>
+			this.handleContentChange(e)
+		);
+		document.getElementById("importSubmitButton")?.addEventListener("click", () =>
+			this.submit()
+		);
+	},
+
+	handleContentChange(e) {
+		const selected = e.target.value;
+		const contextContainer = document.getElementById("contentContextContainer");
+		const courseContainer = document.getElementById("courseSelectorContainer");
+		const chapterContainer = document.getElementById("chapterSelectorContainer");
+
+		contextContainer.innerHTML = "";
+		courseContainer.innerHTML = "";
+		chapterContainer.innerHTML = "";
+
+		if (selected === "school") {
+			// No extra UI needed for school, just fetch its courses directly
+			this.loadCourses("school");
+		} else if (selected === "existing_project") {
+			contextContainer.innerHTML = `
+				<label>Select Project:</label>
+				<select id="projectSelector"></select>
+			`;
+			this.fetchProjects();
+		} else if (selected === "new_project") {
+			contextContainer.innerHTML = `
+				<label>New Project Name:</label>
+				<input type="text" id="newProjectInput" placeholder="Enter project name..." />
+			`;
+			this.renderCourseAndChapterInputs(); // New project: show both
+		}
+	},
+
+	fetchProjects() {
+		fetch("/MyManager/api/import/fetch_contexts/")
+			.then(res => res.json())
+			.then(data => {
+				const projectSelector = document.getElementById("projectSelector");
+				data.projects.forEach(p => {
+					const opt = document.createElement("option");
+					opt.value = p;
+					opt.textContent = p;
+					projectSelector.appendChild(opt);
+				});
+				projectSelector.addEventListener("change", () => {
+					this.loadCourses(projectSelector.value);
+				});
+			});
+	},
+
+	loadCourses(context) {
+		fetch(`/MyManager/api/import/get_courses/?project=${encodeURIComponent(context)}`)
+			.then(res => res.json())
+			.then(data => {
+				const container = document.getElementById("courseSelectorContainer");
+				container.innerHTML = `
+					<label>Select Course:</label>
+					<select id="courseSelector">
+						<option value="new">âž• New Course</option>
+						${data.courses.map(c => `<option value="${c}">${c}</option>`).join("")}
+					</select>
+					<input type="text" id="newCourseInput" placeholder="New course name..." style="display:none" />
+				`;
+
+				document.getElementById("courseSelector").addEventListener("change", (e) => {
+					const isNew = e.target.value === "new";
+					document.getElementById("newCourseInput").style.display = isNew ? "block" : "none";
+
+					if (isNew) {
+						importManager.renderChapterInput();  // just show input
+					} else {
+						importManager.loadChapters(e.target.value);  // load chapters for course
+					}
+				});
+
+				importManager.renderChapterInput();  // default state: new course + chapter
+			});
+	},
+	
+	loadChapters(courseName) {
+		fetch(`/MyManager/api/import/get_chapters/?course=${encodeURIComponent(courseName)}`)
+			.then(res => res.json())
+			.then(data => {
+				const container = document.getElementById("chapterSelectorContainer");
+
+				// âœ… Sort chapters naturally based on numeric suffix
+				const sortedChapters = data.chapters.sort((a, b) => {
+					const aMatch = a.title.match(/\d+/);
+					const bMatch = b.title.match(/\d+/);
+					const aNum = aMatch ? parseInt(aMatch[0]) : 0;
+					const bNum = bMatch ? parseInt(bMatch[0]) : 0;
+					return aNum - bNum;
+				});
+
+				container.innerHTML = `
+					<label>Select Chapter:</label>
+					<select id="chapterSelector">
+						${sortedChapters.map(ch => `<option value="${ch.title}">${ch.title}</option>`).join("")}
+						<option value="new">âž• New Chapter</option>
+					</select>
+					<input type="text" id="newChapterInput" placeholder="New chapter name..." style="display:none" />
+				`;
+
+				document.getElementById("chapterSelector").addEventListener("change", (e) => {
+					const isNew = e.target.value === "new";
+					document.getElementById("newChapterInput").style.display = isNew ? "block" : "none";
+				});
+			});
+	},
+
+
+
+
+
+
+
+	renderCourseAndChapterInputs() {
+		document.getElementById("courseSelectorContainer").innerHTML = `
+			<label>New Course Name:</label>
+			<input type="text" id="newCourseInput" placeholder="Enter course name..." />
+		`;
+		this.renderChapterInput();
+	},
+
+	renderChapterInput() {
+		document.getElementById("chapterSelectorContainer").innerHTML = `
+			<label>New Chapter Name:</label>
+			<input type="text" id="newChapterInput" placeholder="Enter chapter name..." />
+		`;
+	},
+
+	submit() {
+		const ctx = document.getElementById("contentSelector").value;
+		const bulkHTML = document.getElementById("bulkContentInput").value;
+
+		let project = "";
+		if (ctx === "existing_project") {
+			project = document.getElementById("projectSelector")?.value;
+		} else if (ctx === "new_project") {
+			project = document.getElementById("newProjectInput")?.value;
+		} else if (ctx === "school") {
+			project = "SCHOOL_CONTEXT";  // âœ… Dummy placeholder to satisfy backend
+		}
+
+
+		let course = document.getElementById("courseSelector")?.value;
+		if (course === "new" || !course) {
+			course = document.getElementById("newCourseInput")?.value;
+		}
+
+		let chapterSelector = document.getElementById("chapterSelector")?.value;
+		let chapter = chapterSelector === "new"
+			? document.getElementById("newChapterInput")?.value
+			: chapterSelector;
+
+
+		const formData = new FormData();
+		formData.append("project_name", project);
+		formData.append("course_name", course);
+		formData.append("chapter_name", chapter);
+		formData.append("bulk_html", bulkHTML);
+
+		fetch("/MyManager/api/import/bulk_submit/", {
+			method: "POST",
+			headers: { "X-CSRFToken": getCSRFToken() },
+			body: formData
+		})
+		.then(async res => {
+			const data = await res.json();
+			if (res.ok) {
+				document.getElementById("importStatus").innerText = data.message || "âœ… Imported!";
+			} else {
+				document.getElementById("importStatus").innerText = `âŒ Error: ${data.error || "Unknown error"}`;
+				console.error("âŒ Import error:", data);
+			}
+		})
+		.catch(err => {
+			console.error("âŒ Network or server error:", err);
+			document.getElementById("importStatus").innerText = "âŒ Import failed (network/server error)";
+		});
+	}
+
+};
+
+function getCSRFToken() {
+	const cookie = document.cookie.split(";").find(c => c.trim().startsWith("csrftoken="));
+	return cookie ? cookie.split("=")[1] : "";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	importManager.init();
 });
 
 =========================
@@ -782,8 +1408,9 @@ function submitAnswer(answerType, keyPointId) {
 	
 	
 	const formData = new FormData();
-	formData.append("key_point_number", keyPointId);
-	formData.append("answer", answerType);
+	formData.append("key_point_number", keyPointId || 0);
+	formData.append("answer", answerType || "filter_applied");
+
 
 	formData.append("weight_mode", filterManager.filters.weight_mode);
 	filterManager.filters.selected_chapters.forEach(ch => {
@@ -798,6 +1425,7 @@ function submitAnswer(answerType, keyPointId) {
 	.then(response => response.json())
 	.then(data => {
 		console.log("ðŸ§± Keypoint HTML received:", data.html);
+        document.querySelector(".dashboard-content-box").innerHTML = data.html;
 
 		const box = document.querySelector(".dashboard-content-box");
 		if (box) {
@@ -812,10 +1440,24 @@ function submitAnswer(answerType, keyPointId) {
 	
 }
 
-// âœ… Register the function with the filter manager
-if (typeof filterManager !== "undefined") {
-	filterManager.setSubmitHandler(submitAnswer);
-}
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("show-answer-button")) {
+        const box = e.target.closest(".keypoint-box");
+        if (box) {
+            // Reveal body and answer buttons
+            box.querySelector(".keypoint-body").style.display = "block";
+            e.target.remove(); // Remove the "Show Answer" button
+        }
+    }
+
+    if (e.target.classList.contains("answer-button")) {
+        const type = e.target.getAttribute("data-answer");
+        const kpId = parseInt(e.target.getAttribute("data-kp"));
+        console.log("ðŸ–±ï¸ Answer button clicked:", type, "for keypoint ID:", kpId);
+        submitAnswer(type, kpId);
+    }
+});
+
 
 
 =========================
@@ -849,6 +1491,104 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCoursesIntoAccordion();              // âœ… Initial load of courses
     setInterval(loadCoursesIntoAccordion, 5000);  // Optional: Refresh every 5 sec
 });
+
+=========================
+>>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\minila_times.css
+=========================
+@media (max-device-width: 768px) {
+    body {
+        font-size: 32px;
+    }
+
+    h1, h2 {
+        font-size: 4rem;
+    }
+
+    p, div, a {
+        font-size: 2rem;
+    }
+
+    form {
+        gap: 24px;
+        padding: 24px;
+        max-width: 100%;
+    }
+
+    form input, form button {
+        font-size: 2rem;
+        padding: 24px;
+        border-width: 2px;
+    }
+
+    button,
+    .answer-button,
+	#showAnswerButton button {
+        font-size: 2rem;
+        padding: 24px 36px;
+    }
+	
+	.sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow: visible;
+        justify-content: space-around;
+    }
+
+    .sidebar ul {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0;
+        margin: 0;
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .sidebar ul li {
+        margin: 0;
+    }
+
+    .sidebar ul li a,
+    .accordion-title,
+    #accordion-submenu li a {
+        font-size: 1.6rem;
+        padding: 12px 16px;
+        background-color: #2c3e50;
+        border-radius: 6px;
+        display: inline-block;
+        text-align: center;
+    }
+
+    /* Accordion submenu mobile spacing */
+    #accordion-submenu {
+        padding: 10px;
+    }
+
+    /* Content adjusts to no fixed sidebar */
+    .container {
+        flex-direction: column;
+    }
+
+    .content-wrapper {
+        margin-left: 0;
+    }
+
+    .fixed-background {
+        left: 0;
+        right: 0;
+        top: 0;
+    }
+
+    .dashboard-content-box {
+        padding: 20px;
+        font-size: 1.6rem;
+    }
+}
 
 =========================
 >>> C:\Users\andre\My Drive (andreip@my.yorku.ca)\pythonanywhere\MyManager\static\MyManager\styles.css
@@ -951,4 +1691,5 @@ document.addEventListener('DOMContentLoaded', () => {
     padding: 25px;
     margin-top: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+	font-size: 1.7rem; /* â¬…ï¸ Slightly larger than default */
 }

@@ -1,4 +1,4 @@
-{% load static %}
+﻿{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +16,7 @@
         <ul id="dynamic-menu">
             <li class="accordion-item">
                 <div class="accordion-title" onclick="toggleAccordion()">
-                    School Courses <span style="float: right;">▼</span>
+                    School Courses <span style="float: right;"></span>
                 </div>
                 <ul id="accordion-submenu" style="display: none; padding-left: 10px;">
                     <!-- Submenu items injected by JS -->
@@ -44,3 +44,4 @@
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+

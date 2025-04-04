@@ -1,4 +1,4 @@
-# views/filter_api.py (or inside randomized_keypoints_views.py)
+﻿# views/filter_api.py (or inside randomized_keypoints_views.py)
 
 import sqlite3
 import json
@@ -8,7 +8,7 @@ from django.conf import settings
 
 DB_PATH = settings.DATABASES['default']['NAME']
 
-# ✅ Get available courses
+#Get available courses
 @csrf_exempt
 def filter_options_api(request):
     user_id = request.user.id if request.user.is_authenticated else 0
@@ -35,7 +35,7 @@ def filter_options_api(request):
 
     return JsonResponse({"courses": courses, "saved_filters": saved_filters})
 
-# ✅ Get chapters grouped by course name
+#Get chapters grouped by course name
 @csrf_exempt
 def chapters_by_course_api(request):
     selected = request.GET.getlist("courses[]")
@@ -55,7 +55,7 @@ def chapters_by_course_api(request):
 
     return JsonResponse({"chapters_by_course": result})
 
-# ✅ Save filter state
+#Save filter state
 @csrf_exempt
 def save_filter_settings_api(request):
     if request.method == "POST":
@@ -86,3 +86,4 @@ def save_filter_settings_api(request):
         return JsonResponse({"status": "saved"})
 
     return JsonResponse({"error": "invalid request"}, status=400)
+

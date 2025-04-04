@@ -1,4 +1,4 @@
-.sidebar {
+﻿.sidebar {
     width: 80px;
     background-color: #2c3e50;
     color: #ecf0f1;
@@ -29,7 +29,7 @@
     background-color: #34495e;
 }
 
-/* ✅ Accordion title styled like normal menu items */
+/* âœ… Accordion title styled like normal menu items */
 .accordion-title {
     color: #ecf0f1;
     text-decoration: none;
@@ -37,7 +37,7 @@
     cursor: pointer;
 }
 
-/* ✅ Ensure accordion submenu spacing looks clean */
+/* âœ… Ensure accordion submenu spacing looks clean */
 #accordion-submenu {
     list-style-type: none;
     padding-left: 10px;
@@ -60,7 +60,7 @@
     transition: 0.3s;
 }
 
-/* ✅ General layout */
+/* âœ… General layout */
 .container {
     display: flex;
     min-height: 100vh; /* Full height layout */
@@ -76,11 +76,11 @@
     position: fixed;
     padding: 20px;
     height: 100vh;
-    background-color: #f4f4f4;  /* ✅ Background stays fixed */
-    z-index: -1;  /* ✅ Stays behind the content */
-    left: 120px;           /* ✅ Starts right after the sidebar */
-    right: 10px;           /* ✅ Leaves 10px gap before the right edge */
-    box-sizing: border-box; /* ✅ Makes sure padding doesn't break layout */
+    background-color: #f4f4f4;  /* âœ… Background stays fixed */
+    z-index: -1;  /* âœ… Stays behind the content */
+    left: 120px;           /* âœ… Starts right after the sidebar */
+    right: 10px;           /* âœ… Leaves 10px gap before the right edge */
+    box-sizing: border-box; /* âœ… Makes sure padding doesn't break layout */
 }
 
 .content {
@@ -96,4 +96,5 @@
     padding: 25px;
     margin-top: 20px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+	font-size: 1.7rem; /* â¬…ï¸ Slightly larger than default */
 }

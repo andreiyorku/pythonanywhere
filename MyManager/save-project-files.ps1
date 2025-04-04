@@ -4,15 +4,26 @@ $outputFile = "project_dump.txt"
 # Start with a clean file
 "" | Out-File -FilePath $outputFile -Encoding UTF8
 
-# Function to append file content with headers to output file
+# 🔁 Function to read file content with infinite retry until success
+function SafeReadFile($filePath, $delayMs = 300) {
+    while ($true) {
+        try {
+            return Get-Content -Path $filePath -ErrorAction Stop
+        } catch {
+            Write-Host "Retrying to read locked file: $filePath..."
+            Start-Sleep -Milliseconds $delayMs
+        }
+    }
+}
+
+# 📄 Function to append file content with headers to output file
 function Append-FileContentToOutput($filePath) {
     Add-Content -Path $outputFile -Value "`n========================="
     Add-Content -Path $outputFile -Value ">>> $filePath"
     Add-Content -Path $outputFile -Value "========================="
 
-    Get-Content $filePath | ForEach-Object {
-        Add-Content -Path $outputFile -Value $_
-    }
+    $lines = SafeReadFile $filePath
+    $lines | ForEach-Object { Add-Content -Path $outputFile -Value $_ }
 }
 
 # 1. Append urls.py if it exists
@@ -49,4 +60,6 @@ if (Test-Path ".\static") {
     Add-Content -Path $outputFile -Value "`nstatic directory not found."
 }
 
-Write-Host "`n✅ Output written to $outputFile"
+Write-Host ""
+Write-Host "Output written to $outputFile"
+

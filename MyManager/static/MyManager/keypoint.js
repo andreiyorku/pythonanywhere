@@ -1,4 +1,4 @@
-console.log("📌 keypoint.js loaded");
+﻿console.log("ðŸ“Œ keypoint.js loaded");
 
 
 function getCSRFToken() {
@@ -11,7 +11,7 @@ function getCSRFToken() {
 }
 
 function submitAnswer(answerType, keyPointId) {
-	console.log("🎯 Inside submitAnswer()", answerType, keyPointId);  // ✅ debug here
+	console.log("ðŸŽ¯ Inside submitAnswer()", answerType, keyPointId);  // âœ… debug here
 	
 	
 	const formData = new FormData();
@@ -31,15 +31,15 @@ function submitAnswer(answerType, keyPointId) {
 	})
 	.then(response => response.json())
 	.then(data => {
-		console.log("🧱 Keypoint HTML received:", data.html);
+		console.log("ðŸ§± Keypoint HTML received:", data.html);
         document.querySelector(".dashboard-content-box").innerHTML = data.html;
 
 		const box = document.querySelector(".dashboard-content-box");
 		if (box) {
 			box.innerHTML = data.html;
-			console.log("✅ Injected into .dashboard-content-box");
+			console.log("âœ… Injected into .dashboard-content-box");
 		} else {
-			console.warn("❗ .dashboard-content-box not found in DOM");
+			console.warn("â— .dashboard-content-box not found in DOM");
 		}
 	});
 
@@ -60,9 +60,10 @@ document.addEventListener("click", function (e) {
     if (e.target.classList.contains("answer-button")) {
         const type = e.target.getAttribute("data-answer");
         const kpId = parseInt(e.target.getAttribute("data-kp"));
-        console.log("🖱️ Answer button clicked:", type, "for keypoint ID:", kpId);
+        console.log("ðŸ–±ï¸ Answer button clicked:", type, "for keypoint ID:", kpId);
         submitAnswer(type, kpId);
     }
 });
+
 
 

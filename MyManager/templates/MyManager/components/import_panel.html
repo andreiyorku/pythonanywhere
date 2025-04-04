@@ -1,0 +1,31 @@
+﻿<div class="dashboard-content-box">	
+	<div class="import-panel">
+
+		<!-- Content Selector (School/Project/New) -->
+		<label>Content Context:</label>
+		<select id="contentSelector">
+			<option value="">-- Select --</option>
+			<option value="school">School</option>
+			<option value="existing_project">Existing Project</option>
+			<option value="new_project">New Project</option>
+		</select>
+
+		<!-- Dynamic section will appear here -->
+		<div id="contentContextContainer"></div>
+
+		<!-- Course Selector -->
+		<div id="courseSelectorContainer" style="margin-top: 20px;"></div>
+
+		<!-- Chapter Selector -->
+		<div id="chapterSelectorContainer" style="margin-top: 20px;"></div>
+
+		<!-- HTML Paste Area -->
+		<label for="bulkContentInput">Paste Keypoints HTML:</label><br>
+		<textarea id="bulkContentInput" placeholder="<h1>Title</h1><p>Paragraph...</p>" style="width: 100%; min-height: 150px;"></textarea><br><br>
+
+		<button onclick="importManager.submit()">Import Keypoints</button>
+
+		<div id="importStatus"></div>
+	</div>
+</div>
+
