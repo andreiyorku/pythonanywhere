@@ -61,33 +61,41 @@ const importManager = {
 	},
 
 	loadCourses(context) {
-		fetch(`/MyManager/api/import/get_courses/?project=${encodeURIComponent(context)}`)
-			.then(res => res.json())
-			.then(data => {
-				const container = document.getElementById("courseSelectorContainer");
-				container.innerHTML = `
-					<label>Select Course:</label>
-					<select id="courseSelector">
-						<option value="new">âž• New Course</option>
-						${data.courses.map(c => `<option value="${c}">${c}</option>`).join("")}
-					</select>
-					<input type="text" id="newCourseInput" placeholder="New course name..." style="display:none" />
-				`;
+	fetch(`/MyManager/api/import/get_courses/?project=${encodeURIComponent(context)}`)
+		.then(res => res.json())
+		.then(data => {
+			const container = document.getElementById("courseSelectorContainer");
 
-				document.getElementById("courseSelector").addEventListener("change", (e) => {
-					const isNew = e.target.value === "new";
-					document.getElementById("newCourseInput").style.display = isNew ? "block" : "none";
+			// Build HTML: existing courses first, then "New Course"
+			container.innerHTML = `
+				<label>Select Course:</label>
+				<select id="courseSelector">
+					${data.courses.map(c => `<option value="${c}">${c}</option>`).join("")}
+					<option value="new">New Course</option>
+				</select>
+				<input type="text" id="newCourseInput" placeholder="New course name..." style="display:none" />
+			`;
 
-					if (isNew) {
-						importManager.renderChapterInput();  // just show input
-					} else {
-						importManager.loadChapters(e.target.value);  // load chapters for course
-					}
-				});
+			// Add change listener to dropdown
+			const courseSelector = document.getElementById("courseSelector");
+			const newCourseInput = document.getElementById("newCourseInput");
 
-				importManager.renderChapterInput();  // default state: new course + chapter
+			courseSelector.addEventListener("change", (e) => {
+				const isNew = e.target.value === "new";  // check if "New Course" is selected
+				newCourseInput.style.display = isNew ? "block" : "none";  // toggle textbox
+
+				if (isNew) {
+					importManager.renderChapterInput();  // if new course, show blank chapter input
+				} else {
+					importManager.loadChapters(e.target.value);  // if existing, load chapters
+				}
 			});
-	},
+
+			// Trigger change manually so correct state loads by default (especially when no courses exist)
+			courseSelector.dispatchEvent(new Event("change"));
+		});
+    }
+
 	
 	loadChapters(courseName) {
 		fetch(`/MyManager/api/import/get_chapters/?course=${encodeURIComponent(courseName)}`)
@@ -119,12 +127,6 @@ const importManager = {
 				});
 			});
 	},
-
-
-
-
-
-
 
 	renderCourseAndChapterInputs() {
 		document.getElementById("courseSelectorContainer").innerHTML = `
