@@ -23,6 +23,7 @@ urlpatterns = [
     path('myapp_old/', include('myapp.urls')),
     path('myapp/', include('myappv0.urls')),
     path('MyManager/', include('MyManager.urls')),
+    path('school_core/', include('school_core.urls')),
 ]
 
 from django.conf import settings
