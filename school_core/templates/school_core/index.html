@@ -3,65 +3,76 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>School Manager SPA</title>
+    <title>School Manager</title>
 </head>
 <body>
 
-    <div>
-        <h1 id="app-title" onclick="router('home')">School Manager</h1>
-        <button onclick="router('home')">Go Home</button>
-        <hr>
-    </div>
+    <h1>School Manager</h1>
+    <hr>
 
     <div id="view-hub">
         <h2>My Subjects</h2>
-        <div>
-            <input type="text" id="new-course-name" placeholder="New Subject Name">
-            <button onclick="addCourse()">Create Subject</button>
-        </div>
-        <br>
-        <div id="course-grid">
-            </div>
+        <input type="text" id="new-course-name" placeholder="New Subject Name">
+        <button onclick="addCourse()">Create Subject</button>
+        <br><br>
+        <div id="course-list"></div>
     </div>
 
     <div id="view-course" style="display:none;">
+        <button onclick="router('hub')"><< Back</button>
         <h2 id="course-title">Course Name</h2>
 
-        <div style="border: 1px solid black; margin-bottom: 20px;">
+        <div style="border: 1px solid black; padding: 10px;">
             <h3>Add Chapter</h3>
-            <input type="text" id="new-chap-name" placeholder="Chapter Name">
-            <input type="number" id="new-chap-index" placeholder="Index (Multiplier)" value="1">
-            <button onclick="addChapter()">Add Chapter</button>
+            Name: <input type="text" id="new-chap-name" placeholder="Chapter Name"><br>
+            Index: <input type="number" id="new-chap-index" value="1"><br>
+            <button onclick="addChapter()">Add</button>
         </div>
 
         <h3>Quiz Builder</h3>
-        <div id="chapter-list">
-            </div>
+        <div id="chapter-list"></div>
         <br>
-        <button onclick="startQuiz()">Start Adaptive Quiz</button>
+        <button onclick="startQuiz()">Start Quiz</button>
     </div>
 
     <div id="view-chapter" style="display:none;">
+        <button onclick="router('course')"><< Back</button>
+
         <h2 id="chapter-title">Chapter Content</h2>
 
-        <div style="border: 1px solid black; margin-bottom: 20px;">
+        <div style="border: 1px solid black; padding: 10px; background:#f0f0f0;">
             <h3>Add New Note</h3>
-            <input type="text" id="note-header" placeholder="Header / Question">
-            <br>
-            <textarea id="note-body" rows="3" placeholder="Body / Answer"></textarea>
+            <input type="text" id="note-header" placeholder="Question / Header" style="width:100%;">
+            <br><br>
+
+            <label><input type="radio" name="nType" checked onclick="setMode('text')"> Text</label>
+            <label><input type="radio" name="nType" onclick="setMode('image')"> Image</label>
+
+            <div id="mode-text">
+                <textarea id="note-body" placeholder="Answer..." style="width:100%;"></textarea>
+            </div>
+
+            <div id="mode-image" style="display:none;">
+                <div id="drop-area" style="border: 2px dashed black; padding: 20px; text-align: center; background: white; cursor:pointer;">
+                    Paste Image (Ctrl+V), Drag & Drop, or Click here
+                </div>
+                <input type="file" id="file-input" style="display:none;" onchange="handleFile(this.files[0])">
+                <br>
+                <img id="preview-img" style="max-width: 200px; display: none; border: 1px solid red;">
+            </div>
+
             <br>
             <button onclick="addNote()">Save Note</button>
         </div>
 
-        <div id="notes-list">
-            </div>
+        <div id="notes-list"></div>
     </div>
 
     <div id="view-quiz" style="display:none;">
-        <div id="quiz-container">
-            </div>
+        <button onclick="router('course')"><< Quit</button>
+        <div id="quiz-container"></div>
     </div>
 
-    <script src="{% static 'school_core/js/app.js' %}?v=FORCE"></script>
+    <script src="{% static 'school_core/js/app.js' %}?v=3"></script>
 </body>
 </html>

@@ -1,25 +1,43 @@
 import json
+import os
+import uuid
 from django.db import connection
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
+# Add this new view function
+# def get_partial(request, filename):
+#     # This securely returns the requested HTML file from the partials folder
+#     return render(request, f'school_core/partials/{filename}.html')
 
 def spa_shell(request):
-    # Returns the Single HTML file
     return render(request, 'school_core/index.html')
 
-@csrf_exempt  # Disabling CSRF for simplicity in this specific dev context
-def api_handler(request):
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=400)
 
-    data = json.loads(request.body)
+@csrf_exempt
+def api_handler(request):
+    # 1. SETUP: Determine if this is a JSON request or a File Upload request
+    data = {}
+
+    # If it's a file upload, data is in request.POST
+    if request.content_type.startswith('multipart/form-data'):
+        data = request.POST.dict()  # Convert to standard dictionary
+
+    # If it's normal JSON data
+    elif request.body:
+        try:
+            data = json.loads(request.body)
+        except:
+            data = {}
+
     action = data.get('action')
 
     with connection.cursor() as cursor:
 
-        # --- A. School Hub ---
+        # --- HUB ---
         if action == 'get_courses':
             cursor.execute("SELECT id, name FROM school_course")
             rows = cursor.fetchall()
@@ -29,7 +47,7 @@ def api_handler(request):
             cursor.execute("INSERT INTO school_course (name) VALUES (%s)", [data['name']])
             return JsonResponse({'status': 'success'})
 
-        # --- B. Course Dashboard ---
+        # --- DASHBOARD ---
         elif action == 'get_chapters':
             cursor.execute(
                 "SELECT id, name, chapter_index FROM school_chapter WHERE course_id = %s ORDER BY chapter_index",
@@ -42,30 +60,49 @@ def api_handler(request):
                            [data['course_id'], data['name'], data['index']])
             return JsonResponse({'status': 'success'})
 
-        # --- C. Chapter View & Content ---
+        # --- NOTES ( UPDATED FOR IMAGES ) ---
         elif action == 'get_notes':
             cursor.execute("SELECT id, header, body, weight FROM school_note WHERE chapter_id = %s",
                            [data['chapter_id']])
             rows = cursor.fetchall()
+            # Logic handled in frontend to decide if body is text or image URL
             return JsonResponse({'notes': [{'id': r[0], 'header': r[1], 'body': r[2], 'weight': r[3]} for r in rows]})
 
         elif action == 'add_note':
-            # Default weight is 10
+            header = data.get('header')
+            body = data.get('body', '')  # This is the text body
+
+            # CHECK FOR FILE UPLOAD
+            if 'image_file' in request.FILES:
+                image = request.FILES['image_file']
+
+                # 1. Generate unique filename
+                ext = image.name.split('.')[-1]
+                filename = f"{uuid.uuid4()}.{ext}"
+
+                # 2. Save file to MEDIA_ROOT
+                saved_path = default_storage.save(filename, ContentFile(image.read()))
+
+                # 3. The Body becomes the URL path (e.g., /media/uuid.jpg)
+                # We add a prefix 'IMG:' so the frontend knows it's an image
+                body = f"IMG:/media/{saved_path}"
+
             cursor.execute("INSERT INTO school_note (chapter_id, header, body, weight) VALUES (%s, %s, %s, 10)",
-                           [data['chapter_id'], data['header'], data['body']])
+                           [data['chapter_id'], header, body])
             return JsonResponse({'status': 'success'})
 
         elif action == 'delete_note':
             cursor.execute("DELETE FROM school_note WHERE id = %s", [data['note_id']])
             return JsonResponse({'status': 'success'})
 
-        # --- D. Adaptive Quiz Engine ---
+        # --- QUIZ ---
         elif action == 'generate_quiz':
-            # 1. Get notes from selected chapters
-            chapter_ids = data['chapter_ids']  # List of IDs like [1, 2]
-            placeholders = ','.join(['%s'] * len(chapter_ids))
+            # Handle list being passed as string in FormData or List in JSON
+            chapter_ids = data.get('chapter_ids')
+            if isinstance(chapter_ids, str):
+                chapter_ids = json.loads(chapter_ids)
 
-            # SQL: Join Note and Chapter to access Chapter Index for the formula
+            placeholders = ','.join(['%s'] * len(chapter_ids))
             query = f"""
                 SELECT n.id, n.header, n.body, n.weight, c.chapter_index 
                 FROM school_note n
@@ -78,37 +115,26 @@ def api_handler(request):
             quiz_set = []
             for r in rows:
                 note_id, question, answer, weight, ch_index = r
-                # THE FORMULA: Priority = Chapter Index * Note Weight
                 priority_score = ch_index * weight
-
-                # If priority is positive, add it to the pool
                 if priority_score > 0:
-                    quiz_set.append({
-                        'id': note_id,
-                        'question': question,
-                        'answer': answer,
-                        'score': priority_score
-                    })
+                    quiz_set.append({'id': note_id, 'question': question, 'answer': answer, 'score': priority_score})
 
-            # Sort by Priority Score (Highest first) to prioritize hard/important content
             quiz_set.sort(key=lambda x: x['score'], reverse=True)
-
-            # Return top 10 questions (or all if less than 10)
             return JsonResponse({'quiz': quiz_set[:10]})
 
         elif action == 'submit_answer':
-            # Update Logic: Decrease weight by 2 if correct
             note_id = data['note_id']
+            # Convert string 'true'/'false' to python boolean if coming from FormData
             is_correct = data['is_correct']
+            if isinstance(is_correct, str):
+                is_correct = (is_correct.lower() == 'true')
 
             if is_correct:
                 cursor.execute(
-                    "UPDATE school_note SET weight = MAX(1, weight - 2), correct_count = correct_count + 1 WHERE id = %s",
+                    "UPDATE school_note SET weight = MAX(0.123456789012345, weight / 2), correct_count = correct_count + 1 WHERE id = %s",
                     [note_id])
             else:
-                # Optional: Increase weight if wrong? For now just track count.
                 cursor.execute("UPDATE school_note SET wrong_count = wrong_count + 1 WHERE id = %s", [note_id])
-
             return JsonResponse({'status': 'updated'})
 
     return JsonResponse({'error': 'Invalid Action'}, status=400)

@@ -1,0 +1,30 @@
+<button onclick="router('course')"><< Back</button>
+
+<h2 id="chapter-title">Chapter Content</h2>
+
+<div style="border: 1px solid black; padding: 10px; background:#f0f0f0;">
+    <h3>Add New Note</h3>
+    <input type="text" id="note-header" placeholder="Question / Header" style="width:100%;">
+    <br><br>
+
+    <label><input type="radio" name="nType" checked onclick="setMode('text')"> Text</label>
+    <label><input type="radio" name="nType" onclick="setMode('image')"> Image</label>
+
+    <div id="mode-text">
+        <textarea id="note-body" placeholder="Answer..." style="width:100%;"></textarea>
+    </div>
+
+    <div id="mode-image" style="display:none;">
+        <div id="drop-area" style="border: 2px dashed black; padding: 20px; text-align: center; background: white; cursor:pointer;">
+            Paste Image (Ctrl+V), Drag & Drop, or Click here
+        </div>
+        <input type="file" id="file-input" style="display:none;" onchange="handleFile(this.files[0])">
+        <br>
+        <img id="preview-img" style="max-width: 200px; display: none; border: 1px solid red;">
+    </div>
+
+    <br>
+    <button onclick="addNote()">Save Note</button>
+</div>
+
+<div id="notes-list"></div>
