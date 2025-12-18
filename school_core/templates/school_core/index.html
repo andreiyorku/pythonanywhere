@@ -1,15 +1,67 @@
-{% load static %}  <!DOCTYPE html>
+{% load static %}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <script src="{% static 'school_core/js/app.js' %}"></script>
+    <title>School Manager SPA</title>
 </head>
 <body>
 
-    <main id="app-container">
-        <h1>Loading...</h1>
-    </main>
+    <div>
+        <h1 id="app-title" onclick="router('home')">School Manager</h1>
+        <button onclick="router('home')">Go Home</button>
+        <hr>
+    </div>
 
+    <div id="view-hub">
+        <h2>My Subjects</h2>
+        <div>
+            <input type="text" id="new-course-name" placeholder="New Subject Name">
+            <button onclick="addCourse()">Create Subject</button>
+        </div>
+        <br>
+        <div id="course-grid">
+            </div>
+    </div>
+
+    <div id="view-course" style="display:none;">
+        <h2 id="course-title">Course Name</h2>
+
+        <div style="border: 1px solid black; margin-bottom: 20px;">
+            <h3>Add Chapter</h3>
+            <input type="text" id="new-chap-name" placeholder="Chapter Name">
+            <input type="number" id="new-chap-index" placeholder="Index (Multiplier)" value="1">
+            <button onclick="addChapter()">Add Chapter</button>
+        </div>
+
+        <h3>Quiz Builder</h3>
+        <div id="chapter-list">
+            </div>
+        <br>
+        <button onclick="startQuiz()">Start Adaptive Quiz</button>
+    </div>
+
+    <div id="view-chapter" style="display:none;">
+        <h2 id="chapter-title">Chapter Content</h2>
+
+        <div style="border: 1px solid black; margin-bottom: 20px;">
+            <h3>Add New Note</h3>
+            <input type="text" id="note-header" placeholder="Header / Question">
+            <br>
+            <textarea id="note-body" rows="3" placeholder="Body / Answer"></textarea>
+            <br>
+            <button onclick="addNote()">Save Note</button>
+        </div>
+
+        <div id="notes-list">
+            </div>
+    </div>
+
+    <div id="view-quiz" style="display:none;">
+        <div id="quiz-container">
+            </div>
+    </div>
+
+    <script src="{% static 'school_core/js/app.js' %}?v=FORCE"></script>
 </body>
 </html>

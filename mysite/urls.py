@@ -20,10 +20,11 @@ from .views import html_index_view
 urlpatterns = [
     path('', html_index_view, name='index'),
     path('admin/', admin.site.urls),
-    path('myapp_old/', include('myapp.urls')),
-    path('myapp/', include('myappv0.urls')),
-    path('MyManager/', include('MyManager.urls')),
+    #path('myapp_old/', include('myapp.urls')),
+    #path('myapp/', include('myappv0.urls')),
+    #path('MyManager/', include('MyManager.urls')),
     path('school_core/', include('school_core.urls')),
+    path('js_playgrounds/', include('js_playgrounds.urls')),
 ]
 
 from django.conf import settings

@@ -39,10 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'myapp',
-    'myappv0',
-    'MyManager',
-    'school_core'
+    #'myapp',
+    #'myappv0',
+    #'MyManager',
+    'school_core',
+    'js_playgrounds',
 ]
 
 MIDDLEWARE = [
@@ -141,7 +142,9 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Global static files
-    os.path.join(BASE_DIR, 'myapp/static'),  # App-specific static files
-    os.path.join(BASE_DIR, 'MyManager/static'),  # App-specific static files
+    #os.path.join(BASE_DIR, 'myapp/static'),  # App-specific static files
+    #os.path.join(BASE_DIR, 'MyManager/static'),  # App-specific static files
     os.path.join(BASE_DIR, 'school_core/static'),  # App-specific static files
+    os.path.join(BASE_DIR, 'playgrounds/static'),  # App-specific static files
+
 ]
