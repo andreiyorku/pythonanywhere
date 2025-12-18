@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="ss">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="updating">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mysite/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/static/school_core/components/main_hub.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/components/main_hub.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
     </list>
@@ -181,7 +183,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766011880713</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="updating">
+      <option name="closed" value="true" />
+      <created>1766025198902</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1766025198902</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -191,6 +201,7 @@
     <MESSAGE value="should work" />
     <MESSAGE value="new app" />
     <MESSAGE value="ss" />
-    <option name="LAST_COMMIT_MESSAGE" value="ss" />
+    <MESSAGE value="updating" />
+    <option name="LAST_COMMIT_MESSAGE" value="updating" />
   </component>
 </project>

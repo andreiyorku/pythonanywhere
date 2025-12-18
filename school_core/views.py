@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import sqlite3
 import os
-
+from django.views.decorators.csrf import csrf_exempt
 
 def index_view(request):
     """
@@ -42,3 +42,27 @@ def get_school_data(request):
         return JsonResponse({'error': str(e)}, status=500)
 
     return JsonResponse({'data': results})
+
+
+@csrf_exempt  # Simplifies manual JS POST requests
+def manage_school_data(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        action = data.get('action')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if action == 'create_course':
+            name = data.get('name')
+            try:
+                cursor.execute("INSERT INTO school_course (name) VALUES (?)", (name,))
+                conn.commit()
+                return JsonResponse({'status': 'success'})
+            except sqlite3.IntegrityError:
+                return JsonResponse({'status': 'error', 'message': 'Subject already exists'}, status=400)
+            finally:
+                conn.close()
+
+    return JsonResponse({'status': 'invalid_request'}, status=400)

@@ -1,17 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
 <div class="hub-header">
-    <h1>Select a Subject</h1>
-    <button onclick="showCreateSubjectModal()">+ New Subject</button>
-</div>
-<div id="subject-list" class="grid-container">
+    <h1>School Hub</h1>
+    <div class="create-panel">
+        <input type="text" id="new-course-name" placeholder="Course Name...">
+        <button onclick="createNewCourse()">Add Course</button>
+    </div>
 </div>
 
-</body>
-</html>
+<div id="subject-list"></div>
