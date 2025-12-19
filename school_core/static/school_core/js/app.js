@@ -1,12 +1,12 @@
 // --- STATE MANAGEMENT ---
 let currentCourseId = null;
+let currentCourseName = ""; // NEW: Remember the name
 let currentChapterId = null;
-let currentQuizItem = null;
-let pendingImageFile = null;
-
-// NEW: Variables for Infinite Quiz
+let currentChapterName = ""; // NEW: Remember the name
 let quizQueue = [];
+let currentQuizItem = null;
 let currentQuizChapterIds = [];
+let pendingImageFile = null;
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -29,22 +29,53 @@ async function api(payload, isFile = false) {
     }
 }
 
-// --- ROUTER ---
-function router(viewName) {
-    // Hide all views
-    ['hub', 'course', 'chapter', 'quiz'].forEach(v => {
-        const el = document.getElementById('view-' + v);
-        if(el) el.style.display = 'none';
-    });
+// --- ROUTER (Fixed for Timing) ---
+async function router(viewName) {
+    const container = document.getElementById('app-container');
 
-    // Show target view
-    const target = document.getElementById('view-' + viewName);
-    if(target) target.style.display = 'block';
+    // 1. Fetch the HTML Fragment
+    try {
+        const res = await fetch(`/school_core/partial/${viewName}/`);
+        if(!res.ok) throw new Error("View not found");
+        const html = await res.text();
 
-    // Trigger data loads
-    if (viewName === 'hub') loadCourses();
-    if (viewName === 'course' && currentCourseId) loadChapters();
+        // 2. Inject HTML
+        container.innerHTML = html;
+
+        // 3. Re-attach Event Listeners (for Images)
+        if(viewName === 'chapter') attachImageHandlers();
+
+    } catch (err) {
+        console.error(err);
+        return;
+    }
+
+    // 4. Trigger Data Loads & Update Titles
+    // We do this AFTER the HTML is injected, so the elements actually exist.
+
+    if (viewName === 'hub') {
+        loadCourses();
+    }
+
+    if (viewName === 'course') {
+        if(currentCourseId) {
+            document.getElementById('course-title').innerText = currentCourseName;
+            loadChapters();
+        }
+    }
+
+    if (viewName === 'chapter') {
+        if(currentChapterId) {
+            document.getElementById('chapter-title').innerText = currentChapterName;
+            loadNotes();
+        }
+    }
+
+    if (viewName === 'quiz') {
+        nextQuestion();
+    }
 }
+
 
 // --- IMAGE HANDLING ---
 function setMode(mode) {
@@ -66,11 +97,10 @@ function handleFile(file) {
     reader.readAsDataURL(file);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function attachImageHandlers() {
     const dropArea = document.getElementById('drop-area');
     if(dropArea) {
         dropArea.onclick = () => document.getElementById('file-input').click();
-
         dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.style.backgroundColor = '#e0e0e0'; });
         dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); dropArea.style.backgroundColor = 'white'; });
         dropArea.addEventListener('drop', (e) => {
@@ -79,10 +109,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
         });
     }
-});
+}
 
 window.addEventListener('paste', (e) => {
-    if (document.getElementById('view-chapter').style.display === 'block') {
+    // Only capture paste if we are actively looking at the chapter view
+    const dropArea = document.getElementById('drop-area');
+    if (dropArea) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let item of items) {
             if (item.kind === 'file' && item.type.startsWith('image/')) {
@@ -130,9 +162,9 @@ async function addCourse() {
 // --- VIEW LOGIC: COURSE ---
 async function openCourse(id, name) {
     currentCourseId = id;
-    document.getElementById('course-title').innerText = name;
+    currentCourseName = name; // Save name
     router('course');
-    loadChapters();
+    // Note: loadChapters is now called by the router automatically
 }
 
 async function loadChapters() {
@@ -159,9 +191,8 @@ async function addChapter() {
 // --- VIEW LOGIC: CHAPTER ---
 async function openChapter(id, name) {
     currentChapterId = id;
-    document.getElementById('chapter-title').innerText = name;
+    currentChapterName = name; // Save name
     router('chapter');
-    loadNotes();
 }
 
 async function loadNotes() {
@@ -205,11 +236,13 @@ async function addNote() {
         await api({ action: 'add_note', chapter_id: currentChapterId, header: header, body: body });
     }
 
+    // Manually clear inputs since the view doesn't reload entirely
     document.getElementById('note-header').value = '';
-    document.getElementById('note-body').value = '';
+    if(document.getElementById('note-body')) document.getElementById('note-body').value = '';
     pendingImageFile = null;
-    document.getElementById('preview-img').style.display = 'none';
-    document.getElementById('drop-area').innerText = "Paste Image (Ctrl+V), Drag & Drop, or Click here";
+    if(document.getElementById('preview-img')) document.getElementById('preview-img').style.display = 'none';
+    if(document.getElementById('drop-area')) document.getElementById('drop-area').innerText = "Paste Image (Ctrl+V), Drag & Drop, or Click here";
+
     loadNotes();
 }
 
@@ -221,42 +254,30 @@ async function deleteNote(id) {
 }
 
 // --- VIEW LOGIC: INFINITE QUIZ ---
-
 async function startQuiz() {
     const boxes = document.querySelectorAll('.chap-select:checked');
     const ids = Array.from(boxes).map(b => b.value);
     if(ids.length === 0) return alert("Select chapters");
 
-    // 1. Store the chapters so we can fetch more later
     currentQuizChapterIds = ids;
-
-    // 2. Clear queue
     quizQueue = [];
-
-    // 3. Go to view and load first question
     router('quiz');
-    await nextQuestion();
 }
 
 async function nextQuestion() {
     const div = document.getElementById('quiz-container');
 
-    // 1. CHECK IF EMPTY -> FETCH MORE
     if(quizQueue.length === 0) {
         div.innerHTML = "<h3>Fetching more questions...</h3>";
-
-        // Ask backend for 10 more high-priority questions
         const data = await api({ action: 'generate_quiz', chapter_ids: currentQuizChapterIds });
 
         if(!data.quiz || data.quiz.length === 0) {
-            div.innerHTML = "<h3>No notes found in selected chapters. Add some notes first!</h3><button onclick=\"router('course')\">Back</button>";
+            div.innerHTML = "<h3>No notes found.</h3><button onclick=\"router('course')\">Back</button>";
             return;
         }
-
         quizQueue = data.quiz;
     }
 
-    // 2. RENDER THE NEXT QUESTION
     currentQuizItem = quizQueue.shift();
     div.innerHTML = `
         <h3>${currentQuizItem.question}</h3>
@@ -271,11 +292,11 @@ async function nextQuestion() {
 }
 
 async function submitAnswer(isCorrect) {
-    // Send result to backend to update weight
     await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
-    // Immediately load next (or fetch more)
     nextQuestion();
 }
 
 // --- INITIALIZATION ---
-window.onload = function() { loadCourses(); };
+window.onload = function() {
+    router('hub');
+};
