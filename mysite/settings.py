@@ -136,10 +136,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # default staticfiles files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
 # MEDIA_ROOT = '/home/andreiyorku/mysite/media'
-MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'myapp', 'generated')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/staticfiles/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'staticfiles'),  # Global staticfiles files
