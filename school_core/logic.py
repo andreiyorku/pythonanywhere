@@ -111,7 +111,7 @@ def handle_quiz(action, data):
         if is_correct:
             # Decimal math: max(0.001, weight / 2.0)
             db_query(
-                "UPDATE school_note SET weight = MAX(0.001, weight / 2.0), correct_count = correct_count + 1 WHERE id = %s",
+                "UPDATE school_note SET weight = MAX(2.23e-308, weight / 2.0), correct_count = correct_count + 1 WHERE id = %s",
                 [note_id])
         else:
             db_query("UPDATE school_note SET wrong_count = wrong_count + 1 WHERE id = %s", [note_id])

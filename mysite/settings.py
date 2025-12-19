@@ -125,7 +125,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = '/staticfiles/'
 MEDIA_URL = '/media/'
 
 # Default primary key field type
@@ -133,16 +133,16 @@ MEDIA_URL = '/media/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# default static files settings for PythonAnywhere.
+# default staticfiles files settings for PythonAnywhere.
 # see https://help.pythonanywhere.com/pages/DjangoStaticFiles for more info
 # MEDIA_ROOT = '/home/andreiyorku/mysite/media'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'myapp', 'generated')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/static/'
+STATIC_URL = '/staticfiles/'
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Global static files
-    #os.path.join(BASE_DIR, 'school_core/static'),  # App-specific static files
-    #os.path.join(BASE_DIR, 'playgrounds/static'),  # App-specific static files
+    os.path.join(BASE_DIR, 'staticfiles'),  # Global staticfiles files
+    #os.path.join(BASE_DIR, 'school_core/staticfiles'),  # App-specific staticfiles files
+    #os.path.join(BASE_DIR, 'playgrounds/staticfiles'),  # App-specific staticfiles files
 ]
