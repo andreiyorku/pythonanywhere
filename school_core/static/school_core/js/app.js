@@ -31,7 +31,7 @@ async function api(payload, isFile = false) {
 
 // --- ROUTER (Fixed for Timing) ---
 async function router(viewName) {
-    const container = document.getElementById('app-container');
+    const container = document.getElementById('content-slot');
 
     // 1. Fetch the HTML Fragment
     try {

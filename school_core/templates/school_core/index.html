@@ -3,17 +3,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>School Manager</title>
+
+    <link rel="stylesheet" href="{% static 'school_core/css/styles.css' %}?v=1">
 </head>
 <body>
 
-    <h1>School Manager</h1>
-    <hr>
-
     <div id="app-container">
-        <p>Loading...</p>
+        <h1 onclick="router('hub')">School Manager</h1>
+
+        <div id="content-slot">
+            <p style="text-align:center; color:#999;">Loading App...</p>
+        </div>
     </div>
 
-    <script src="{% static 'school_core/js/app.js' %}?v=4"></script>
+    <script src="{% static 'school_core/js/app.js' %}?v=5"></script>
 </body>
 </html>
