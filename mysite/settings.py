@@ -143,9 +143,6 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),  # Global static files
-    #os.path.join(BASE_DIR, 'myapp/static'),  # App-specific static files
-    #os.path.join(BASE_DIR, 'MyManager/static'),  # App-specific static files
-    os.path.join(BASE_DIR, 'school_core/static'),  # App-specific static files
-    os.path.join(BASE_DIR, 'playgrounds/static'),  # App-specific static files
-
+    #os.path.join(BASE_DIR, 'school_core/static'),  # App-specific static files
+    #os.path.join(BASE_DIR, 'playgrounds/static'),  # App-specific static files
 ]
