@@ -125,7 +125,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
-STATIC_URL = '/staticfiles/'
+STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
 # Default primary key field type
@@ -140,7 +140,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'myapp', 'generated')
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'staticfiles'),  # Global staticfiles files
+    os.path.join(BASE_DIR, 'static'),  # Global staticfiles files
     #os.path.join(BASE_DIR, 'school_core/staticfiles'),  # App-specific staticfiles files
     #os.path.join(BASE_DIR, 'playgrounds/staticfiles'),  # App-specific staticfiles files
 ]
