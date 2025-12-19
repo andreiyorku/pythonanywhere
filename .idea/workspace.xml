@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="school_core is modularized">
-      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/index.html" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="school_core stylysed with mobile">
+      <change beforePath="$PROJECT_DIR$/mysite/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/templates/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -221,7 +218,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766109752940</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="school_core stylysed with mobile">
+      <option name="closed" value="true" />
+      <created>1766109999136</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1766109999136</updated>
+    </task>
+    <option name="localTasksCounter" value="16" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -235,6 +240,7 @@
     <MESSAGE value="restart, and js_playgrounds" />
     <MESSAGE value="before adding modular htmls" />
     <MESSAGE value="school_core is modularized" />
-    <option name="LAST_COMMIT_MESSAGE" value="school_core is modularized" />
+    <MESSAGE value="school_core stylysed with mobile" />
+    <option name="LAST_COMMIT_MESSAGE" value="school_core stylysed with mobile" />
   </component>
 </project>
