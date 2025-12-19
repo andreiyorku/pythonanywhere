@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .views import html_index_view
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    #path('', RedirectView.as_view(url='/school_core/', permanent=False)),
+
     path('', html_index_view, name='index'),
     path('admin/', admin.site.urls),
     #path('myapp_old/', include('myapp.urls')),

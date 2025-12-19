@@ -7,7 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from . import logic
 
 
-def spa_shell(request):
+def school_core(request):
     return render(request, 'school_core/index.html')
 
 

@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', views.spa_shell, name='spa_shell'),
+    path('', views.school_core, name='school_core'),
     path('api/', views.api_handler, name='api_handler'),
 
     # NEW: Route for fetching HTML fragments
