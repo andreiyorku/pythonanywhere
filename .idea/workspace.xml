@@ -4,13 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="static v2">
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="delete buttons for course and chapter">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/import_html_to_sql.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup_db.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/start_server.bat" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -336,7 +335,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766115956122</updated>
     </task>
-    <option name="localTasksCounter" value="29" />
+    <task id="LOCAL-00029" summary="delete buttons for course and chapter">
+      <option name="closed" value="true" />
+      <created>1766437422298</created>
+      <option name="number" value="00029" />
+      <option name="presentableId" value="LOCAL-00029" />
+      <option name="project" value="LOCAL" />
+      <updated>1766437422298</updated>
+    </task>
+    <option name="localTasksCounter" value="30" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -360,6 +367,7 @@
     <MESSAGE value="strangre" />
     <MESSAGE value="static" />
     <MESSAGE value="static v2" />
-    <option name="LAST_COMMIT_MESSAGE" value="static v2" />
+    <MESSAGE value="delete buttons for course and chapter" />
+    <option name="LAST_COMMIT_MESSAGE" value="delete buttons for course and chapter" />
   </component>
 </project>
