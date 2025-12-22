@@ -33,10 +33,10 @@ def api_handler(request):
     # 2. ROUTE TO LOGIC
     # We check which "Module" handles this action
 
-    if action in ['get_courses', 'add_course']:
+    if action in ['get_courses', 'add_course', 'delete_course']:
         response_data = logic.handle_hub(action, data)
 
-    elif action in ['get_chapters', 'add_chapter']:
+    elif action in ['get_chapters', 'add_chapter', 'delete_chapter']:
         response_data = logic.handle_course(action, data)
 
     elif action in ['get_notes', 'add_note', 'delete_note']:

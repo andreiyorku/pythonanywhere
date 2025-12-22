@@ -146,7 +146,11 @@ async function loadCourses() {
 
     data.courses.forEach(c => {
         const div = document.createElement('div');
-        div.innerHTML = `<strong>${c.name}</strong> <button onclick="openCourse(${c.id}, '${c.name}')">Open</button><hr>`;
+        div.innerHTML = `<strong>${c.name}</strong>
+            <button onclick="openCourse(${c.id}, '${c.name}')">Open</button>
+            <button onclick="deleteCourse(${c.id})" style="background: #ffcccc; color: #cc0000; margin-top:5px; padding: 5px;">Delete</button>
+        <hr>`;
+
         list.appendChild(div);
     });
 }
@@ -176,7 +180,10 @@ async function loadChapters() {
 
     data.chapters.forEach(c => {
         const div = document.createElement('div');
-        div.innerHTML = `<div><label><input type="checkbox" class="chap-select" value="${c.id}"> Index ${c.index}: ${c.name}</label> <button onclick="openChapter(${c.id}, '${c.name}')">Notes</button></div>`;
+        div.innerHTML = `<div><label><input type="checkbox" class="chap-select" value="${c.id}"> Index ${c.index}: ${c.name}</label>
+            <button onclick="openChapter(${c.id}, '${c.name}')">Notes</button>
+            <button onclick="deleteChapter(${c.id})" style="background: #ffcccc; color: #cc0000; margin-left: 5px; padding: 5px 10px; width: auto; display: inline-block;">Delete</button>
+        </div>`;
         list.appendChild(div);
     });
 }
@@ -250,6 +257,22 @@ async function deleteNote(id) {
     if(confirm("Delete?")) {
         await api({ action: 'delete_note', note_id: id });
         loadNotes();
+    }
+}
+
+// --- NEW DELETE FUNCTIONS ---
+
+async function deleteCourse(id) {
+    if(confirm("Delete this Subject? All chapters and notes inside it will be lost.")) {
+        await api({ action: 'delete_course', course_id: id });
+        loadCourses(); // Refresh the list
+    }
+}
+
+async function deleteChapter(id) {
+    if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
+        await api({ action: 'delete_chapter', chapter_id: id });
+        loadChapters(); // Refresh the list
     }
 }
 

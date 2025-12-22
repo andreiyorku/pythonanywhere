@@ -25,6 +25,12 @@ def handle_hub(action, data):
         db_query("INSERT INTO school_course (name) VALUES (%s)", [data['name']])
         return {'status': 'success'}
 
+    # --- NEW: Delete Subject Logic ---
+    elif action == 'delete_course':
+        # Note: 'ON DELETE CASCADE' in your SQL schema ensures chapters/notes die with it
+        db_query("DELETE FROM school_course WHERE id = %s", [data['course_id']])
+        return {'status': 'success'}
+
     return None
 
 
@@ -39,6 +45,11 @@ def handle_course(action, data):
     elif action == 'add_chapter':
         db_query("INSERT INTO school_chapter (course_id, name, chapter_index) VALUES (%s, %s, %s)",
                  [data['course_id'], data['name'], data['index']])
+        return {'status': 'success'}
+
+    # --- NEW: Delete Chapter Logic ---
+    elif action == 'delete_chapter':
+        db_query("DELETE FROM school_chapter WHERE id = %s", [data['chapter_id']])
         return {'status': 'success'}
 
     return None
