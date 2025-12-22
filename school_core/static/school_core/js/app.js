@@ -163,6 +163,13 @@ async function addCourse() {
     loadCourses();
 }
 
+async function deleteCourse(id) {
+    if(confirm("Delete this Subject? All chapters and notes inside it will be lost.")) {
+        await api({ action: 'delete_course', course_id: id });
+        loadCourses(); // Refresh the list
+    }
+}
+
 // --- VIEW LOGIC: COURSE ---
 async function openCourse(id, name) {
     currentCourseId = id;
@@ -193,6 +200,13 @@ async function addChapter() {
     const index = document.getElementById('new-chap-index').value;
     await api({ action: 'add_chapter', course_id: currentCourseId, name: name, index: index });
     loadChapters();
+}
+
+async function deleteChapter(id) {
+    if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
+        await api({ action: 'delete_chapter', chapter_id: id });
+        loadChapters(); // Refresh the list
+    }
 }
 
 // --- VIEW LOGIC: CHAPTER ---
@@ -260,21 +274,7 @@ async function deleteNote(id) {
     }
 }
 
-// --- NEW DELETE FUNCTIONS ---
 
-async function deleteCourse(id) {
-    if(confirm("Delete this Subject? All chapters and notes inside it will be lost.")) {
-        await api({ action: 'delete_course', course_id: id });
-        loadCourses(); // Refresh the list
-    }
-}
-
-async function deleteChapter(id) {
-    if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
-        await api({ action: 'delete_chapter', chapter_id: id });
-        loadChapters(); // Refresh the list
-    }
-}
 
 // --- VIEW LOGIC: INFINITE QUIZ ---
 async function startQuiz() {

@@ -4,12 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="delete buttons for course and chapter">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="gitignore changes">
+      <change afterPath="$PROJECT_DIR$/start_server.bat" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/import_html_to_sql.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup_db.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/start_server.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -343,7 +342,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766437422298</updated>
     </task>
-    <option name="localTasksCounter" value="30" />
+    <task id="LOCAL-00030" summary="gitignore changes">
+      <option name="closed" value="true" />
+      <created>1766437861963</created>
+      <option name="number" value="00030" />
+      <option name="presentableId" value="LOCAL-00030" />
+      <option name="project" value="LOCAL" />
+      <updated>1766437861963</updated>
+    </task>
+    <option name="localTasksCounter" value="31" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -368,6 +375,7 @@
     <MESSAGE value="static" />
     <MESSAGE value="static v2" />
     <MESSAGE value="delete buttons for course and chapter" />
-    <option name="LAST_COMMIT_MESSAGE" value="delete buttons for course and chapter" />
+    <MESSAGE value="gitignore changes" />
+    <option name="LAST_COMMIT_MESSAGE" value="gitignore changes" />
   </component>
 </project>
