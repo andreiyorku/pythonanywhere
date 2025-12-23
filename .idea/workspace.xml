@@ -4,15 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="something">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
-    </list>
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="test sql1" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="ChangesViewManager" show_ignored="true" />
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
@@ -420,12 +418,26 @@
       <option name="project" value="LOCAL" />
       <updated>1766468651883</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="test sql">
+      <option name="closed" value="true" />
+      <created>1766468917407</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1766468917407</updated>
+    </task>
+    <task id="LOCAL-00041" summary="test sql1">
+      <option name="closed" value="true" />
+      <created>1766468965923</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1766468965923</updated>
+    </task>
+    <option name="localTasksCounter" value="42" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="original" />
-    <MESSAGE value="should work" />
     <MESSAGE value="new app" />
     <MESSAGE value="ss" />
     <MESSAGE value="updating" />
@@ -449,6 +461,8 @@
     <MESSAGE value="updated quiz wint internal logic" />
     <MESSAGE value="removed my app" />
     <MESSAGE value="something" />
-    <option name="LAST_COMMIT_MESSAGE" value="something" />
+    <MESSAGE value="test sql" />
+    <MESSAGE value="test sql1" />
+    <option name="LAST_COMMIT_MESSAGE" value="test sql1" />
   </component>
 </project>
