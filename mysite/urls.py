@@ -22,7 +22,7 @@ urlpatterns = [
     #path('', RedirectView.as_view(url='/school_core/', permanent=False)),
 
     path('', html_index_view, name='index'),
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls),
     #path('myapp_old/', include('myapp.urls')),
     #path('myapp/', include('myappv0.urls')),
     #path('MyManager/', include('MyManager.urls')),

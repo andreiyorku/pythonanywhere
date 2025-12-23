@@ -365,7 +365,7 @@ async function handleLocalAnswer(isCorrect) {
 
     // 6. NEXT
     nextQuestion();
-}}
+}
 
 async function submitAnswer(isCorrect) {
     await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });

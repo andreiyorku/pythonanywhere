@@ -4,11 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="updated quiz to be reshuffled each answer">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="removed my app">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/mysite/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/start_server.bat" beforeDir="false" afterPath="$PROJECT_DIR$/start_server.bat" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -390,11 +390,26 @@
       <option name="project" value="LOCAL" />
       <updated>1766465744721</updated>
     </task>
-    <option name="localTasksCounter" value="36" />
+    <task id="LOCAL-00036" summary="updated quiz wint internal logic">
+      <option name="closed" value="true" />
+      <created>1766466289009</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1766466289009</updated>
+    </task>
+    <task id="LOCAL-00037" summary="removed my app">
+      <option name="closed" value="true" />
+      <created>1766466333234</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1766466333234</updated>
+    </task>
+    <option name="localTasksCounter" value="38" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updated" />
     <MESSAGE value="sql updates" />
     <MESSAGE value="original" />
     <MESSAGE value="should work" />
@@ -418,6 +433,8 @@
     <MESSAGE value="gitignore changes" />
     <MESSAGE value="updated quiz to be random" />
     <MESSAGE value="updated quiz to be reshuffled each answer" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated quiz to be reshuffled each answer" />
+    <MESSAGE value="updated quiz wint internal logic" />
+    <MESSAGE value="removed my app" />
+    <option name="LAST_COMMIT_MESSAGE" value="removed my app" />
   </component>
 </project>
