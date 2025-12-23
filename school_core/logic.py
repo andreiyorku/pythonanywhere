@@ -4,6 +4,7 @@ from django.db import connection
 from django.http import JsonResponse
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+import random
 
 
 # --- HELPER: Execute SQL ---
@@ -94,33 +95,40 @@ def handle_quiz(action, data):
 
         placeholders = ','.join(['%s'] * len(chapter_ids))
         query = f"""
-            SELECT n.id, n.header, n.body, n.weight, c.chapter_index 
+            SELECT n.id, n.header, n.body, n.weight 
             FROM school_note n
-            JOIN school_chapter c ON n.chapter_id = c.id
             WHERE n.chapter_id IN ({placeholders})
         """
+        # Note: We removed the JOIN with school_chapter because we don't need index anymore
         rows = db_query(query, chapter_ids)
 
         quiz_set = []
         for r in rows:
-            note_id, question, answer, weight, ch_index = r
-            priority_score = ch_index * weight
-            if priority_score > 0.0001:  # Use small decimal check
+            note_id, question, answer, weight = r
+
+            # THE FIX: Multiply weight by a random number (0.0 to 1.0)
+            # This shuffles the order while still favoring heavy items.
+            priority_score = float(weight) * random.random()
+
+            # Only add if it has some weight
+            if float(weight) > 2.23e-308:
                 quiz_set.append({'id': note_id, 'question': question, 'answer': answer, 'score': priority_score})
 
+        # Sort by the new randomized score (Highest first)
         quiz_set.sort(key=lambda x: x['score'], reverse=True)
+
+        # Return top 10
         return {'quiz': quiz_set[:10]}
 
     elif action == 'submit_answer':
+        # ... (This part stays exactly the same as before) ...
         note_id = data['note_id']
         is_correct = data['is_correct']
 
-        # Safe boolean conversion
         if isinstance(is_correct, str):
             is_correct = (is_correct.lower() == 'true')
 
         if is_correct:
-            # Decimal math: max(0.001, weight / 2.0)
             db_query(
                 "UPDATE school_note SET weight = MAX(2.23e-308, weight / 2.0), correct_count = correct_count + 1 WHERE id = %s",
                 [note_id])
