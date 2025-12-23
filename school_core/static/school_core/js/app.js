@@ -372,7 +372,7 @@ async function submitAnswer(isCorrect) {
     nextQuestion();
 }
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION ---dd
 window.onload = function() {
     router('hub');
 };
