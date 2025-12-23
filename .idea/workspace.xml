@@ -4,11 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="removed my app">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mysite/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/start_server.bat" beforeDir="false" afterPath="$PROJECT_DIR$/start_server.bat" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="something">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -406,11 +403,18 @@
       <option name="project" value="LOCAL" />
       <updated>1766466333234</updated>
     </task>
-    <option name="localTasksCounter" value="38" />
+    <task id="LOCAL-00038" summary="something">
+      <option name="closed" value="true" />
+      <created>1766468615591</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1766468615591</updated>
+    </task>
+    <option name="localTasksCounter" value="39" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="sql updates" />
     <MESSAGE value="original" />
     <MESSAGE value="should work" />
     <MESSAGE value="new app" />
@@ -435,6 +439,7 @@
     <MESSAGE value="updated quiz to be reshuffled each answer" />
     <MESSAGE value="updated quiz wint internal logic" />
     <MESSAGE value="removed my app" />
-    <option name="LAST_COMMIT_MESSAGE" value="removed my app" />
+    <MESSAGE value="something" />
+    <option name="LAST_COMMIT_MESSAGE" value="something" />
   </component>
 </project>
