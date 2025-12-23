@@ -4,10 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="updated quiz to be random">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="updated quiz to be reshuffled each answer">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -381,7 +382,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766448091889</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="updated quiz to be reshuffled each answer">
+      <option name="closed" value="true" />
+      <created>1766465744721</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1766465744721</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
@@ -408,6 +417,7 @@
     <MESSAGE value="delete buttons for course and chapter" />
     <MESSAGE value="gitignore changes" />
     <MESSAGE value="updated quiz to be random" />
-    <option name="LAST_COMMIT_MESSAGE" value="updated quiz to be random" />
+    <MESSAGE value="updated quiz to be reshuffled each answer" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated quiz to be reshuffled each answer" />
   </component>
 </project>

@@ -43,7 +43,10 @@ def api_handler(request):
         # Note logic needs files for uploads
         response_data = logic.handle_note(action, data, request.FILES)
 
-    elif action in ['generate_quiz', 'submit_answer']:
+    # elif action in ['generate_quiz', 'submit_answer']:
+    #     response_data = logic.handle_quiz(action, data)
+
+    elif action in ['init_quiz', 'get_content', 'submit_answer']:
         response_data = logic.handle_quiz(action, data)
 
     # 3. RETURN RESPONSE

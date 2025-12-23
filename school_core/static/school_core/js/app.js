@@ -277,42 +277,95 @@ async function deleteNote(id) {
 
 
 // --- VIEW LOGIC: INFINITE QUIZ ---
+// --- CLIENT-SIDE QUIZ ENGINE ---
+let quizDeck = []; // Stores {id, w} objects locally
+
 async function startQuiz() {
     const boxes = document.querySelectorAll('.chap-select:checked');
     const ids = Array.from(boxes).map(b => b.value);
     if(ids.length === 0) return alert("Select chapters");
 
-    currentQuizChapterIds = ids;
-    quizQueue = [];
-    router('quiz');
+    // 1. Fetch the "Deck" (IDs and Weights only)
+    const data = await api({ action: 'init_quiz', chapter_ids: ids });
+
+    if (!data.deck || data.deck.length === 0) {
+        alert("No notes found in these chapters.");
+        return;
+    }
+
+    quizDeck = data.deck; // Store the weights locally!
+    console.log(`Loaded ${quizDeck.length} notes into local deck.`);
+
+    router('quiz'); // This will trigger nextQuestion() in the router check
 }
 
 async function nextQuestion() {
-    const div = document.getElementById('quiz-container');
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = "<h3>Calculating...</h3>";
 
-    if(quizQueue.length === 0) {
-        div.innerHTML = "<h3>Fetching more questions...</h3>";
-        const data = await api({ action: 'generate_quiz', chapter_ids: currentQuizChapterIds });
-
-        if(!data.quiz || data.quiz.length === 0) {
-            div.innerHTML = "<h3>No notes found.</h3><button onclick=\"router('course')\">Back</button>";
-            return;
-        }
-        quizQueue = data.quiz;
+    if (quizDeck.length === 0) {
+        container.innerHTML = "<h3>Error: Deck empty.</h3>";
+        return;
     }
 
-    currentQuizItem = quizQueue.shift();
-    div.innerHTML = `
-        <h3>${currentQuizItem.question}</h3>
+    // 2. RUN WEIGHTED SHUFFLE LOCALLY
+    // Formula: Score = Weight * Random()
+    // The note with the highest score wins this round.
+
+    let winner = null;
+    let maxScore = -1;
+
+    quizDeck.forEach(note => {
+        let score = note.w * Math.random();
+        if (score > maxScore) {
+            maxScore = score;
+            winner = note;
+        }
+    });
+
+    currentQuizItem = winner; // Store for submission
+
+    // 3. FETCH CONTENT (Only for the winner)
+    // We only ask the server for the text of THIS specific note.
+    const content = await api({ action: 'get_content', note_id: winner.id });
+
+    container.innerHTML = `
+        <h3>${content.header}</h3>
         <button onclick="document.getElementById('ans').style.display='block'">Show Answer</button>
         <div id="ans" style="display:none; margin-top:20px;">
-            ${renderContent(currentQuizItem.answer)}
+            ${renderContent(content.body)}
             <br>
-            <button onclick="submitAnswer(true)">I got it</button>
-            <button onclick="submitAnswer(false)">I missed it</button>
+            <div style="margin-top:20px;">
+                <button onclick="handleLocalAnswer(true)" style="background:#d4edda; color:#155724;">I got it</button>
+                <button onclick="handleLocalAnswer(false)" style="background:#f8d7da; color:#721c24;">I missed it</button>
+            </div>
+            <div style="margin-top:10px; font-size:0.8em; color:#666;">
+                Current Weight: ${winner.w.toExponential(2)}
+            </div>
         </div>
     `;
 }
+
+async function handleLocalAnswer(isCorrect) {
+    // 4. UPDATE LOCAL WEIGHT (Instant Feedback)
+    if (isCorrect) {
+        // Halve the weight locally
+        // We use 2.23e-308 to match Python's limit
+        currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
+    }
+    // If wrong, weight stays the same (or you could increase it if you wanted)
+
+    // 5. SYNC WITH SERVER (Background)
+    // We don't await this. We let it happen in the background while the user moves on.
+    api({
+        action: 'submit_answer',
+        note_id: currentQuizItem.id,
+        is_correct: isCorrect
+    });
+
+    // 6. NEXT
+    nextQuestion();
+}}
 
 async function submitAnswer(isCorrect) {
     await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });

@@ -86,42 +86,37 @@ def handle_note(action, data, files):
 
 
 # --- SECTION 4: QUIZ LOGIC ---
+# --- SECTION 4: QUIZ LOGIC ---
 def handle_quiz(action, data):
-    if action == 'generate_quiz':
-        # Handle list input safely
+    # 1. INITIAL LOAD: Send ONLY IDs and Weights to the client
+    if action == 'init_quiz':
         chapter_ids = data.get('chapter_ids')
         if isinstance(chapter_ids, str):
             chapter_ids = json.loads(chapter_ids)
 
         placeholders = ','.join(['%s'] * len(chapter_ids))
+
+        # We only fetch ID and WEIGHT. No text. Super fast.
         query = f"""
-            SELECT n.id, n.header, n.body, n.weight 
-            FROM school_note n
-            WHERE n.chapter_id IN ({placeholders})
+            SELECT id, weight 
+            FROM school_note 
+            WHERE chapter_id IN ({placeholders})
         """
-        # Note: We removed the JOIN with school_chapter because we don't need index anymore
         rows = db_query(query, chapter_ids)
 
-        quiz_set = []
-        for r in rows:
-            note_id, question, answer, weight = r
+        # Send raw list to JS: [{'id': 12, 'w': 100.0}, ...]
+        return {'deck': [{'id': r[0], 'w': float(r[1])} for r in rows]}
 
-            # THE FIX: Multiply weight by a random number (0.0 to 1.0)
-            # This shuffles the order while still favoring heavy items.
-            priority_score = float(weight) * random.random()
+    # 2. CONTENT FETCH: Client picked a winner, now asks for text
+    elif action == 'get_content':
+        note_id = data.get('note_id')
+        rows = db_query("SELECT header, body FROM school_note WHERE id = %s", [note_id])
+        if rows:
+            return {'header': rows[0][0], 'body': rows[0][1]}
+        return {'error': 'Note not found'}
 
-            # Only add if it has some weight
-            #if float(weight) > 2.23e-308:
-            quiz_set.append({'id': note_id, 'question': question, 'answer': answer, 'score': priority_score})
-
-        # Sort by the new randomized score (Highest first)
-        quiz_set.sort(key=lambda x: x['score'], reverse=True)
-
-        # Return top 10
-        return {'quiz': quiz_set[:1]}
-
+    # 3. SAVE RESULT: Client tells us to update DB (Background sync)
     elif action == 'submit_answer':
-        # ... (This part stays exactly the same as before) ...
         note_id = data['note_id']
         is_correct = data['is_correct']
 
@@ -129,12 +124,13 @@ def handle_quiz(action, data):
             is_correct = (is_correct.lower() == 'true')
 
         if is_correct:
+            # Server-side weight update (Source of Truth)
             db_query(
                 "UPDATE school_note SET weight = MAX(2.23e-308, weight / 2.0), correct_count = correct_count + 1 WHERE id = %s",
                 [note_id])
         else:
             db_query("UPDATE school_note SET wrong_count = wrong_count + 1 WHERE id = %s", [note_id])
 
-        return {'status': 'updated'}
+        return {'status': 'saved'}
 
     return None
