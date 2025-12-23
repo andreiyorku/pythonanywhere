@@ -111,14 +111,14 @@ def handle_quiz(action, data):
             priority_score = float(weight) * random.random()
 
             # Only add if it has some weight
-            if float(weight) > 2.23e-308:
-                quiz_set.append({'id': note_id, 'question': question, 'answer': answer, 'score': priority_score})
+            #if float(weight) > 2.23e-308:
+            quiz_set.append({'id': note_id, 'question': question, 'answer': answer, 'score': priority_score})
 
         # Sort by the new randomized score (Highest first)
         quiz_set.sort(key=lambda x: x['score'], reverse=True)
 
         # Return top 10
-        return {'quiz': quiz_set[:10]}
+        return {'quiz': quiz_set[:1]}
 
     elif action == 'submit_answer':
         # ... (This part stays exactly the same as before) ...
