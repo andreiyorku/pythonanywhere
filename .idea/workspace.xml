@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="test sql12">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="test sql123">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
     </list>
@@ -461,11 +461,18 @@
       <option name="project" value="LOCAL" />
       <updated>1766470039492</updated>
     </task>
-    <option name="localTasksCounter" value="45" />
+    <task id="LOCAL-00045" summary="test sql123">
+      <option name="closed" value="true" />
+      <created>1766470097856</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1766470097856</updated>
+    </task>
+    <option name="localTasksCounter" value="46" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="ss" />
     <MESSAGE value="updating" />
     <MESSAGE value="restart, and js_playgrounds" />
     <MESSAGE value="before adding modular htmls" />
@@ -490,6 +497,7 @@
     <MESSAGE value="test sql" />
     <MESSAGE value="test sql1" />
     <MESSAGE value="test sql12" />
-    <option name="LAST_COMMIT_MESSAGE" value="test sql12" />
+    <MESSAGE value="test sql123" />
+    <option name="LAST_COMMIT_MESSAGE" value="test sql123" />
   </component>
 </project>

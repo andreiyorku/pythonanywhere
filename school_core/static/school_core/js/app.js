@@ -7,6 +7,7 @@ let quizQueue = [];
 let currentQuizItem = null;
 let currentQuizChapterIds = [];
 let pendingImageFile = null;
+let lastQuizItemId = null;
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -308,25 +309,33 @@ async function nextQuestion() {
         return;
     }
 
-    // 2. RUN WEIGHTED SHUFFLE LOCALLY
-    // Formula: Score = Weight * Random()
-    // The note with the highest score wins this round.
+    // --- NEW LOGIC STARTS HERE ---
 
     let winner = null;
     let maxScore = -1;
 
-    quizDeck.forEach(note => {
+    // Filter out the last seen question (unless it's the only one left)
+    const candidates = (quizDeck.length > 1 && lastQuizItemId)
+        ? quizDeck.filter(n => n.id !== lastQuizItemId)
+        : quizDeck;
+
+    candidates.forEach(note => {
+        // Simple weighted random: Weight * Random Number
         let score = note.w * Math.random();
+
         if (score > maxScore) {
             maxScore = score;
             winner = note;
         }
     });
 
-    currentQuizItem = winner; // Store for submission
+    // Save this as the "Last Seen" for next time
+    lastQuizItemId = winner.id;
+    currentQuizItem = winner;
 
-    // 3. FETCH CONTENT (Only for the winner)
-    // We only ask the server for the text of THIS specific note.
+    // --- NEW LOGIC ENDS HERE ---
+
+    // 3. FETCH CONTENT (Rest of function stays the same...)
     const content = await api({ action: 'get_content', note_id: winner.id });
 
     container.innerHTML = `
