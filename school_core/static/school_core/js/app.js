@@ -172,11 +172,82 @@ async function deleteCourse(id) {
 }
 
 // --- VIEW LOGIC: COURSE ---
-async function openCourse(id, name) {
-    currentCourseId = id;
-    currentCourseName = name; // Save name
-    router('course');
-    // Note: loadChapters is now called by the router automatically
+async function loadCourses() {
+    const data = await api({ action: 'get_courses' });
+    const list = document.getElementById('course-list');
+    list.innerHTML = '';
+
+    if(!data || !data.courses) return;
+
+    data.courses.forEach(c => {
+        const div = document.createElement('div');
+        div.style.marginBottom = "10px";
+        div.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border: 1px solid #ddd;">
+                <div>
+                    <input type="checkbox" onchange="toggleCourseSelection(this, ${c.id})" title="Select All Chapters">
+                    <strong>${c.name}</strong>
+                </div>
+                <div>
+                    <button onclick="toggleHubChapters(${c.id})" style="margin-right: 5px;">▼ Chapters</button>
+                    <button onclick="openCourse(${c.id}, '${c.name}')">Edit</button>
+                    <button onclick="deleteCourse(${c.id})" style="background: #ffcccc; color: #cc0000;">X</button>
+                </div>
+            </div>
+            <div id="hub-chapters-${c.id}" style="display:none; padding: 10px 10px 10px 30px; border-left: 2px solid #ccc; background: #fff;"></div>
+        `;
+
+        list.appendChild(div);
+    });
+}
+
+// NEW: Load chapters for the Hub view (Lazy Loading)
+async function toggleHubChapters(courseId) {
+    const container = document.getElementById(`hub-chapters-${courseId}`);
+
+    // Toggle Visibility
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+
+        // Only fetch if empty (prevents re-fetching every time you click)
+        if (container.innerHTML === '') {
+            container.innerHTML = "Loading...";
+            const data = await api({ action: 'get_chapters', course_id: courseId });
+            container.innerHTML = ''; // Clear loading text
+
+            if (data && data.chapters) {
+                data.chapters.forEach(c => {
+                    // Note: We use the SAME class 'chap-select' so startQuiz() finds them automatically
+                    container.innerHTML += `
+                        <div style="margin-bottom: 5px;">
+                            <label>
+                                <input type="checkbox" class="chap-select course-chap-${courseId}" value="${c.id}">
+                                ${c.name}
+                            </label>
+                        </div>`;
+                });
+            } else {
+                container.innerHTML = "<em>No chapters found.</em>";
+            }
+        }
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+// NEW: Select All Chapters when Course is clicked
+async function toggleCourseSelection(masterCheckbox, courseId) {
+    // 1. Ensure chapters are loaded (so we can check them)
+    const container = document.getElementById(`hub-chapters-${courseId}`);
+    if (container.innerHTML === '') {
+        await toggleHubChapters(courseId);
+    }
+    // Ensure it's visible if the user checks the box
+    if (masterCheckbox.checked) container.style.display = 'block';
+
+    // 2. Check/Uncheck all child checkboxes
+    const children = document.querySelectorAll(`.course-chap-${courseId}`);
+    children.forEach(child => child.checked = masterCheckbox.checked);
 }
 
 async function loadChapters() {

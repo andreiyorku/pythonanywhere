@@ -1,5 +1,16 @@
 <h2>My Subjects</h2>
-<input type="text" id="new-course-name" placeholder="New Subject Name">
-<button onclick="addCourse()">Create Subject</button>
-<br><br>
+
+<div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+    <strong>Quiz Builder</strong><br>
+    <small>Select courses or specific chapters below, then click Start.</small><br><br>
+    <button onclick="startQuiz()" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+        Start Multi-Course Quiz
+    </button>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <input type="text" id="new-course-name" placeholder="New Subject Name">
+    <button onclick="addCourse()">Create Subject</button>
+</div>
+
 <div id="course-list"></div>
