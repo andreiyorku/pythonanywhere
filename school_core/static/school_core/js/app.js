@@ -8,6 +8,7 @@ let currentQuizItem = null;
 let currentQuizChapterIds = [];
 let pendingImageFile = null;
 let lastQuizItemId = null;
+let quizReturnView = 'hub'; // Default return location
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -73,6 +74,10 @@ async function router(viewName) {
     }
 
     if (viewName === 'quiz') {
+        // FORCE the quit button to go back to the correct place
+        const btn = document.getElementById('quiz-quit-btn');
+        if(btn) btn.setAttribute('onclick', `router('${quizReturnView}')`);
+
         nextQuestion();
     }
 }
@@ -353,6 +358,8 @@ async function deleteNote(id) {
 let quizDeck = []; // Stores {id, w} objects locally
 
 async function startQuiz() {
+    quizReturnView = returnTo;
+
     const boxes = document.querySelectorAll('.chap-select:checked');
     const ids = Array.from(boxes).map(b => b.value);
     if(ids.length === 0) return alert("Select chapters");
