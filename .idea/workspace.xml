@@ -4,9 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="test sql123">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="none repeating">
+      <change afterPath="$PROJECT_DIR$/git_update.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -469,11 +468,18 @@
       <option name="project" value="LOCAL" />
       <updated>1766470097856</updated>
     </task>
-    <option name="localTasksCounter" value="46" />
+    <task id="LOCAL-00046" summary="none repeating">
+      <option name="closed" value="true" />
+      <created>1766607362327</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1766607362327</updated>
+    </task>
+    <option name="localTasksCounter" value="47" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updating" />
     <MESSAGE value="restart, and js_playgrounds" />
     <MESSAGE value="before adding modular htmls" />
     <MESSAGE value="school_core is modularized" />
@@ -498,6 +504,7 @@
     <MESSAGE value="test sql1" />
     <MESSAGE value="test sql12" />
     <MESSAGE value="test sql123" />
-    <option name="LAST_COMMIT_MESSAGE" value="test sql123" />
+    <MESSAGE value="none repeating" />
+    <option name="LAST_COMMIT_MESSAGE" value="none repeating" />
   </component>
 </project>
