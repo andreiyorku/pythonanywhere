@@ -11,6 +11,8 @@ BRANCH=$(git branch --show-current)
 # 3. Force overwrite local files to match GitHub exactly
 git reset --hard origin/$BRANCH
 
+git update-index --chmod=+x git_update.sh
+
 echo "--- Pulled successfully on branch: $BRANCH ---"
 
 # Optional: Reload the web app automatically (uncomment if you want this)

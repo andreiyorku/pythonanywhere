@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="none repeating">
-      <change afterPath="$PROJECT_DIR$/git_update.sh" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="add git update">
+      <change beforePath="$PROJECT_DIR$/git_update.sh" beforeDir="false" afterPath="$PROJECT_DIR$/git_update.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -476,11 +476,18 @@
       <option name="project" value="LOCAL" />
       <updated>1766607362327</updated>
     </task>
-    <option name="localTasksCounter" value="47" />
+    <task id="LOCAL-00047" summary="add git update">
+      <option name="closed" value="true" />
+      <created>1766607646564</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1766607646564</updated>
+    </task>
+    <option name="localTasksCounter" value="48" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="restart, and js_playgrounds" />
     <MESSAGE value="before adding modular htmls" />
     <MESSAGE value="school_core is modularized" />
     <MESSAGE value="school_core stylysed with mobile" />
@@ -505,6 +512,7 @@
     <MESSAGE value="test sql12" />
     <MESSAGE value="test sql123" />
     <MESSAGE value="none repeating" />
-    <option name="LAST_COMMIT_MESSAGE" value="none repeating" />
+    <MESSAGE value="add git update" />
+    <option name="LAST_COMMIT_MESSAGE" value="add git update" />
   </component>
 </project>
