@@ -16,4 +16,4 @@ git update-index --chmod=+x git_update.sh
 echo "--- Pulled successfully on branch: $BRANCH ---"
 
 # Optional: Reload the web app automatically (uncomment if you want this)
-# touch /var/www/your_username_pythonanywhere_com_wsgi.py
+# touch /var/www/your_username_pythonanywhere_com_wsgi.py  tt
