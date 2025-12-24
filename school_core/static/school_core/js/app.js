@@ -373,7 +373,7 @@ async function deleteNote(id) {
 // --- CLIENT-SIDE QUIZ ENGINE ---
 let quizDeck = []; // Stores {id, w} objects locally
 
-async function startQuiz() {
+async function startQuiz(returnTo = 'hub') {
     quizReturnView = returnTo;
 
     const boxes = document.querySelectorAll('.chap-select:checked');
