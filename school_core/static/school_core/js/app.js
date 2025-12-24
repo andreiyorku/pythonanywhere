@@ -180,37 +180,45 @@ async function deleteCourse(id) {
 async function loadCourses() {
     const data = await api({ action: 'get_courses' });
     const list = document.getElementById('course-list');
-    const template = document.getElementById('course-template'); // Get the template
+    const template = document.getElementById('course-template');
 
     list.innerHTML = '';
     if(!data || !data.courses) return;
 
     data.courses.forEach(c => {
-        // 1. Clone the HTML structure
+        // 1. Clone the template
         const clone = template.content.cloneNode(true);
 
-        // 2. Fill in the Text
+        // 2. Set the Name
         clone.querySelector('.course-name').innerText = c.name;
 
-        // 3. Attach Events & IDs
+        // 3. Setup the Checkbox (for the Quiz)
         const checkbox = clone.querySelector('.course-check');
         checkbox.onchange = () => toggleCourseSelection(checkbox, c.id);
 
+        // 4. Setup the Expand Button
         const btnExpand = clone.querySelector('.btn-expand');
         btnExpand.onclick = () => toggleHubChapters(c.id);
 
+        // 5. Setup the EDIT Button (The Broken Part)
         const btnOpen = clone.querySelector('.btn-open');
-        btnOpen.onclick = () => openCourse(c.id, c.name);
+        btnOpen.onclick = () => openCourse(c.id, c.name); // <--- Make sure this line exists!
 
+        // 6. Setup the Delete Button
         const btnDelete = clone.querySelector('.btn-delete');
         btnDelete.onclick = () => deleteCourse(c.id);
 
-        // We need to set the ID of the container so toggleHubChapters can find it
+        // 7. Prepare the Chapter Container ID
         clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
 
-        // 4. Append to list
         list.appendChild(clone);
     });
+}
+
+async function openCourse(id, name) {
+    currentCourseId = id;
+    currentCourseName = name;
+    router('course');
 }
 
 // NEW: Load chapters for the Hub view (Lazy Loading)
