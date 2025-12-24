@@ -1,2 +1,27 @@
 <button id="quiz-quit-btn" onclick="router('hub')"><< Quit</button>
 <div id="quiz-container"></div>
+
+<button id="quiz-quit-btn" onclick="router('hub')"><< Quit</button>
+<div id="quiz-container"></div>
+
+<template id="quiz-card-template">
+    <div>
+        <h3 class="q-header"></h3>
+
+        <button class="btn-show-answer">Show Answer</button>
+
+        <div class="q-answer-area" style="display:none; margin-top:20px;">
+            <div class="q-body"></div>
+            <br>
+
+            <div style="margin-top:20px;">
+                <button class="btn-correct" style="background:#d4edda; color:#155724;">I got it</button>
+                <button class="btn-wrong" style="background:#f8d7da; color:#721c24;">I missed it</button>
+            </div>
+
+            <div style="margin-top:10px; font-size:0.8em; color:#666;">
+                Current Weight: <span class="q-weight"></span>
+            </div>
+        </div>
+    </div>
+</template>

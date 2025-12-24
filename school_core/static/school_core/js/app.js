@@ -141,26 +141,6 @@ function renderContent(text) {
     return `<div>${text}</div>`;
 }
 
-
-// --- VIEW LOGIC: HUB ---
-async function loadCourses() {
-    const data = await api({ action: 'get_courses' });
-    const list = document.getElementById('course-list');
-    list.innerHTML = '';
-
-    if(!data || !data.courses) return;
-
-    data.courses.forEach(c => {
-        const div = document.createElement('div');
-        div.innerHTML = `<strong>${c.name}</strong>
-            <button onclick="openCourse(${c.id}, '${c.name}')">Open</button>
-            <button onclick="deleteCourse(${c.id})" style="background: #ffcccc; color: #cc0000; margin-top:5px; padding: 5px;">Delete</button>
-        <hr>`;
-
-        list.appendChild(div);
-    });
-}
-
 async function addCourse() {
     const name = document.getElementById('new-course-name').value;
     if(!name) return;
@@ -177,39 +157,28 @@ async function deleteCourse(id) {
 }
 
 // --- VIEW LOGIC: COURSE ---
-async function loadCourses() {
-    const data = await api({ action: 'get_courses' });
-    const list = document.getElementById('course-list');
-    const template = document.getElementById('course-template');
+async function loadNotes() {
+    const data = await api({ action: 'get_notes', chapter_id: currentChapterId });
+    const list = document.getElementById('notes-list');
+    const template = document.getElementById('note-item-template');
 
     list.innerHTML = '';
-    if(!data || !data.courses) return;
+    if(!data || !data.notes) return;
 
-    data.courses.forEach(c => {
-        // 1. Clone the template
+    data.notes.forEach(n => {
         const clone = template.content.cloneNode(true);
 
-        // 2. Set the Name
-        clone.querySelector('.course-name').innerText = c.name;
+        // Fill Data
+        clone.querySelector('.note-header').innerText = n.header;
 
-        // 3. Setup the Checkbox (for the Quiz)
-        const checkbox = clone.querySelector('.course-check');
-        checkbox.onchange = () => toggleCourseSelection(checkbox, c.id);
+        // We still use renderContent helper, but inject it into the span
+        clone.querySelector('.note-body').innerHTML = renderContent(n.body);
 
-        // 4. Setup the Expand Button
-        const btnExpand = clone.querySelector('.btn-expand');
-        btnExpand.onclick = () => toggleHubChapters(c.id);
+        clone.querySelector('.note-weight').innerText = n.weight;
 
-        // 5. Setup the EDIT Button (The Broken Part)
-        const btnOpen = clone.querySelector('.btn-open');
-        btnOpen.onclick = () => openCourse(c.id, c.name); // <--- Make sure this line exists!
-
-        // 6. Setup the Delete Button
+        // Attach Button Action
         const btnDelete = clone.querySelector('.btn-delete');
-        btnDelete.onclick = () => deleteCourse(c.id);
-
-        // 7. Prepare the Chapter Container ID
-        clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
+        btnDelete.onclick = () => deleteNote(n.id);
 
         list.appendChild(clone);
     });
@@ -404,57 +373,59 @@ async function startQuiz(returnTo = 'hub') {
 
 async function nextQuestion() {
     const container = document.getElementById('quiz-container');
-    container.innerHTML = "<h3>Calculating...</h3>";
 
+    // Check Deck
     if (quizDeck.length === 0) {
         container.innerHTML = "<h3>Error: Deck empty.</h3>";
         return;
     }
 
-    // --- NEW LOGIC STARTS HERE ---
+    container.innerHTML = "<h3>Calculating...</h3>";
 
+    // --- LOGIC: Pick Winner ---
     let winner = null;
     let maxScore = -1;
-
-    // Filter out the last seen question (unless it's the only one left)
     const candidates = (quizDeck.length > 1 && lastQuizItemId)
         ? quizDeck.filter(n => n.id !== lastQuizItemId)
         : quizDeck;
 
     candidates.forEach(note => {
-        // Simple weighted random: Weight * Random Number
         let score = note.w * Math.random();
-
         if (score > maxScore) {
             maxScore = score;
             winner = note;
         }
     });
 
-    // Save this as the "Last Seen" for next time
     lastQuizItemId = winner.id;
     currentQuizItem = winner;
+    // --------------------------
 
-    // --- NEW LOGIC ENDS HERE ---
-
-    // 3. FETCH CONTENT (Rest of function stays the same...)
+    // Fetch Content
     const content = await api({ action: 'get_content', note_id: winner.id });
 
-    container.innerHTML = `
-        <h3>${content.header}</h3>
-        <button onclick="document.getElementById('ans').style.display='block'">Show Answer</button>
-        <div id="ans" style="display:none; margin-top:20px;">
-            ${renderContent(content.body)}
-            <br>
-            <div style="margin-top:20px;">
-                <button onclick="handleLocalAnswer(true)" style="background:#d4edda; color:#155724;">I got it</button>
-                <button onclick="handleLocalAnswer(false)" style="background:#f8d7da; color:#721c24;">I missed it</button>
-            </div>
-            <div style="margin-top:10px; font-size:0.8em; color:#666;">
-                Current Weight: ${winner.w.toExponential(2)}
-            </div>
-        </div>
-    `;
+    // Clear loading text
+    container.innerHTML = '';
+
+    // CLONE TEMPLATE
+    const template = document.getElementById('quiz-card-template');
+    const clone = template.content.cloneNode(true);
+
+    // Fill Content
+    clone.querySelector('.q-header').innerText = content.header;
+    clone.querySelector('.q-body').innerHTML = renderContent(content.body);
+    clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
+
+    // Setup "Show Answer" Toggle
+    const ansArea = clone.querySelector('.q-answer-area');
+    const btnShow = clone.querySelector('.btn-show-answer');
+    btnShow.onclick = () => { ansArea.style.display = 'block'; };
+
+    // Setup Answer Buttons
+    clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);
+    clone.querySelector('.btn-wrong').onclick = () => handleLocalAnswer(false);
+
+    container.appendChild(clone);
 }
 
 async function handleLocalAnswer(isCorrect) {
