@@ -1,8 +1,8 @@
 // --- STATE MANAGEMENT ---
 let currentCourseId = null;
-let currentCourseName = ""; // NEW: Remember the name
+let currentCourseName = "";
 let currentChapterId = null;
-let currentChapterName = ""; // NEW: Remember the name
+let currentChapterName = "";
 let quizQueue = [];
 let currentQuizItem = null;
 let currentQuizChapterIds = [];
@@ -31,29 +31,22 @@ async function api(payload, isFile = false) {
     }
 }
 
-// --- ROUTER (Fixed for Timing) ---
+// --- ROUTER ---
 async function router(viewName) {
     const container = document.getElementById('content-slot');
 
-    // 1. Fetch the HTML Fragment
     try {
         const res = await fetch(`/school_core/partial/${viewName}/`);
         if(!res.ok) throw new Error("View not found");
         const html = await res.text();
-
-        // 2. Inject HTML
         container.innerHTML = html;
 
-        // 3. Re-attach Event Listeners (for Images)
         if(viewName === 'chapter') attachImageHandlers();
 
     } catch (err) {
         console.error(err);
         return;
     }
-
-    // 4. Trigger Data Loads & Update Titles
-    // We do this AFTER the HTML is injected, so the elements actually exist.
 
     if (viewName === 'hub') {
         loadCourses();
@@ -74,10 +67,8 @@ async function router(viewName) {
     }
 
     if (viewName === 'quiz') {
-        // FORCE the quit button to go back to the correct place
         const btn = document.getElementById('quiz-quit-btn');
         if(btn) btn.setAttribute('onclick', `router('${quizReturnView}')`);
-
         nextQuestion();
     }
 }
@@ -118,7 +109,6 @@ function attachImageHandlers() {
 }
 
 window.addEventListener('paste', (e) => {
-    // Only capture paste if we are actively looking at the chapter view
     const dropArea = document.getElementById('drop-area');
     if (dropArea) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
@@ -141,6 +131,45 @@ function renderContent(text) {
     return `<div>${text}</div>`;
 }
 
+
+// --- VIEW LOGIC: HUB ---
+async function loadCourses() {
+    const data = await api({ action: 'get_courses' });
+    const list = document.getElementById('course-list');
+    const template = document.getElementById('course-template');
+
+    list.innerHTML = '';
+    if(!data || !data.courses) return;
+
+    // SAFETY CHECK: Ensure template exists before running
+    if (!template) {
+        console.error("ERROR: <template id='course-template'> is missing in hub.html");
+        return;
+    }
+
+    data.courses.forEach(c => {
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.course-name').innerText = c.name;
+
+        const checkbox = clone.querySelector('.course-check');
+        checkbox.onchange = () => toggleCourseSelection(checkbox, c.id);
+
+        const btnExpand = clone.querySelector('.btn-expand');
+        btnExpand.onclick = () => toggleHubChapters(c.id);
+
+        const btnOpen = clone.querySelector('.btn-open');
+        btnOpen.onclick = () => openCourse(c.id, c.name);
+
+        const btnDelete = clone.querySelector('.btn-delete');
+        btnDelete.onclick = () => deleteCourse(c.id);
+
+        clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
+
+        list.appendChild(clone);
+    });
+}
+
 async function addCourse() {
     const name = document.getElementById('new-course-name').value;
     if(!name) return;
@@ -152,42 +181,8 @@ async function addCourse() {
 async function deleteCourse(id) {
     if(confirm("Delete this Subject? All chapters and notes inside it will be lost.")) {
         await api({ action: 'delete_course', course_id: id });
-        loadCourses(); // Refresh the list
+        loadCourses();
     }
-}
-
-// --- VIEW LOGIC: COURSE ---
-async function loadNotes() {
-    const data = await api({ action: 'get_notes', chapter_id: currentChapterId });
-    const list = document.getElementById('notes-list');
-    const template = document.getElementById('note-item-template');
-
-    list.innerHTML = '';
-    if(!data || !data.notes) return;
-
-    data.notes.forEach(n => {
-        const clone = template.content.cloneNode(true);
-
-        // Fill Data
-        clone.querySelector('.note-header').innerText = n.header;
-
-        // We still use renderContent helper, but inject it into the span
-        clone.querySelector('.note-body').innerHTML = renderContent(n.body);
-
-        clone.querySelector('.note-weight').innerText = n.weight;
-
-        // Attach Button Action
-        const btnDelete = clone.querySelector('.btn-delete');
-        btnDelete.onclick = () => deleteNote(n.id);
-
-        list.appendChild(clone);
-    });
-}
-
-async function openCourse(id, name) {
-    currentCourseId = id;
-    currentCourseName = name;
-    router('course');
 }
 
 // NEW: Load chapters for the Hub view (Lazy Loading)
@@ -203,14 +198,14 @@ async function toggleHubChapters(courseId) {
             container.innerHTML = '';
 
             if (data && data.chapters) {
-                const template = document.getElementById('hub-chapter-template'); // Use the mini template
+                const template = document.getElementById('hub-chapter-template');
 
                 data.chapters.forEach(c => {
                     const clone = template.content.cloneNode(true);
 
                     const checkbox = clone.querySelector('.chap-select');
                     checkbox.value = c.id;
-                    checkbox.classList.add(`course-chap-${courseId}`); // Add dynamic class for "Select All" logic
+                    checkbox.classList.add(`course-chap-${courseId}`);
 
                     clone.querySelector('.chap-name').innerText = c.name;
                     container.appendChild(clone);
@@ -224,19 +219,22 @@ async function toggleHubChapters(courseId) {
     }
 }
 
-// NEW: Select All Chapters when Course is clicked
 async function toggleCourseSelection(masterCheckbox, courseId) {
-    // 1. Ensure chapters are loaded (so we can check them)
     const container = document.getElementById(`hub-chapters-${courseId}`);
     if (container.innerHTML === '') {
         await toggleHubChapters(courseId);
     }
-    // Ensure it's visible if the user checks the box
     if (masterCheckbox.checked) container.style.display = 'block';
 
-    // 2. Check/Uncheck all child checkboxes
     const children = document.querySelectorAll(`.course-chap-${courseId}`);
     children.forEach(child => child.checked = masterCheckbox.checked);
+}
+
+// --- VIEW LOGIC: COURSE ---
+async function openCourse(id, name) {
+    currentCourseId = id;
+    currentCourseName = name;
+    router('course');
 }
 
 async function loadChapters() {
@@ -275,37 +273,36 @@ async function addChapter() {
 async function deleteChapter(id) {
     if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
         await api({ action: 'delete_chapter', chapter_id: id });
-        loadChapters(); // Refresh the list
+        loadChapters();
     }
 }
 
 // --- VIEW LOGIC: CHAPTER ---
 async function openChapter(id, name) {
     currentChapterId = id;
-    currentChapterName = name; // Save name
+    currentChapterName = name;
     router('chapter');
 }
 
 async function loadNotes() {
     const data = await api({ action: 'get_notes', chapter_id: currentChapterId });
     const list = document.getElementById('notes-list');
-    list.innerHTML = '';
+    const template = document.getElementById('note-item-template');
 
+    list.innerHTML = '';
     if(!data || !data.notes) return;
 
     data.notes.forEach(n => {
-        const div = document.createElement('div');
-        div.style.borderBottom = "1px solid #ccc";
-        div.style.padding = "10px";
-        div.innerHTML = `
-            <b>Q: ${n.header}</b>
-            <br>
-            A: ${renderContent(n.body)}
-            <br>
-            <small>Weight: ${n.weight}</small>
-            <button onclick="deleteNote(${n.id})">Delete</button>
-        `;
-        list.appendChild(div);
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.note-header').innerText = n.header;
+        clone.querySelector('.note-body').innerHTML = renderContent(n.body);
+        clone.querySelector('.note-weight').innerText = n.weight;
+
+        const btnDelete = clone.querySelector('.btn-delete');
+        btnDelete.onclick = () => deleteNote(n.id);
+
+        list.appendChild(clone);
     });
 }
 
@@ -327,7 +324,6 @@ async function addNote() {
         await api({ action: 'add_note', chapter_id: currentChapterId, header: header, body: body });
     }
 
-    // Manually clear inputs since the view doesn't reload entirely
     document.getElementById('note-header').value = '';
     if(document.getElementById('note-body')) document.getElementById('note-body').value = '';
     pendingImageFile = null;
@@ -344,12 +340,7 @@ async function deleteNote(id) {
     }
 }
 
-
-
-// --- VIEW LOGIC: INFINITE QUIZ ---
-// --- CLIENT-SIDE QUIZ ENGINE ---
-let quizDeck = []; // Stores {id, w} objects locally
-
+// --- VIEW LOGIC: QUIZ ENGINE ---
 async function startQuiz(returnTo = 'hub') {
     quizReturnView = returnTo;
 
@@ -357,7 +348,6 @@ async function startQuiz(returnTo = 'hub') {
     const ids = Array.from(boxes).map(b => b.value);
     if(ids.length === 0) return alert("Select chapters");
 
-    // 1. Fetch the "Deck" (IDs and Weights only)
     const data = await api({ action: 'init_quiz', chapter_ids: ids });
 
     if (!data.deck || data.deck.length === 0) {
@@ -365,16 +355,13 @@ async function startQuiz(returnTo = 'hub') {
         return;
     }
 
-    quizDeck = data.deck; // Store the weights locally!
-    console.log(`Loaded ${quizDeck.length} notes into local deck.`);
-
-    router('quiz'); // This will trigger nextQuestion() in the router check
+    quizDeck = data.deck;
+    router('quiz');
 }
 
 async function nextQuestion() {
     const container = document.getElementById('quiz-container');
 
-    // Check Deck
     if (quizDeck.length === 0) {
         container.innerHTML = "<h3>Error: Deck empty.</h3>";
         return;
@@ -382,7 +369,6 @@ async function nextQuestion() {
 
     container.innerHTML = "<h3>Calculating...</h3>";
 
-    // --- LOGIC: Pick Winner ---
     let winner = null;
     let maxScore = -1;
     const candidates = (quizDeck.length > 1 && lastQuizItemId)
@@ -399,29 +385,21 @@ async function nextQuestion() {
 
     lastQuizItemId = winner.id;
     currentQuizItem = winner;
-    // --------------------------
 
-    // Fetch Content
     const content = await api({ action: 'get_content', note_id: winner.id });
 
-    // Clear loading text
     container.innerHTML = '';
-
-    // CLONE TEMPLATE
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
 
-    // Fill Content
     clone.querySelector('.q-header').innerText = content.header;
     clone.querySelector('.q-body').innerHTML = renderContent(content.body);
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
 
-    // Setup "Show Answer" Toggle
     const ansArea = clone.querySelector('.q-answer-area');
     const btnShow = clone.querySelector('.btn-show-answer');
     btnShow.onclick = () => { ansArea.style.display = 'block'; };
 
-    // Setup Answer Buttons
     clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);
     clone.querySelector('.btn-wrong').onclick = () => handleLocalAnswer(false);
 
@@ -429,32 +407,18 @@ async function nextQuestion() {
 }
 
 async function handleLocalAnswer(isCorrect) {
-    // 4. UPDATE LOCAL WEIGHT (Instant Feedback)
     if (isCorrect) {
-        // Halve the weight locally
-        // We use 2.23e-308 to match Python's limit
         currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
     }
-    // If wrong, weight stays the same (or you could increase it if you wanted)
-
-    // 5. SYNC WITH SERVER (Background)
-    // We don't await this. We let it happen in the background while the user moves on.
     api({
         action: 'submit_answer',
         note_id: currentQuizItem.id,
         is_correct: isCorrect
     });
-
-    // 6. NEXT
     nextQuestion();
 }
 
-async function submitAnswer(isCorrect) {
-    await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
-    nextQuestion();
-}
-
-// --- INITIALIZATION ---dd
+// --- INITIALIZATION ---
 window.onload = function() {
     router('hub');
 };
