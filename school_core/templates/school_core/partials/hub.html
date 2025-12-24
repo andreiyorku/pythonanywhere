@@ -3,7 +3,7 @@
 <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
     <strong>Quiz Builder</strong><br>
     <small>Select courses or specific chapters below, then click Start.</small><br><br>
-    <button onclick="startQuiz('hub')" style="background: #007bff; color: white; ...">
+    <button onclick="startQuiz('hub')" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
         Start Multi-Course Quiz
     </button>
 </div>
@@ -14,3 +14,29 @@
 </div>
 
 <div id="course-list"></div>
+
+<template id="course-template">
+    <div style="margin-bottom: 10px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border: 1px solid #ddd;">
+            <div>
+                <input type="checkbox" class="course-check" title="Select All Chapters">
+                <strong class="course-name"></strong>
+            </div>
+            <div>
+                <button class="btn-expand" style="margin-right: 5px;">▼ Chapters</button>
+                <button class="btn-open">Edit</button>
+                <button class="btn-delete" style="background: #ffcccc; color: #cc0000;">X</button>
+            </div>
+        </div>
+        <div class="hub-chapters-container" style="display:none; padding: 10px 10px 10px 30px; border-left: 2px solid #ccc; background: #fff;"></div>
+    </div>
+</template>
+
+<template id="hub-chapter-template">
+    <div style="margin-bottom: 5px;">
+        <label>
+            <input type="checkbox" class="chap-select">
+            <span class="chap-name"></span>
+        </label>
+    </div>
+</template>

@@ -180,29 +180,36 @@ async function deleteCourse(id) {
 async function loadCourses() {
     const data = await api({ action: 'get_courses' });
     const list = document.getElementById('course-list');
-    list.innerHTML = '';
+    const template = document.getElementById('course-template'); // Get the template
 
+    list.innerHTML = '';
     if(!data || !data.courses) return;
 
     data.courses.forEach(c => {
-        const div = document.createElement('div');
-        div.style.marginBottom = "10px";
-        div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border: 1px solid #ddd;">
-                <div>
-                    <input type="checkbox" onchange="toggleCourseSelection(this, ${c.id})" title="Select All Chapters">
-                    <strong>${c.name}</strong>
-                </div>
-                <div>
-                    <button onclick="toggleHubChapters(${c.id})" style="margin-right: 5px;">▼ Chapters</button>
-                    <button onclick="openCourse(${c.id}, '${c.name}')">Edit</button>
-                    <button onclick="deleteCourse(${c.id})" style="background: #ffcccc; color: #cc0000;">X</button>
-                </div>
-            </div>
-            <div id="hub-chapters-${c.id}" style="display:none; padding: 10px 10px 10px 30px; border-left: 2px solid #ccc; background: #fff;"></div>
-        `;
+        // 1. Clone the HTML structure
+        const clone = template.content.cloneNode(true);
 
-        list.appendChild(div);
+        // 2. Fill in the Text
+        clone.querySelector('.course-name').innerText = c.name;
+
+        // 3. Attach Events & IDs
+        const checkbox = clone.querySelector('.course-check');
+        checkbox.onchange = () => toggleCourseSelection(checkbox, c.id);
+
+        const btnExpand = clone.querySelector('.btn-expand');
+        btnExpand.onclick = () => toggleHubChapters(c.id);
+
+        const btnOpen = clone.querySelector('.btn-open');
+        btnOpen.onclick = () => openCourse(c.id, c.name);
+
+        const btnDelete = clone.querySelector('.btn-delete');
+        btnDelete.onclick = () => deleteCourse(c.id);
+
+        // We need to set the ID of the container so toggleHubChapters can find it
+        clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
+
+        // 4. Append to list
+        list.appendChild(clone);
     });
 }
 
@@ -210,26 +217,26 @@ async function loadCourses() {
 async function toggleHubChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
 
-    // Toggle Visibility
     if (container.style.display === 'none') {
         container.style.display = 'block';
 
-        // Only fetch if empty (prevents re-fetching every time you click)
         if (container.innerHTML === '') {
-            container.innerHTML = "Loading...";
+            container.innerText = "Loading...";
             const data = await api({ action: 'get_chapters', course_id: courseId });
-            container.innerHTML = ''; // Clear loading text
+            container.innerHTML = '';
 
             if (data && data.chapters) {
+                const template = document.getElementById('hub-chapter-template'); // Use the mini template
+
                 data.chapters.forEach(c => {
-                    // Note: We use the SAME class 'chap-select' so startQuiz() finds them automatically
-                    container.innerHTML += `
-                        <div style="margin-bottom: 5px;">
-                            <label>
-                                <input type="checkbox" class="chap-select course-chap-${courseId}" value="${c.id}">
-                                ${c.name}
-                            </label>
-                        </div>`;
+                    const clone = template.content.cloneNode(true);
+
+                    const checkbox = clone.querySelector('.chap-select');
+                    checkbox.value = c.id;
+                    checkbox.classList.add(`course-chap-${courseId}`); // Add dynamic class for "Select All" logic
+
+                    clone.querySelector('.chap-name').innerText = c.name;
+                    container.appendChild(clone);
                 });
             } else {
                 container.innerHTML = "<em>No chapters found.</em>";
@@ -258,17 +265,26 @@ async function toggleCourseSelection(masterCheckbox, courseId) {
 async function loadChapters() {
     const data = await api({ action: 'get_chapters', course_id: currentCourseId });
     const list = document.getElementById('chapter-list');
-    list.innerHTML = '';
+    const template = document.getElementById('chapter-row-template');
 
+    list.innerHTML = '';
     if(!data || !data.chapters) return;
 
     data.chapters.forEach(c => {
-        const div = document.createElement('div');
-        div.innerHTML = `<div><label><input type="checkbox" class="chap-select" value="${c.id}"> Index ${c.index}: ${c.name}</label>
-            <button onclick="openChapter(${c.id}, '${c.name}')">Notes</button>
-            <button onclick="deleteChapter(${c.id})" style="background: #ffcccc; color: #cc0000; margin-left: 5px; padding: 5px 10px; width: auto; display: inline-block;">Delete</button>
-        </div>`;
-        list.appendChild(div);
+        const clone = template.content.cloneNode(true);
+
+        clone.querySelector('.chap-label').innerText = `Index ${c.index}: ${c.name}`;
+
+        const checkbox = clone.querySelector('.chap-select');
+        checkbox.value = c.id;
+
+        const btnNotes = clone.querySelector('.btn-notes');
+        btnNotes.onclick = () => openChapter(c.id, c.name);
+
+        const btnDelete = clone.querySelector('.btn-delete');
+        btnDelete.onclick = () => deleteChapter(c.id);
+
+        list.appendChild(clone);
     });
 }
 

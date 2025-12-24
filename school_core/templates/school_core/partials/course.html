@@ -6,8 +6,20 @@
     Name: <input type="text" id="new-chap-name" placeholder="Chapter Name"><br>
     Index: <input type="number" id="new-chap-index" value="1"><br>
     <button onclick="addChapter()">Add</button>
+</div>
 
 <h3>Quiz Builder</h3>
 <div id="chapter-list"></div>
 <br>
-<button onclick="startQuiz()">Start Quiz</button>
+<button onclick="startQuiz('course')">Start Quiz</button>
+
+<template id="chapter-row-template">
+    <div>
+        <label>
+            <input type="checkbox" class="chap-select">
+            <span class="chap-label"></span>
+        </label>
+        <button class="btn-notes">Notes</button>
+        <button class="btn-delete" style="background: #ffcccc; color: #cc0000; margin-left: 5px; padding: 5px 10px; width: auto; display: inline-block;">Delete</button>
+    </div>
+</template>
