@@ -1,17 +1,25 @@
-<button onclick="router('course')"><< Back</button>
+<div style="margin-bottom:15px; display: flex; align-items: center; justify-content: space-between;">
+    <div>
+        <button onclick="router('course')"><< Back to Course</button>
+        <span id="chapter-title" style="font-size: 1.5em; font-weight: bold; margin-left: 10px;">Chapter View</span>
+    </div>
 
-<h2 id="chapter-title">Chapter Content</h2>
+    <button onclick="resetChapterWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00; cursor: pointer; padding: 5px 10px;">
+        ⚠ Reset Chapter Progress
+    </button>
+</div>
 
-<div style="border: 1px solid black; padding: 10px; background:#f0f0f0;">
+<div style="border: 1px solid black; padding: 10px; background:#f0f0f0; margin-bottom: 20px;">
     <h3>Add New Note</h3>
-    <input type="text" id="note-header" placeholder="Question / Header" style="width:100%;">
-    <br><br>
+    <input type="text" id="note-header" placeholder="Question / Header" style="width:100%; margin-bottom: 10px; padding: 5px;">
 
-    <label><input type="radio" name="nType" checked onclick="setMode('text')"> Text</label>
-    <label><input type="radio" name="nType" onclick="setMode('image')"> Image</label>
+    <div style="margin-bottom: 10px;">
+        <label><input type="radio" name="nType" checked onclick="setMode('text')"> Text</label>
+        <label><input type="radio" name="nType" onclick="setMode('image')"> Image</label>
+    </div>
 
     <div id="mode-text">
-        <textarea id="note-body" placeholder="Answer..." style="width:100%;"></textarea>
+        <textarea id="note-body" placeholder="Answer..." style="width:100%; height: 80px; padding: 5px;"></textarea>
     </div>
 
     <div id="mode-image" style="display:none;">
@@ -24,46 +32,24 @@
     </div>
 
     <br>
-    <button onclick="addNote()">Save Note</button>
-</div>
-
-<div id="notes-list"></div>
-
-<div id="notes-list"></div>
-
-<template id="note-item-template">
-    <div style="border-bottom: 1px solid #ccc; padding: 10px;">
-        <div><b>Q: </b><span class="note-header"></span></div>
-        <div style="margin-top:5px;">A: <span class="note-body"></span></div>
-        <div style="margin-top:5px;"><small>Weight: <span class="note-weight"></span></small></div>
-        <button class="btn-delete" style="margin-top:5px;">Delete</button>
-    </div>
-</template>
-
-<div style="margin-bottom:15px;">
-    <button onclick="router('course')"><< Back to Course</button>
-    <h2 id="chapter-title">Chapter View</h2>
-
-    <button onclick="resetChapterWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00;">
-        ⚠ Reset Chapter Progress
-    </button>
+    <button onclick="addNote()" style="padding: 5px 15px; cursor: pointer; background: #28a745; color: white; border: none;">Save Note</button>
 </div>
 
 <div id="notes-list"></div>
 
 <template id="note-item-template">
-    <div style="border-bottom: 1px solid #ccc; padding: 10px; position: relative;">
+    <div style="border-bottom: 1px solid #ccc; padding: 10px; position: relative; background: white;">
         <div><b>Q: </b><span class="note-header"></span></div>
         <div style="margin-top:5px;">A: <span class="note-body"></span></div>
 
         <div style="margin-top:5px; display: flex; gap: 10px; align-items: center;">
             <small>Weight: <span class="note-weight"></span></small>
 
-            <button class="btn-reset" style="background: #e0e0e0; font-size: 0.8em; padding: 2px 5px;">
+            <button class="btn-reset" style="background: #e0e0e0; font-size: 0.8em; padding: 2px 5px; cursor: pointer; border: 1px solid #ccc;">
                 Reset Progress
             </button>
 
-            <button class="btn-delete" style="background: #ffcccc; color: #cc0000; font-size: 0.8em; padding: 2px 5px;">
+            <button class="btn-delete" style="background: #ffcccc; color: #cc0000; font-size: 0.8em; padding: 2px 5px; cursor: pointer; border: 1px solid #cc0000;">
                 Delete
             </button>
         </div>
