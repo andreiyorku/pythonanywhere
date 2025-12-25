@@ -12,7 +12,6 @@ let quizReturnView = 'hub';
 let isRegisterMode = false;
 let currentUserIsAdmin = false; // NEW STATE
 let currentUserId = null; // NEW
-let currentUserIsAdmin = false;
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
