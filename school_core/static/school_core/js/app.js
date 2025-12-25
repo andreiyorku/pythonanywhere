@@ -11,6 +11,8 @@ let lastQuizItemId = null;
 let quizReturnView = 'hub';
 let isRegisterMode = false;
 let currentUserIsAdmin = false; // NEW STATE
+let currentUserId = null; // NEW
+let currentUserIsAdmin = false;
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -38,6 +40,7 @@ async function checkLogin() {
     const data = await api({ action: 'get_current_user' });
 
     if (data && data.username) {
+        currentUserId = data.id; // <--- SAVE ID
         currentUserIsAdmin = data.is_admin; // <--- SAVE THIS
         console.log("Logged in as:", data.username, "Admin:", currentUserIsAdmin);
 
@@ -241,9 +244,9 @@ async function loadCourses() {
         const btnOpen = clone.querySelector('.btn-open');
         btnOpen.onclick = () => openCourse(c.id, c.name);
 
-        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin) {
+        // Allow if Admin OR if I own it
+        if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteCourse(c.id);
         } else {
             btnDelete.style.display = 'none';
@@ -348,7 +351,7 @@ async function loadChapters() {
 
         // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin) {
+        if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteChapter(c.id);
         } else {
             btnDelete.style.display = 'none';
@@ -401,7 +404,7 @@ async function loadNotes() {
 
         // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin) {
+        if (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteNote(n.id);
         } else {
             btnDelete.style.display = 'none';
