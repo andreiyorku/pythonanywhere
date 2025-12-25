@@ -16,6 +16,14 @@ def db_query(query, params=[]):
         return None
 
 
+# --- HELPER: Admin Check ---
+def is_admin(user_id):
+    if not user_id: return False
+    # Check if the username is exactly 'admin'
+    rows = db_query("SELECT username FROM school_user WHERE id = %s", [user_id])
+    return rows and rows[0][0] == 'admin'
+
+
 # --- AUTHENTICATION ---
 def handle_auth(action, data, request):
     if action == 'login':
@@ -35,14 +43,12 @@ def handle_auth(action, data, request):
         username = data.get('username')
         password = data.get('password')
 
-        # Check duplicate
         if db_query("SELECT id FROM school_user WHERE username = %s", [username]):
             return {'error': 'Username taken'}
 
         hashed_pw = make_password(password)
         db_query("INSERT INTO school_user (username, password) VALUES (%s, %s)", [username, hashed_pw])
 
-        # Auto-login
         new_user = db_query("SELECT id FROM school_user WHERE username = %s", [username])
         request.session['user_id'] = new_user[0][0]
         return {'status': 'success', 'username': username}
@@ -61,9 +67,7 @@ def handle_auth(action, data, request):
     return None
 
 
-# --- PUBLIC CONTENT (Shared by Everyone) ---
-# We REMOVED the user_id check so everyone sees all courses.
-
+# --- HUB LOGIC (Courses) ---
 def handle_hub(action, data, request):
     if action == 'get_courses':
         rows = db_query("SELECT id, name FROM school_course")
@@ -74,12 +78,17 @@ def handle_hub(action, data, request):
         return {'status': 'success'}
 
     elif action == 'delete_course':
+        # NEW: Admin Check
+        if not is_admin(request.session.get('user_id')):
+            return {'error': 'Permission Denied: Only admin can delete courses.'}
+
         db_query("DELETE FROM school_course WHERE id = %s", [data['course_id']])
         return {'status': 'success'}
 
     return None
 
 
+# --- COURSE LOGIC (Chapters) ---
 def handle_course(action, data, request):
     if action == 'get_chapters':
         rows = db_query(
@@ -93,16 +102,33 @@ def handle_course(action, data, request):
         return {'status': 'success'}
 
     elif action == 'delete_chapter':
+        # NEW: Admin Check
+        if not is_admin(request.session.get('user_id')):
+            return {'error': 'Permission Denied: Only admin can delete chapters.'}
+
         db_query("DELETE FROM school_chapter WHERE id = %s", [data['chapter_id']])
         return {'status': 'success'}
 
     return None
 
 
+# --- NOTE LOGIC ---
 def handle_note(action, data, files, request):
     if action == 'get_notes':
-        # NOTE: We show the GLOBAL DEFAULT weight here for reference
-        rows = db_query("SELECT id, header, body, weight FROM school_note WHERE chapter_id = %s", [data['chapter_id']])
+        user_id = request.session.get('user_id')
+
+        # UPDATED: Fetch Personal Weight (Left Join)
+        # If user has a row in school_progress, use that weight.
+        # Otherwise, use the global school_note weight.
+        query = """
+            SELECT n.id, n.header, n.body, 
+                   COALESCE(p.weight, n.weight) as user_weight
+            FROM school_note n
+            LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
+            WHERE n.chapter_id = %s
+        """
+        rows = db_query(query, [user_id, data['chapter_id']])
+
         return {'notes': [{'id': r[0], 'header': r[1], 'body': r[2], 'weight': r[3]} for r in rows]}
 
     elif action == 'add_note':
@@ -116,58 +142,48 @@ def handle_note(action, data, files, request):
             saved_path = default_storage.save(filename, ContentFile(image.read()))
             body = f"IMG:/media/{saved_path}"
 
-        # Insert with default weight 10
         db_query("INSERT INTO school_note (chapter_id, header, body, weight) VALUES (%s, %s, %s, 10)",
                  [data['chapter_id'], header, body])
         return {'status': 'success'}
 
     elif action == 'delete_note':
+        # NEW: Admin Check
+        if not is_admin(request.session.get('user_id')):
+            return {'error': 'Permission Denied: Only admin can delete notes.'}
+
         db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
         return {'status': 'success'}
 
     return None
 
 
-# --- PERSONALIZED QUIZ LOGIC ---
+# --- QUIZ LOGIC (Personalized) ---
 def handle_quiz(action, data, request):
     user_id = request.session.get('user_id')
 
-    # 1. INIT: Fetch Personal Weights OR Default Weights
     if action == 'init_quiz':
         chapter_ids = data.get('chapter_ids')
         if isinstance(chapter_ids, str): chapter_ids = json.loads(chapter_ids)
         if not chapter_ids: return {'deck': []}
 
         placeholders = ','.join(['%s'] * len(chapter_ids))
-
-        # SQL LOGIC:
-        # Join school_note (n) with school_progress (p).
-        # IF p.weight exists (User has seen it), use it.
-        # ELSE use n.weight (Default).
-
-        params = [user_id] + chapter_ids  # [user_id, id1, id2...]
+        params = [user_id] + chapter_ids
 
         query = f"""
-            SELECT n.id, 
-                   COALESCE(p.weight, n.weight) as effective_weight
+            SELECT n.id, COALESCE(p.weight, n.weight)
             FROM school_note n
-            LEFT JOIN school_progress p 
-                   ON n.id = p.note_id AND p.user_id = %s
+            LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
             WHERE n.chapter_id IN ({placeholders})
         """
-
-        # If user is not logged in, just use defaults (handled by COALESCE if user_id is None)
         rows = db_query(query, params)
         return {'deck': [{'id': r[0], 'w': float(r[1])} for r in rows]}
 
     elif action == 'get_content':
-        # Content is public, no change
         note_id = data.get('note_id')
         rows = db_query("SELECT header, body FROM school_note WHERE id = %s", [note_id])
         if rows: return {'header': rows[0][0], 'body': rows[0][1]}
         return {'error': 'Note not found'}
 
-    # 2. SUBMIT: Save to PERSONAL Progress Table
     elif action == 'submit_answer':
         if not user_id: return {'error': 'Must be logged in'}
 
@@ -175,35 +191,25 @@ def handle_quiz(action, data, request):
         is_correct = data['is_correct']
         if isinstance(is_correct, str): is_correct = (is_correct.lower() == 'true')
 
-        # A. Check if user already has a row for this note
         existing = db_query("SELECT weight FROM school_progress WHERE user_id = %s AND note_id = %s",
                             [user_id, note_id])
 
-        current_weight = 10.0  # Default fallback
-
+        current_weight = 10.0
         if existing:
             current_weight = existing[0][0]
-            # Calculate new weight
-            new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1.5)
-
-            # Update Existing
-            db_query("""
-                UPDATE school_progress 
-                SET weight = %s, 
-                    correct_count = correct_count + %s, 
-                    wrong_count = wrong_count + %s 
-                WHERE user_id = %s AND note_id = %s
-            """, [new_weight, 1 if is_correct else 0, 0 if is_correct else 1, user_id, note_id])
-
         else:
-            # First time seeing this note? Fetch global default first
             global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
             if global_row: current_weight = global_row[0][0]
 
-            # Calculate new weight
-            new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1.5)
+        new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1.5)
 
-            # Insert New Record
+        if existing:
+            db_query("""
+                UPDATE school_progress 
+                SET weight = %s, correct_count = correct_count + %s, wrong_count = wrong_count + %s 
+                WHERE user_id = %s AND note_id = %s
+            """, [new_weight, 1 if is_correct else 0, 0 if is_correct else 1, user_id, note_id])
+        else:
             db_query("""
                 INSERT INTO school_progress (user_id, note_id, weight, correct_count, wrong_count)
                 VALUES (%s, %s, %s, %s, %s)

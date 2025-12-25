@@ -259,9 +259,15 @@ async function addCourse() {
 }
 
 async function deleteCourse(id) {
-    if(confirm("Delete this Subject? All chapters and notes inside it will be lost.")) {
-        await api({ action: 'delete_course', course_id: id });
-        loadCourses();
+    if(confirm("Delete this Subject?")) {
+        const res = await api({ action: 'delete_course', course_id: id });
+
+        // NEW: Check if the server said "Permission Denied"
+        if (res && res.error) {
+            alert(res.error);
+        } else {
+            loadCourses();
+        }
     }
 }
 
@@ -352,8 +358,15 @@ async function addChapter() {
 
 async function deleteChapter(id) {
     if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
-        await api({ action: 'delete_chapter', chapter_id: id });
-        loadChapters();
+        // 1. Send request
+        const res = await api({ action: 'delete_chapter', chapter_id: id });
+
+        // 2. Check for Permission Error
+        if (res && res.error) {
+            alert(res.error); // Show "Permission Denied"
+        } else {
+            loadChapters(); // Only refresh if successful
+        }
     }
 }
 
@@ -415,8 +428,13 @@ async function addNote() {
 
 async function deleteNote(id) {
     if(confirm("Delete?")) {
-        await api({ action: 'delete_note', note_id: id });
-        loadNotes();
+        const res = await api({ action: 'delete_note', note_id: id });
+
+        if (res && res.error) {
+            alert(res.error);
+        } else {
+            loadNotes();
+        }
     }
 }
 
