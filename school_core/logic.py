@@ -221,7 +221,7 @@ def handle_quiz(action, data, request):
             global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
             if global_row: current_weight = global_row[0][0]
 
-        new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1.5)
+        new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else current_weight
 
         if existing:
             db_query("UPDATE school_progress SET weight=%s WHERE user_id=%s AND note_id=%s",

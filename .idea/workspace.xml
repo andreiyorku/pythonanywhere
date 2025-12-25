@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="installing login feaute">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="reset weight">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,14 +108,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00017" summary="main index link fixed">
-      <option name="closed" value="true" />
-      <created>1766111132009</created>
-      <option name="number" value="00017" />
-      <option name="presentableId" value="LOCAL-00017" />
-      <option name="project" value="LOCAL" />
-      <updated>1766111132009</updated>
     </task>
     <task id="LOCAL-00018" summary="rr">
       <option name="closed" value="true" />
@@ -504,11 +493,18 @@
       <option name="project" value="LOCAL" />
       <updated>1766630768216</updated>
     </task>
-    <option name="localTasksCounter" value="66" />
+    <task id="LOCAL-00066" summary="reset weight">
+      <option name="closed" value="true" />
+      <created>1766672329816</created>
+      <option name="number" value="00066" />
+      <option name="presentableId" value="LOCAL-00066" />
+      <option name="project" value="LOCAL" />
+      <updated>1766672329816</updated>
+    </task>
+    <option name="localTasksCounter" value="67" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="rr43" />
     <MESSAGE value="changed static settings" />
     <MESSAGE value="strangr" />
     <MESSAGE value="strangre" />
@@ -533,6 +529,7 @@
     <MESSAGE value="fixed course view" />
     <MESSAGE value="modulirize html" />
     <MESSAGE value="installing login feaute" />
-    <option name="LAST_COMMIT_MESSAGE" value="installing login feaute" />
+    <MESSAGE value="reset weight" />
+    <option name="LAST_COMMIT_MESSAGE" value="reset weight" />
   </component>
 </project>
