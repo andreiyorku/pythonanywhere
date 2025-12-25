@@ -1,18 +1,24 @@
 <div align="center">
 
 # 🎓 School Core
-### A Personalized Learning System with Spaced Repetition
+### Personalized Learning System & Infinite Quiz Engine
 
-<img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
-<img src="https://img.shields.io/badge/Django-5.0-092E20?style=for-the-badge&logo=django&logoColor=white" />
-<img src="https://img.shields.io/badge/SQLite-Raw_SQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
-<img src="https://img.shields.io/badge/Frontend-Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
+<a href="#">
+  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+</a>
+<a href="#">
+  <img src="https://img.shields.io/badge/Django-5.0-092E20?style=for-the-badge&logo=django&logoColor=white" />
+</a>
+<a href="#">
+  <img src="https://img.shields.io/badge/Database-Raw%20SQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
+</a>
+<a href="#">
+  <img src="https://img.shields.io/badge/Frontend-Vanilla%20JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
+</a>
 
 <br/><br/>
 
-**School Core** is a dynamic Single-Page Application (SPA) designed to revolutionize how you study. It combines a robust **Multi-User Permission System** with an intelligent **Infinite Quiz Engine** that adapts to your learning progress using weighted probabilities.
-
-
+**School Core** is a dynamic **Single-Page Application (SPA)** that adapts to how you learn. It features a secure multi-user environment, granular permissions, and a **Weighted Probability Algorithm** that acts like a digital tutor—drilling you on what you don't know and skipping what you do.
 
 </div>
 
@@ -20,107 +26,87 @@
 
 ## 🚀 Key Features
 
-| Feature | Description |
-| :--- | :--- |
-| **🧠 Smart Quiz Engine** | Uses a **weighted probability algorithm**. Questions you miss appear more often (1.5x weight), while questions you get right fade away (0.5x weight). |
-| **👥 Multi-User System** | Users can register, log in, and manage their own private content. **Admins** have global oversight. |
-| **🔒 Granular Permissions** | • **Admins:** Can delete any content.<br>• **Owners:** Can delete their own content.<br>• **Public:** Everyone can learn from shared courses. |
-| **⚡ Single Page App** | Built with Vanilla JavaScript, the app feels instant. No page reloads when navigating between Hub, Courses, and Quizzes. |
-| **📸 Rich Media Support** | Upload images directly to your notes via **Paste** or **Drag-and-Drop**. |
+<table>
+  <tr>
+    <td width="50px" align="center">🧠</td>
+    <td><strong>Smart Quiz Engine</strong><br>Uses a <em>Spaced Repetition</em> inspired algorithm. Questions you miss get <strong>1.5x weight</strong> (appear more). Questions you answer correctly get <strong>0.5x weight</strong> (appear less).</td>
+  </tr>
+  <tr>
+    <td align="center">👥</td>
+    <td><strong>Multi-User Community</strong><br>Users can register, login, and manage their own private content. All Shared/Public courses are available for everyone to learn from.</td>
+  </tr>
+  <tr>
+    <td align="center">🔒</td>
+    <td><strong>Granular Permissions</strong><br>• <strong>Admins:</strong> God-mode access (Delete/Edit anything).<br>• <strong>Owners:</strong> Can only delete content <em>they</em> created.<br>• <strong>Students:</strong> Read-only access to public material.</td>
+  </tr>
+  <tr>
+    <td align="center">⚡</td>
+    <td><strong>Instant Navigation</strong><br>Built as a high-performance SPA. Navigating between Hub, Courses, and Quizzes happens instantly without page reloads.</td>
+  </tr>
+</table>
 
 ---
 
-## 📂 Backend Documentation
-The backend bypasses the Django ORM for **Raw SQL** performance, giving us fine-grained control over the complex weighting logic.
+## 📂 Technical Documentation
 
-### 🛠️ Core Logic (`school_core/logic.py`)
+### 🛠️ Backend (`school_core/logic.py`)
+> The backend bypasses the Django ORM for **Raw SQL** queries to handle complex probability logic efficiently.
+
 <details>
-<summary><b>Click to expand detailed function reference</b></summary>
+<summary><b>Click to expand Function Reference</b></summary>
 <br>
 
-| Function | Description |
-| :--- | :--- |
-| **`handle_auth`** | • **Login/Register:** Hashes passwords using Django's `make_password`.<br>• **Session:** Stores `user_id` in `request.session`.<br>• **`get_current_user`:** Returns `{id, username, is_admin}`. |
-| **`handle_hub`** | • **Get:** Fetches all courses with `owner_id`.<br>• **Add:** Creates a course linked to the logged-in user.<br>• **Delete:** Checks if `user_id == owner_id` OR `is_admin` before deleting. |
-| **`handle_course`** | • Manages Chapters. Returns them sorted by `chapter_index`.<br>• Enforces ownership checks for deletion. |
-| **`handle_note`** | • **Smart Fetch:** Uses a **LEFT JOIN** to merge Global Notes with the User's Personal Progress (`school_progress` table).<br>• **Images:** UUID-renames uploaded files and saves them to `/media/`. |
-| **`handle_quiz`** | • **`init_quiz`:** Generates a lightweight "Deck" of IDs and Weights.<br>• **`submit_answer`:** Updates the user's personal weight in the `school_progress` table (Halves on success, increases 1.5x on failure). |
+| Function | Role | Details |
+| :--- | :--- | :--- |
+| `handle_auth` | **Security** | Manages Sessions and Password Hashing (`pbkdf2_sha256`). Returns `is_admin` flags. |
+| `handle_hub` | **Course Mgr** | Fetches courses with `owner_id`. Enforces `user_id == owner_id` checks for deletion. |
+| `handle_note` | **Data Merge** | Uses a **SQL LEFT JOIN** to merge the *Global Note* data with the *User's Personal Progress* table in one query. |
+| `handle_quiz` | **Algorithm** | • **Init:** Generates a "Deck" of IDs and Weights.<br>• **Submit:** Updates the user's specific weight in `school_progress` based on the answer. |
 
 </details>
 
 ### 🔌 API Gateway (`school_core/views.py`)
 <details>
-<summary><b>Click to expand API details</b></summary>
+<summary><b>Click to expand API Details</b></summary>
 <br>
 
-This file acts as the bridge between the Frontend and the Logic layer.
+Acts as the bridge between the Frontend and Logic layers.
 
-* **`api_handler(request)`**: The single entry point for all JSON requests.
-    * **Crucial:** It injects the `request` object into every logic function (e.g., `logic.handle_note(..., request)`), ensuring the logic layer always knows *who* is making the request.
-    * Handles both `application/json` and `multipart/form-data` (for images).
-* **`get_partial(request)`**: Serves raw HTML templates to the Javascript Router.
+* **`api_handler(request)`**: The single entry point.
+    * **Security:** Injects the `request` object into every logic function call.
+    * **Uploads:** Handles `multipart/form-data` for image uploads.
+* **`get_partial(request)`**: Securely serves HTML fragments to the router.
 
 </details>
 
-### 🔗 Routing (`school_core/urls.py`)
-Maps the essential endpoints:
-* `path('api/', ...)` → **The JSON API**
-* `path('partial/<str:filename>/', ...)` → **HTML Fragment Loader**
-* `path('', ...)` → **SPA Entry Point**
-
----
-
-## 🎨 Frontend Documentation
-A dependency-free JavaScript application located in `static/school_core/`.
-
-### 🧠 Application Logic (`js/app.js`)
+### 🎨 Frontend (`static/js/app.js`)
 <details>
-<summary><b>Click to expand JavaScript modules</b></summary>
+<summary><b>Click to expand JavaScript Modules</b></summary>
 <br>
 
-#### 1. Router Engine
-* **`router(viewName)`**: Dynamically fetches HTML from `/partial/` and injects it into the DOM.
-* **Lazy Loading**: Only loads data (Courses, Chapters) when the view is actually requested.
+A dependency-free Vanilla JS application.
 
-#### 2. Authentication Module
-* **`checkLogin()`**: Runs on app start. If not logged in, redirects to the Auth screen.
-* **`currentUserIsAdmin`**: A global state flag that dynamically shows/hides "Delete" buttons in the UI.
-
-#### 3. Quiz Client
-* **`nextQuestion()`**: The heart of the app. It uses a **Weighted Random Selector** to pick the next card from the local deck.
-* **Optimistic UI**: It updates the weight *locally* immediately after you answer, while syncing with the server in the background for a lag-free experience.
-
-#### 4. Image Handler
-* **`attachImageHandlers()`**: Adds listeners for `paste` and `drop` events, allowing seamless image uploading.
+1.  **Router Engine:** Dynamically fetches and injects HTML templates.
+2.  **State Management:** Tracks `currentUser`, `isAdmin`, and `quizDeck`.
+3.  **Optimistic UI:** The Quiz Client updates weights locally *immediately* for a snappy feel, while syncing to the server in the background.
 
 </details>
-
-### 📄 Templates (`templates/partials/`)
-We use **HTML5 `<template>` tags** for efficient cloning.
-
-| Template | Usage |
-| :--- | :--- |
-| **`auth.html`** | A unified Login / Register card that toggles modes instantly. |
-| **`hub.html`** | The main dashboard. Contains the `<template id="course-template">`. |
-| **`course.html`** | Lists chapters. Features a "Select All" checkbox for mass-quizzing. |
-| **`chapter.html`** | The note editor. Contains the Drag-and-Drop dropzone. |
-| **`quiz.html`** | The Flashcard interface with "Show Answer" and Feedback buttons. |
 
 ---
 
 ## 🗄️ Database Schema
 
-The system uses a **Hybrid Ownership Model** stored in SQLite:
+The system uses a **Hybrid Ownership Model**.
 
-| Table | Description |
-| :--- | :--- |
-| **`school_user`** | `id`, `username`, `password` (Hashed) |
-| **`school_course`** | Content hierarchy. Includes `owner_id` to track the creator. |
-| **`school_note`** | Stores the **Base Weight** (Default difficulty: 10.0). |
-| **`school_progress`** | **The Magic Table.** Links `user_id` + `note_id`. Stores the *Personalized Weight* for that specific user. |
+| Table | Columns | Purpose |
+| :--- | :--- | :--- |
+| **`school_user`** | `id`, `username`, `password` | User credentials. |
+| **`school_course`** | `id`, `name`, `owner_id` | Content hierarchy root. |
+| **`school_note`** | `id`, `body`, `weight` (Default) | The "Master Copy" of the question. |
+| **`school_progress`** | `user_id`, `note_id`, `weight` | **The Magic Table.** Overrides the default weight for specific users based on their quiz history. |
 
 ---
 
 <div align="center">
-    <sub>Built with ❤️ using Django & Vanilla JS</sub>
+  <sub>Built with ❤️ using Django & Vanilla JS</sub>
 </div>
