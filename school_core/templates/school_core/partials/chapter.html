@@ -39,3 +39,33 @@
         <button class="btn-delete" style="margin-top:5px;">Delete</button>
     </div>
 </template>
+
+<div style="margin-bottom:15px;">
+    <button onclick="router('course')"><< Back to Course</button>
+    <h2 id="chapter-title">Chapter View</h2>
+
+    <button onclick="resetChapterWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00;">
+        ⚠ Reset Chapter Progress
+    </button>
+</div>
+
+<div id="notes-list"></div>
+
+<template id="note-item-template">
+    <div style="border-bottom: 1px solid #ccc; padding: 10px; position: relative;">
+        <div><b>Q: </b><span class="note-header"></span></div>
+        <div style="margin-top:5px;">A: <span class="note-body"></span></div>
+
+        <div style="margin-top:5px; display: flex; gap: 10px; align-items: center;">
+            <small>Weight: <span class="note-weight"></span></small>
+
+            <button class="btn-reset" style="background: #e0e0e0; font-size: 0.8em; padding: 2px 5px;">
+                Reset Progress
+            </button>
+
+            <button class="btn-delete" style="background: #ffcccc; color: #cc0000; font-size: 0.8em; padding: 2px 5px;">
+                Delete
+            </button>
+        </div>
+    </div>
+</template>

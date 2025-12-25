@@ -120,11 +120,11 @@ def handle_course(action, data, request):
 
 
 # --- NOTES ---
+# --- NOTES ---
 def handle_note(action, data, files, request):
     user_id = request.session.get('user_id')
 
     if action == 'get_notes':
-        # Fetch Personal Weight + Owner ID
         query = """
             SELECT n.id, n.header, n.body, 
                    COALESCE(p.weight, n.weight) as user_weight,
@@ -161,6 +161,25 @@ def handle_note(action, data, files, request):
             db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
+
+    # --- NEW: RESET SINGLE NOTE ---
+    elif action == 'reset_note':
+        if not user_id: return {'error': 'Must be logged in'}
+        # Deleting from progress table forces the system to use the default weight again
+        db_query("DELETE FROM school_progress WHERE user_id = %s AND note_id = %s", [user_id, data['note_id']])
+        return {'status': 'success'}
+
+    # --- NEW: RESET ENTIRE CHAPTER ---
+    elif action == 'reset_chapter':
+        if not user_id: return {'error': 'Must be logged in'}
+        # Delete progress for ALL notes in this chapter
+        query = """
+            DELETE FROM school_progress 
+            WHERE user_id = %s 
+            AND note_id IN (SELECT id FROM school_note WHERE chapter_id = %s)
+        """
+        db_query(query, [user_id, data['chapter_id']])
+        return {'status': 'success'}
 
     return None
 

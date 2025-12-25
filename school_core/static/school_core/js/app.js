@@ -399,9 +399,22 @@ async function loadNotes() {
 
         clone.querySelector('.note-header').innerText = n.header;
         clone.querySelector('.note-body').innerHTML = renderContent(n.body);
-        clone.querySelector('.note-weight').innerText = n.weight;
 
-        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
+        // Highlight weight if it is NOT default (10)
+        const weightSpan = clone.querySelector('.note-weight');
+        weightSpan.innerText = n.weight;
+        if (n.weight !== 10) weightSpan.style.fontWeight = 'bold';
+
+        // --- NEW: Reset Button Logic ---
+        const btnReset = clone.querySelector('.btn-reset');
+        // Only show reset if the weight is not default (why reset if it's already 10?)
+        if (n.weight !== 10) {
+            btnReset.onclick = () => resetNoteWeight(n.id);
+        } else {
+            btnReset.style.display = 'none'; // Hide if already default
+        }
+
+        // --- Existing Delete Logic ---
         const btnDelete = clone.querySelector('.btn-delete');
         if (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteNote(n.id);
@@ -528,6 +541,20 @@ async function handleLocalAnswer(isCorrect) {
         is_correct: isCorrect
     });
     nextQuestion();
+}
+
+async function resetNoteWeight(noteId) {
+    // No confirmation needed for single note, it's low risk
+    await api({ action: 'reset_note', note_id: noteId });
+    // Reload to see the weight change back to 10.0
+    loadNotes();
+}
+
+async function resetChapterWeights() {
+    if (confirm("Are you sure? This will wipe your memory progress for ALL notes in this chapter.")) {
+        await api({ action: 'reset_chapter', chapter_id: currentChapterId });
+        loadNotes();
+    }
 }
 
 // --- INITIALIZATION ---

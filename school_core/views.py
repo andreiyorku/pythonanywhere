@@ -46,8 +46,7 @@ def api_handler(request):
     elif action in ['get_chapters', 'add_chapter', 'delete_chapter']:
         response_data = logic.handle_course(action, data, request)
 
-    elif action in ['get_notes', 'add_note', 'delete_note']:
-        # Note logic needs 'request.FILES' for uploading images
+    elif action in ['get_notes', 'add_note', 'delete_note', 'reset_note', 'reset_chapter']:
         response_data = logic.handle_note(action, data, request.FILES, request)
 
     elif action in ['init_quiz', 'get_content', 'submit_answer']:
