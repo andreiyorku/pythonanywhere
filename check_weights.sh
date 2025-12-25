@@ -8,5 +8,5 @@ elif [ -d "venv" ]; then
     source venv/bin/activate
 fi
 
-# 2. Run the Python script
+# 2. Run the Python scriptc
 python show_admin_weights.py
