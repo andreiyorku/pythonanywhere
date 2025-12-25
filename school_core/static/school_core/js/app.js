@@ -8,7 +8,8 @@ let currentQuizItem = null;
 let currentQuizChapterIds = [];
 let pendingImageFile = null;
 let lastQuizItemId = null;
-let quizReturnView = 'hub'; // Default return location
+let quizReturnView = 'hub';
+let isRegisterMode = false;
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -31,6 +32,80 @@ async function api(payload, isFile = false) {
     }
 }
 
+// --- AUTHENTICATION ---
+async function checkLogin() {
+    // Ask server: "Who am I?"
+    const data = await api({ action: 'get_current_user' });
+
+    if (data && data.username) {
+        // Logged in!
+        console.log("Logged in as:", data.username);
+        router('hub');
+        updateUserDisplay(data.username);
+    } else {
+        // Not logged in -> Show Login Screen
+        router('auth');
+    }
+}
+
+async function performAuth() {
+    const user = document.getElementById('auth-username').value;
+    const pass = document.getElementById('auth-password').value;
+    const errorBox = document.getElementById('auth-error');
+
+    if (!user || !pass) return alert("Please enter both fields.");
+
+    const action = isRegisterMode ? 'register' : 'login';
+
+    const data = await api({ action: action, username: user, password: pass });
+
+    if (data.status === 'success') {
+        // Success! Go to Hub
+        checkLogin();
+    } else {
+        // Show Error
+        errorBox.innerText = data.error || "Authentication failed";
+        errorBox.style.display = 'block';
+    }
+}
+
+function toggleAuthMode() {
+    isRegisterMode = !isRegisterMode;
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const toggle = document.getElementById('auth-toggle-text');
+    const errorBox = document.getElementById('auth-error');
+
+    errorBox.style.display = 'none';
+
+    if (isRegisterMode) {
+        title.innerText = "Create Account";
+        btn.innerText = "Sign Up";
+        toggle.innerHTML = 'Already have an account? <a href="#" onclick="toggleAuthMode()">Login</a>';
+    } else {
+        title.innerText = "Login";
+        btn.innerText = "Login";
+        toggle.innerHTML = 'New here? <a href="#" onclick="toggleAuthMode()">Create an account</a>';
+    }
+}
+
+async function logout() {
+    await api({ action: 'logout' });
+    location.reload(); // Refresh page to clear state
+}
+
+function updateUserDisplay(username) {
+    // Create a small "Hello, User (Logout)" banner at the top
+    let banner = document.getElementById('user-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'user-banner';
+        banner.style.cssText = "position: absolute; top: 10px; right: 10px; background: #eee; padding: 5px 10px; border-radius: 4px;";
+        document.body.prepend(banner);
+    }
+    banner.innerHTML = `<b>${username}</b> | <a href="#" onclick="logout()">Logout</a>`;
+}
+
 // --- ROUTER ---
 async function router(viewName) {
     const container = document.getElementById('content-slot');
@@ -45,6 +120,11 @@ async function router(viewName) {
 
     } catch (err) {
         console.error(err);
+        return;
+    }
+
+    if (viewName === 'auth') {
+        // No special data needed, just show the form
         return;
     }
 
@@ -420,5 +500,5 @@ async function handleLocalAnswer(isCorrect) {
 
 // --- INITIALIZATION ---
 window.onload = function() {
-    router('hub');
+    checkLogin(); // <--- CHANGE THIS
 };

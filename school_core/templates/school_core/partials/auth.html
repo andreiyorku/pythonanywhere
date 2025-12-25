@@ -1,0 +1,16 @@
+<div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <h2 id="auth-title">Login</h2>
+
+    <div id="auth-error" style="color: red; display: none; margin-bottom: 10px;"></div>
+
+    <input type="text" id="auth-username" placeholder="Username" style="width: 100%; padding: 10px; margin-bottom: 10px;">
+    <input type="password" id="auth-password" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 20px;">
+
+    <button onclick="performAuth()" id="auth-btn" style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; cursor: pointer;">Login</button>
+
+    <hr>
+
+    <p id="auth-toggle-text">
+        New here? <a href="#" onclick="toggleAuthMode()">Create an account</a>
+    </p>
+</div>

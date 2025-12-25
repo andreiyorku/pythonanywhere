@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-# Import our new logic module rr
+# Import our new logic module
 from . import logic
 
 
@@ -31,23 +31,23 @@ def api_handler(request):
     response_data = None
 
     # 2. ROUTE TO LOGIC
-    # We check which "Module" handles this action
+    # UPDATED: We now pass 'request' to every function so logic.py can check sessions
 
-    if action in ['get_courses', 'add_course', 'delete_course']:
-        response_data = logic.handle_hub(action, data)
+    if action in ['login', 'register', 'logout', 'get_current_user']:
+        response_data = logic.handle_auth(action, data, request)
+
+    elif action in ['get_courses', 'add_course', 'delete_course']:
+        response_data = logic.handle_hub(action, data, request)
 
     elif action in ['get_chapters', 'add_chapter', 'delete_chapter']:
-        response_data = logic.handle_course(action, data)
+        response_data = logic.handle_course(action, data, request)
 
     elif action in ['get_notes', 'add_note', 'delete_note']:
-        # Note logic needs files for uploads
-        response_data = logic.handle_note(action, data, request.FILES)
-
-    # elif action in ['generate_quiz', 'submit_answer']:
-    #     response_data = logic.handle_quiz(action, data)
+        # Note logic needs 'request.FILES' for images AND 'request' for user ID
+        response_data = logic.handle_note(action, data, request.FILES, request)
 
     elif action in ['init_quiz', 'get_content', 'submit_answer']:
-        response_data = logic.handle_quiz(action, data)
+        response_data = logic.handle_quiz(action, data, request)
 
     # 3. RETURN RESPONSE
     if response_data is not None:
