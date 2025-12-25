@@ -25,14 +25,14 @@ def is_admin(user_id):
 
 
 # --- AUTHENTICATION ---
+# --- AUTHENTICATION ---
 def handle_auth(action, data, request):
+    # ... (login, register, logout logic stays the same) ...
     if action == 'login':
         username = data.get('username')
         password = data.get('password')
-
         rows = db_query("SELECT id, password FROM school_user WHERE username = %s", [username])
         if not rows: return {'error': 'User not found'}
-
         user_id, hashed_pw = rows[0]
         if check_password(password, hashed_pw):
             request.session['user_id'] = user_id
@@ -42,13 +42,10 @@ def handle_auth(action, data, request):
     elif action == 'register':
         username = data.get('username')
         password = data.get('password')
-
         if db_query("SELECT id FROM school_user WHERE username = %s", [username]):
             return {'error': 'Username taken'}
-
         hashed_pw = make_password(password)
         db_query("INSERT INTO school_user (username, password) VALUES (%s, %s)", [username, hashed_pw])
-
         new_user = db_query("SELECT id FROM school_user WHERE username = %s", [username])
         request.session['user_id'] = new_user[0][0]
         return {'status': 'success', 'username': username}
@@ -57,12 +54,16 @@ def handle_auth(action, data, request):
         request.session.flush()
         return {'status': 'logged_out'}
 
+    # --- THIS IS THE PART TO CHANGE ---
     elif action == 'get_current_user':
         user_id = request.session.get('user_id')
         if user_id:
             rows = db_query("SELECT username FROM school_user WHERE id = %s", [user_id])
-            if rows: return {'username': rows[0][0]}
-        return {'username': None}
+            if rows:
+                username = rows[0][0]
+                # Return True if username is 'admin'
+                return {'username': username, 'is_admin': (username == 'admin')}
+        return {'username': None, 'is_admin': False}
 
     return None
 

@@ -10,6 +10,7 @@ let pendingImageFile = null;
 let lastQuizItemId = null;
 let quizReturnView = 'hub';
 let isRegisterMode = false;
+let currentUserIsAdmin = false; // NEW STATE
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -34,16 +35,15 @@ async function api(payload, isFile = false) {
 
 // --- AUTHENTICATION ---
 async function checkLogin() {
-    // Ask server: "Who am I?"
     const data = await api({ action: 'get_current_user' });
 
     if (data && data.username) {
-        // Logged in!
-        console.log("Logged in as:", data.username);
-        router('hub');
+        currentUserIsAdmin = data.is_admin; // <--- SAVE THIS
+        console.log("Logged in as:", data.username, "Admin:", currentUserIsAdmin);
+
         updateUserDisplay(data.username);
+        router('hub');
     } else {
-        // Not logged in -> Show Login Screen
         router('auth');
     }
 }
@@ -241,8 +241,13 @@ async function loadCourses() {
         const btnOpen = clone.querySelector('.btn-open');
         btnOpen.onclick = () => openCourse(c.id, c.name);
 
+        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        btnDelete.onclick = () => deleteCourse(c.id);
+        if (currentUserIsAdmin) {
+            btnDelete.onclick = () => deleteCourse(c.id);
+        } else {
+            btnDelete.style.display = 'none';
+        }
 
         clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
 
@@ -262,7 +267,6 @@ async function deleteCourse(id) {
     if(confirm("Delete this Subject?")) {
         const res = await api({ action: 'delete_course', course_id: id });
 
-        // NEW: Check if the server said "Permission Denied"
         if (res && res.error) {
             alert(res.error);
         } else {
@@ -342,8 +346,13 @@ async function loadChapters() {
         const btnNotes = clone.querySelector('.btn-notes');
         btnNotes.onclick = () => openChapter(c.id, c.name);
 
+        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        btnDelete.onclick = () => deleteChapter(c.id);
+        if (currentUserIsAdmin) {
+            btnDelete.onclick = () => deleteChapter(c.id);
+        } else {
+            btnDelete.style.display = 'none';
+        }
 
         list.appendChild(clone);
     });
@@ -358,14 +367,12 @@ async function addChapter() {
 
 async function deleteChapter(id) {
     if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
-        // 1. Send request
         const res = await api({ action: 'delete_chapter', chapter_id: id });
 
-        // 2. Check for Permission Error
         if (res && res.error) {
-            alert(res.error); // Show "Permission Denied"
+            alert(res.error);
         } else {
-            loadChapters(); // Only refresh if successful
+            loadChapters();
         }
     }
 }
@@ -392,8 +399,13 @@ async function loadNotes() {
         clone.querySelector('.note-body').innerHTML = renderContent(n.body);
         clone.querySelector('.note-weight').innerText = n.weight;
 
+        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
-        btnDelete.onclick = () => deleteNote(n.id);
+        if (currentUserIsAdmin) {
+            btnDelete.onclick = () => deleteNote(n.id);
+        } else {
+            btnDelete.style.display = 'none';
+        }
 
         list.appendChild(clone);
     });
@@ -518,5 +530,5 @@ async function handleLocalAnswer(isCorrect) {
 
 // --- INITIALIZATION ---
 window.onload = function() {
-    checkLogin(); // <--- CHANGE THIS
+    checkLogin();
 };
