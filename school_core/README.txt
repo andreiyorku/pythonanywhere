@@ -1,108 +1,126 @@
-🎓 School Core - Personalized Learning System
+<div align="center">
 
-School Core is a dynamic, single-page application (SPA) designed for personalized learning. It allows users to create courses, chapters, and notes, while an intelligent "Infinite Quiz" engine adapts to their learning progress using a weighted probability algorithm.
+# 🎓 School Core
+### A Personalized Learning System with Spaced Repetition
 
+<img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white" />
+<img src="https://img.shields.io/badge/Django-5.0-092E20?style=for-the-badge&logo=django&logoColor=white" />
+<img src="https://img.shields.io/badge/SQLite-Raw_SQL-003B57?style=for-the-badge&logo=sqlite&logoColor=white" />
+<img src="https://img.shields.io/badge/Frontend-Vanilla_JS-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" />
 
-🚀 Key Features
+<br/><br/>
 
-Multi-User Architecture: Secure Login/Register system where users manage their own content.
-Smart Quiz Engine: Uses a Spaced Repetition inspired algorithm. Questions you answer correctly appear less often (lower weight), while difficult questions appear more frequently.
-Granular Permissions:
-Admins: Can delete any content and view all data.
-Users: Can only delete content they created.
-Public Read Access: All users can view and learn from all shared courses.
-Rich Media Notes: Support for text and image uploads (via paste or drag-and-drop).
-Single Page Application: Fast, fluid navigation without page reloads, built with vanilla JavaScript and Django.
+**School Core** is a dynamic Single-Page Application (SPA) designed to revolutionize how you study. It combines a robust **Multi-User Permission System** with an intelligent **Infinite Quiz Engine** that adapts to your learning progress using weighted probabilities.
 
 
-📂 Backend Documentation (school_core/)
 
-The backend is built on Django but bypasses standard ORM models for high-performance Raw SQL queries to handle the complex weighting logic efficiently.
+</div>
 
-1. Logic Layer (logic.py)
-This file contains the core business rules and direct database interactions.
-handle_auth(action, data, request)
-Manages Session-based Authentication.
-Handles login, register (with password hashing), and logout.
-get_current_user: Returns the user's ID, Username, and Admin status.
-handle_hub(action, data, request)
-Get: Fetches all available Courses.
-Add: Creates a new Course and assigns ownership to the creator.
-Delete: Enforces security—only Admins or the Course Owner can delete.
-handle_course(action, data, request)
-Manages Chapters within a Course.
-Ensures Chapters are returned in the correct index order.
-handle_note(action, data, files, request)
-Smart Fetching: Uses a SQL LEFT JOIN to merge the Global Note Data with the User's Personal Progress.
-Image Handling: Saves uploaded images to the media directory and stores the reference path.
-handle_quiz(action, data, request)
-init_quiz: Returns a lightweight "Deck" of Question IDs and Weights. It prioritizes the user's personal history (school_progress table) over default values.
-submit_answer: Updates the user's personal weight for a question.
-Correct: Weight is halved (appears less).
-Wrong: Weight is increased by 1.5x (appears more).
+---
 
-2. API Gateway (views.py)
-Acts as the bridge between the Frontend and the Logic Layer.
-api_handler(request): A single endpoint (/api/) that routes all JSON requests to the appropriate function in logic.py. It injects the request object into every call to ensure Session Security.
-get_partial(request, filename): Securely serves HTML fragments (templates) to the frontend router.
-school_core(request): Renders the main entry point (index.html).
+## 🚀 Key Features
 
-3. URL Routing (urls.py)
+| Feature | Description |
+| :--- | :--- |
+| **🧠 Smart Quiz Engine** | Uses a **weighted probability algorithm**. Questions you miss appear more often (1.5x weight), while questions you get right fade away (0.5x weight). |
+| **👥 Multi-User System** | Users can register, log in, and manage their own private content. **Admins** have global oversight. |
+| **🔒 Granular Permissions** | • **Admins:** Can delete any content.<br>• **Owners:** Can delete their own content.<br>• **Public:** Everyone can learn from shared courses. |
+| **⚡ Single Page App** | Built with Vanilla JavaScript, the app feels instant. No page reloads when navigating between Hub, Courses, and Quizzes. |
+| **📸 Rich Media Support** | Upload images directly to your notes via **Paste** or **Drag-and-Drop**. |
+
+---
+
+## 📂 Backend Documentation
+The backend bypasses the Django ORM for **Raw SQL** performance, giving us fine-grained control over the complex weighting logic.
+
+### 🛠️ Core Logic (`school_core/logic.py`)
+<details>
+<summary><b>Click to expand detailed function reference</b></summary>
+<br>
+
+| Function | Description |
+| :--- | :--- |
+| **`handle_auth`** | • **Login/Register:** Hashes passwords using Django's `make_password`.<br>• **Session:** Stores `user_id` in `request.session`.<br>• **`get_current_user`:** Returns `{id, username, is_admin}`. |
+| **`handle_hub`** | • **Get:** Fetches all courses with `owner_id`.<br>• **Add:** Creates a course linked to the logged-in user.<br>• **Delete:** Checks if `user_id == owner_id` OR `is_admin` before deleting. |
+| **`handle_course`** | • Manages Chapters. Returns them sorted by `chapter_index`.<br>• Enforces ownership checks for deletion. |
+| **`handle_note`** | • **Smart Fetch:** Uses a **LEFT JOIN** to merge Global Notes with the User's Personal Progress (`school_progress` table).<br>• **Images:** UUID-renames uploaded files and saves them to `/media/`. |
+| **`handle_quiz`** | • **`init_quiz`:** Generates a lightweight "Deck" of IDs and Weights.<br>• **`submit_answer`:** Updates the user's personal weight in the `school_progress` table (Halves on success, increases 1.5x on failure). |
+
+</details>
+
+### 🔌 API Gateway (`school_core/views.py`)
+<details>
+<summary><b>Click to expand API details</b></summary>
+<br>
+
+This file acts as the bridge between the Frontend and the Logic layer.
+
+* **`api_handler(request)`**: The single entry point for all JSON requests.
+    * **Crucial:** It injects the `request` object into every logic function (e.g., `logic.handle_note(..., request)`), ensuring the logic layer always knows *who* is making the request.
+    * Handles both `application/json` and `multipart/form-data` (for images).
+* **`get_partial(request)`**: Serves raw HTML templates to the Javascript Router.
+
+</details>
+
+### 🔗 Routing (`school_core/urls.py`)
 Maps the essential endpoints:
-path('', ...): Loads the App.
-path('api/', ...): The JSON API Gateway.
-path('partial/<str:filename>/', ...): The HTML Fragment loader.
+* `path('api/', ...)` → **The JSON API**
+* `path('partial/<str:filename>/', ...)` → **HTML Fragment Loader**
+* `path('', ...)` → **SPA Entry Point**
 
+---
 
-🎨 Frontend Documentation (static/)
+## 🎨 Frontend Documentation
+A dependency-free JavaScript application located in `static/school_core/`.
 
-The frontend is a lightweight, dependency-free JavaScript application that handles routing, state, and UI rendering.
+### 🧠 Application Logic (`js/app.js`)
+<details>
+<summary><b>Click to expand JavaScript modules</b></summary>
+<br>
 
-1. Application Logic (app.js)
-Router Engine (router(viewName)):
-Dynamically fetches HTML fragments from the server.
-Injects them into the main container (#content-slot).
-Triggers specific initialization logic (e.g., loadCourses, startQuiz) based on the view.
-State Management:
-Maintains global state for currentUser, isAdmin, currentCourseId, and the active quizDeck.
-Authentication:
-checkLogin(): Verifies session status on load. Redirects to Auth or Hub.
-Hides "Delete" buttons dynamically if the user is not the Owner or Admin.
-Quiz Client:
-Weighted Random Selector: Picks the next question based on the weights in the local deck.
-Optimistic UI: Updates weights locally for instant feedback while syncing with the server in the background.
+#### 1. Router Engine
+* **`router(viewName)`**: Dynamically fetches HTML from `/partial/` and injects it into the DOM.
+* **Lazy Loading**: Only loads data (Courses, Chapters) when the view is actually requested.
 
-2. Styling (styles.css)
-Contains modular styles for the card-based layout, interactive buttons, and the quiz interface.
-Implements the "Hidden/Visible" utility classes for the SPA navigation.
+#### 2. Authentication Module
+* **`checkLogin()`**: Runs on app start. If not logged in, redirects to the Auth screen.
+* **`currentUserIsAdmin`**: A global state flag that dynamically shows/hides "Delete" buttons in the UI.
 
+#### 3. Quiz Client
+* **`nextQuestion()`**: The heart of the app. It uses a **Weighted Random Selector** to pick the next card from the local deck.
+* **Optimistic UI**: It updates the weight *locally* immediately after you answer, while syncing with the server in the background for a lag-free experience.
 
-📄 Templates (templates/)
+#### 4. Image Handler
+* **`attachImageHandlers()`**: Adds listeners for `paste` and `drop` events, allowing seamless image uploading.
 
-The app uses HTML5 Templates (<template>) for efficient client-side rendering.
-Main Container
-index.html: The skeleton of the app. It imports app.js and provides the #content-slot where views are injected.
-Partials (Views)
-auth.html: A combined Login/Register form that toggles modes dynamically.
-hub.html:
-Displays the list of Subjects (Courses).
-Contains the <template id="course-template"> for rendering course rows.
-course.html:
-Displays Chapters inside a selected Course.
-Allows users to "Select All" chapters for a mass quiz.
-chapter.html:
-Displays Notes (Questions/Answers).
-Features a Drag-and-Drop zone for uploading images to notes.
-quiz.html:
-The Flashcard interface.
-Shows the Question, a "Show Answer" toggle, and "I got it / I missed it" feedback buttons.
+</details>
 
+### 📄 Templates (`templates/partials/`)
+We use **HTML5 `<template>` tags** for efficient cloning.
 
-🗄️ Database Schema (SQLite/Raw SQL)
+| Template | Usage |
+| :--- | :--- |
+| **`auth.html`** | A unified Login / Register card that toggles modes instantly. |
+| **`hub.html`** | The main dashboard. Contains the `<template id="course-template">`. |
+| **`course.html`** | Lists chapters. Features a "Select All" checkbox for mass-quizzing. |
+| **`chapter.html`** | The note editor. Contains the Drag-and-Drop dropzone. |
+| **`quiz.html`** | The Flashcard interface with "Show Answer" and Feedback buttons. |
 
-The system uses a relational structure to link content and user progress:
-school_user: Stores credentials (username, hashed password).
-school_course / school_chapter / school_note: Hierarchical content tables. Each row has an owner_id linking it to its creator.
-school_progress: The "Pivot Table" for the learning algorithm.
-Links user_id + note_id.
-Stores weight, correct_count, and wrong_count for that specific user/note pair.
+---
+
+## 🗄️ Database Schema
+
+The system uses a **Hybrid Ownership Model** stored in SQLite:
+
+| Table | Description |
+| :--- | :--- |
+| **`school_user`** | `id`, `username`, `password` (Hashed) |
+| **`school_course`** | Content hierarchy. Includes `owner_id` to track the creator. |
+| **`school_note`** | Stores the **Base Weight** (Default difficulty: 10.0). |
+| **`school_progress`** | **The Magic Table.** Links `user_id` + `note_id`. Stores the *Personalized Weight* for that specific user. |
+
+---
+
+<div align="center">
+    <sub>Built with ❤️ using Django & Vanilla JS</sub>
+</div>
