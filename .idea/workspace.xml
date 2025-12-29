@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="weight adjustment">
-      <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="quiz question image">
+      <change afterPath="$PROJECT_DIR$/debug_notes.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,14 +107,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00020" summary="changed static settings">
-      <option name="closed" value="true" />
-      <created>1766112896843</created>
-      <option name="number" value="00020" />
-      <option name="presentableId" value="LOCAL-00020" />
-      <option name="project" value="LOCAL" />
-      <updated>1766112896843</updated>
     </task>
     <task id="LOCAL-00021" summary="changed static settings">
       <option name="closed" value="true" />
@@ -500,11 +492,18 @@
       <option name="project" value="LOCAL" />
       <updated>1767031087441</updated>
     </task>
-    <option name="localTasksCounter" value="69" />
+    <task id="LOCAL-00069" summary="quiz question image">
+      <option name="closed" value="true" />
+      <created>1767031747972</created>
+      <option name="number" value="00069" />
+      <option name="presentableId" value="LOCAL-00069" />
+      <option name="project" value="LOCAL" />
+      <updated>1767031747972</updated>
+    </task>
+    <option name="localTasksCounter" value="70" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="strangr" />
     <MESSAGE value="strangre" />
     <MESSAGE value="static" />
     <MESSAGE value="static v2" />
@@ -529,6 +528,7 @@
     <MESSAGE value="installing login feaute" />
     <MESSAGE value="reset weight" />
     <MESSAGE value="weight adjustment" />
-    <option name="LAST_COMMIT_MESSAGE" value="weight adjustment" />
+    <MESSAGE value="quiz question image" />
+    <option name="LAST_COMMIT_MESSAGE" value="quiz question image" />
   </component>
 </project>
