@@ -123,7 +123,6 @@ def handle_course(action, data, request):
 
     return None
 
-
 # --- NOTE LOGIC ---
 def handle_note(action, data, files, request):
     user_id = request.session.get('user_id')
@@ -143,37 +142,101 @@ def handle_note(action, data, files, request):
     elif action == 'add_note':
         if not user_id: return {'error': 'Must be logged in'}
 
-        # 1. Prepare Text Data (Default to empty string if not provided)
-        header = data.get('header', '')
-        body = data.get('body', '')
+        header_text = data.get('header', '').strip()
+        body_text = data.get('body', '').strip()
 
-        # 2. Process Header Image
+        # Combine Text + Image using delimiter |||
+        header_final = header_text
         if 'header_image' in files:
             image = files['header_image']
             ext = image.name.split('.')[-1]
             filename = f"{uuid.uuid4()}.{ext}"
             saved_path = default_storage.save(filename, ContentFile(image.read()))
-            header = f"IMG:/media/{saved_path}"
+            header_final = f"{header_text}|||IMG:/media/{saved_path}"
 
-        # 3. Process Body Image (Support new 'body_image' and legacy 'image_file')
-        body_img = files.get('body_image') or files.get('image_file')
-        if body_img:
-            ext = body_img.name.split('.')[-1]
+        body_final = body_text
+        if 'body_image' in files:
+            img = files['body_image']
+            ext = img.name.split('.')[-1]
             filename = f"{uuid.uuid4()}.{ext}"
-            saved_path = default_storage.save(filename, ContentFile(body_img.read()))
-            body = f"IMG:/media/{saved_path}"
+            saved_path = default_storage.save(filename, ContentFile(img.read()))
+            body_final = f"{body_text}|||IMG:/media/{saved_path}"
 
-        # Validation
-        if not header: return {'error': 'Header (Question) is required'}
+        # Validation: Ensure at least something exists
+        if not header_final: return {'error': 'Question cannot be empty'}
+        if not body_final: return {'error': 'Answer cannot be empty'}
 
         db_query("INSERT INTO school_note (chapter_id, header, body, weight, owner_id) VALUES (%s, %s, %s, 10, %s)",
-                 [data['chapter_id'], header, body, user_id])
+                 [data['chapter_id'], header_final, body_final, user_id])
+        return {'status': 'success'}
+
+    elif action == 'edit_note':
+        # NEW: Edit Functionality
+        if not user_id: return {'error': 'Must be logged in'}
+
+        note_id = data.get('note_id')
+        new_header_text = data.get('header', '').strip()
+        new_body_text = data.get('body', '').strip()
+
+        remove_header_img = data.get('remove_header_img') == 'true'
+        remove_body_img = data.get('remove_body_img') == 'true'
+
+        # 1. Fetch current note to preserve existing images if not removed
+        current = db_query("SELECT header, body, owner_id FROM school_note WHERE id = %s", [note_id])
+        if not current: return {'error': 'Note not found'}
+
+        cur_header, cur_body, owner_id = current[0]
+
+        # Permission Check
+        if not (is_admin(user_id) or user_id == owner_id):
+            return {'error': 'Permission Denied'}
+
+        # 2. Process Header
+        header_img_part = ""
+        # Check if new file uploaded
+        if 'header_image' in files:
+            image = files['header_image']
+            ext = image.name.split('.')[-1]
+            filename = f"{uuid.uuid4()}.{ext}"
+            saved_path = default_storage.save(filename, ContentFile(image.read()))
+            header_img_part = f"IMG:/media/{saved_path}"
+        # Else check if keeping existing image
+        elif not remove_header_img and "IMG:" in cur_header:
+            if "|||" in cur_header:
+                header_img_part = cur_header.split("|||")[1]
+            elif cur_header.startswith("IMG:"):
+                header_img_part = cur_header
+
+        header_final = f"{new_header_text}|||{header_img_part}" if header_img_part else new_header_text
+
+        # 3. Process Body
+        body_img_part = ""
+        if 'body_image' in files:
+            img = files['body_image']
+            ext = img.name.split('.')[-1]
+            filename = f"{uuid.uuid4()}.{ext}"
+            saved_path = default_storage.save(filename, ContentFile(img.read()))
+            body_img_part = f"IMG:/media/{saved_path}"
+        elif not remove_body_img and "IMG:" in cur_body:
+            if "|||" in cur_body:
+                body_img_part = cur_body.split("|||")[1]
+            elif cur_body.startswith("IMG:"):
+                body_img_part = cur_body
+
+        body_final = f"{new_body_text}|||{body_img_part}" if body_img_part else new_body_text
+
+        # 4. Final Validation
+        if not header_final.strip() or header_final == "|||": return {'error': 'Question cannot be empty'}
+        if not body_final.strip() or body_final == "|||": return {'error': 'Answer cannot be empty'}
+
+        # 5. Update
+        db_query("UPDATE school_note SET header = %s, body = %s WHERE id = %s", [header_final, body_final, note_id])
         return {'status': 'success'}
 
     elif action == 'delete_note':
+        # ... (Same as before) ...
         note = db_query("SELECT owner_id FROM school_note WHERE id = %s", [data['note_id']])
         if not note: return {'error': 'Not found'}
-
         owner_id = note[0][0]
         if is_admin(user_id) or user_id == owner_id:
             db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
@@ -182,13 +245,11 @@ def handle_note(action, data, files, request):
 
     elif action == 'reset_note':
         if not user_id: return {'error': 'Must be logged in'}
-        # Deleting from progress table forces the system to use the default weight again
         db_query("DELETE FROM school_progress WHERE user_id = %s AND note_id = %s", [user_id, data['note_id']])
         return {'status': 'success'}
 
     elif action == 'reset_chapter':
         if not user_id: return {'error': 'Must be logged in'}
-        # Delete progress for ALL notes in this chapter
         query = """
             DELETE FROM school_progress 
             WHERE user_id = %s 
@@ -198,7 +259,6 @@ def handle_note(action, data, files, request):
         return {'status': 'success'}
 
     return None
-
 
 # --- QUIZ LOGIC (Personalized) ---
 def handle_quiz(action, data, request):

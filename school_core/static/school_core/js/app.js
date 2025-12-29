@@ -12,10 +12,9 @@ let isRegisterMode = false;
 let currentUserIsAdmin = false;
 let currentUserId = null;
 
-// New Image State for Header and Body
+// New Image State
 let pendingHeaderFile = null;
 let pendingBodyFile = null;
-let lastActiveUploadZone = 'body'; // Default target for paste events
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -76,7 +75,6 @@ function toggleAuthMode() {
     isRegisterMode = !isRegisterMode;
     const title = document.getElementById('auth-title');
     const btn = document.getElementById('auth-btn');
-    const toggle = document.getElementById('auth-toggle-text');
     const errorBox = document.getElementById('auth-error');
 
     errorBox.style.display = 'none';
@@ -84,11 +82,11 @@ function toggleAuthMode() {
     if (isRegisterMode) {
         title.innerText = "Create Account";
         btn.innerText = "Sign Up";
-        toggle.innerHTML = 'Already have an account? <a href="#" onclick="toggleAuthMode()">Login</a>';
+        document.getElementById('auth-toggle-text').innerHTML = 'Already have an account? <a href="#" onclick="toggleAuthMode()">Login</a>';
     } else {
         title.innerText = "Login";
         btn.innerText = "Login";
-        toggle.innerHTML = 'New here? <a href="#" onclick="toggleAuthMode()">Create an account</a>';
+        document.getElementById('auth-toggle-text').innerHTML = 'New here? <a href="#" onclick="toggleAuthMode()">Create an account</a>';
     }
 }
 
@@ -117,9 +115,6 @@ async function router(viewName) {
         if(!res.ok) throw new Error("View not found");
         const html = await res.text();
         container.innerHTML = html;
-
-        if(viewName === 'chapter') attachImageHandlers();
-
     } catch (err) {
         console.error(err);
         return;
@@ -153,112 +148,58 @@ async function router(viewName) {
 }
 
 
-// --- IMAGE HANDLING (UPDATED) ---
-
-function setMode(section, type) {
-    // section is 'header' or 'body', type is 'text' or 'image'
-    // Example ID: header-mode-text, body-mode-image
-    const textMode = document.getElementById(`${section}-mode-text`);
-    const imgMode = document.getElementById(`${section}-mode-image`);
-
-    if (textMode && imgMode) {
-        textMode.style.display = (type === 'text') ? 'block' : 'none';
-        imgMode.style.display = (type === 'image') ? 'block' : 'none';
-    }
-
-    // Update active zone for Paste events to know where to go
-    if (type === 'image') lastActiveUploadZone = section;
-}
+// --- NEW IMAGE & CONTENT HANDLING ---
 
 function handleFile(file, section) {
     if (!file || !file.type.startsWith('image/')) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        // Update Preview Image
-        const img = document.getElementById(`preview-img-${section}`);
-        if(img) {
-            img.src = e.target.result;
-            img.style.display = 'block';
-        }
+    // Update Preview Text
+    const preview = document.getElementById(`preview-text-${section}`);
+    if(preview) {
+        preview.innerText = "Selected: " + file.name;
+        preview.style.display = 'block';
+    }
 
-        // Update Drop Area Text
-        const dropText = document.getElementById(`drop-area-${section}`);
-        if(dropText) {
-            dropText.innerText = "Selected: " + file.name;
-        }
-    };
-    reader.readAsDataURL(file);
-
-    // Save to global state variables
     if (section === 'header') pendingHeaderFile = file;
     if (section === 'body') pendingBodyFile = file;
 }
 
-// Global Paste Listener - Intelligent Routing
-window.addEventListener('paste', (e) => {
-    // Check if we are in the chapter view (do drop areas exist?)
-    const hDrop = document.getElementById('drop-area-header');
-    const bDrop = document.getElementById('drop-area-body');
+// HELPER: Parse "Text|||IMG:..." format
+function parseContent(content) {
+    // Returns object { text: string, img: url | null }
+    if (!content) return { text: "", img: null };
 
-    if (hDrop && bDrop) {
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        for (let item of items) {
-            if (item.kind === 'file' && item.type.startsWith('image/')) {
-                // Determine target based on visible inputs or last click
-                const isHeaderImageMode = document.getElementById('header-mode-image').style.display !== 'none';
-                const isBodyImageMode = document.getElementById('body-mode-image').style.display !== 'none';
+    let text = content;
+    let img = null;
 
-                let target = lastActiveUploadZone;
-
-                // Fallback logic: if target is text mode, try the other one
-                if (target === 'header' && !isHeaderImageMode && isBodyImageMode) target = 'body';
-                if (target === 'body' && !isBodyImageMode && isHeaderImageMode) target = 'header';
-
-                // Auto-switch radio button if needed (optional UX polish)
-                if (target === 'header' && !isHeaderImageMode) {
-                    document.querySelector('input[name="hType"][value="image"]')?.click();
-                    setMode('header', 'image');
-                }
-                if (target === 'body' && !isBodyImageMode) {
-                    document.querySelector('input[name="bType"][value="image"]')?.click();
-                    setMode('body', 'image');
-                }
-
-                handleFile(item.getAsFile(), target);
-            }
-        }
+    // 1. Check for delimiter
+    if (content.includes("|||")) {
+        const parts = content.split("|||");
+        text = parts[0];
+        img = parts[1];
     }
-});
+    // 2. Legacy Support (Pure IMG)
+    else if (content.startsWith("IMG:")) {
+        text = "";
+        img = content;
+    }
 
-// Attach Drag & Drop handlers dynamically
-function attachImageHandlers() {
-    ['header', 'body'].forEach(section => {
-        const dropArea = document.getElementById(`drop-area-${section}`);
-        if(dropArea) {
-            dropArea.onclick = () => {
-                lastActiveUploadZone = section;
-                document.getElementById(`file-input-${section}`).click();
-            };
-            dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.style.backgroundColor = '#e0e0e0'; });
-            dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); dropArea.style.backgroundColor = 'white'; });
-            dropArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropArea.style.backgroundColor = 'white';
-                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0], section);
-            });
-        }
-    });
+    if (img && img.startsWith("IMG:")) {
+        img = img.substring(4); // Remove "IMG:" prefix
+    } else {
+        img = null;
+    }
+
+    return { text, img };
 }
 
-// --- RENDER HELPER ---
-function renderMedia(text) {
-    if (text && text.startsWith('IMG:')) {
-        const url = text.substring(4);
-        return `<img src="${url}" style="max-width:300px; display:block; border:1px solid #ccc; margin-top:5px; border-radius: 4px;">`;
-    }
-    // Return text wrapped in div to maintain block structure
-    return `<div>${text}</div>`;
+// HELPER: Render HTML for mixed content
+function renderMedia(content) {
+    const { text, img } = parseContent(content);
+    let html = "";
+    if (text) html += `<div>${text}</div>`;
+    if (img) html += `<img src="${img}" style="max-width:300px; display:block; border:1px solid #ccc; margin-top:5px; border-radius: 4px;">`;
+    return html;
 }
 
 
@@ -271,27 +212,17 @@ async function loadCourses() {
     list.innerHTML = '';
     if(!data || !data.courses) return;
 
-    if (!template) {
-        console.error("ERROR: <template id='course-template'> is missing in hub.html");
-        return;
-    }
+    if (!template) return console.error("Missing template");
 
     data.courses.forEach(c => {
         const clone = template.content.cloneNode(true);
-
         clone.querySelector('.course-name').innerText = c.name;
-
-        const checkbox = clone.querySelector('.course-check');
-        checkbox.onchange = () => toggleCourseSelection(checkbox, c.id);
-
-        const btnExpand = clone.querySelector('.btn-expand');
-        btnExpand.onclick = () => toggleHubChapters(c.id);
-
-        const btnOpen = clone.querySelector('.btn-open');
-        btnOpen.onclick = () => openCourse(c.id, c.name);
+        clone.querySelector('.course-check').onchange = () => toggleCourseSelection(clone.querySelector('.course-check'), c.id);
+        clone.querySelector('.btn-expand').onclick = () => toggleHubChapters(c.id);
+        clone.querySelector('.btn-open').onclick = () => openCourse(c.id, c.name);
 
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
+        if (currentUserIsAdmin || c.owner_id === currentUserId) {
             btnDelete.onclick = () => deleteCourse(c.id);
         } else {
             btnDelete.style.display = 'none';
@@ -304,46 +235,27 @@ async function loadCourses() {
 
 async function addCourse() {
     const name = document.getElementById('new-course-name').value;
-    if(!name) return;
-    await api({ action: 'add_course', name: name });
-    document.getElementById('new-course-name').value = '';
-    loadCourses();
+    if(name) { await api({ action: 'add_course', name: name }); loadCourses(); }
 }
 
 async function deleteCourse(id) {
-    if(confirm("Delete this Subject?")) {
-        const res = await api({ action: 'delete_course', course_id: id });
-        if (res && res.error) {
-            alert(res.error);
-        } else {
-            loadCourses();
-        }
-    }
+    if(confirm("Delete?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); }
 }
 
 async function toggleHubChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
-
     if (container.style.display === 'none') {
         container.style.display = 'block';
-
         if (container.innerHTML === '') {
             container.innerText = "Loading...";
             const data = await api({ action: 'get_chapters', course_id: courseId });
             container.innerHTML = '';
-
-            if (data && data.chapters) {
-                const template = document.getElementById('hub-chapter-template');
+            if(data.chapters) {
                 data.chapters.forEach(c => {
-                    const clone = template.content.cloneNode(true);
-                    const checkbox = clone.querySelector('.chap-select');
-                    checkbox.value = c.id;
-                    checkbox.classList.add(`course-chap-${courseId}`);
-                    clone.querySelector('.chap-name').innerText = c.name;
-                    container.appendChild(clone);
+                    const el = document.createElement('div');
+                    el.innerHTML = `<input type="checkbox" class="chap-select course-chap-${courseId}" value="${c.id}"> ${c.name}`;
+                    container.appendChild(el);
                 });
-            } else {
-                container.innerHTML = "<em>No chapters found.</em>";
             }
         }
     } else {
@@ -353,13 +265,9 @@ async function toggleHubChapters(courseId) {
 
 async function toggleCourseSelection(masterCheckbox, courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
-    if (container.innerHTML === '') {
-        await toggleHubChapters(courseId);
-    }
+    if (container.innerHTML === '') await toggleHubChapters(courseId);
     if (masterCheckbox.checked) container.style.display = 'block';
-
-    const children = document.querySelectorAll(`.course-chap-${courseId}`);
-    children.forEach(child => child.checked = masterCheckbox.checked);
+    document.querySelectorAll(`.course-chap-${courseId}`).forEach(c => c.checked = masterCheckbox.checked);
 }
 
 
@@ -380,22 +288,16 @@ async function loadChapters() {
 
     data.chapters.forEach(c => {
         const clone = template.content.cloneNode(true);
-
         clone.querySelector('.chap-label').innerText = `Index ${c.index}: ${c.name}`;
-
-        const checkbox = clone.querySelector('.chap-select');
-        checkbox.value = c.id;
-
-        const btnNotes = clone.querySelector('.btn-notes');
-        btnNotes.onclick = () => openChapter(c.id, c.name);
+        clone.querySelector('.chap-select').value = c.id;
+        clone.querySelector('.btn-notes').onclick = () => openChapter(c.id, c.name);
 
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
+        if (currentUserIsAdmin || c.owner_id === currentUserId) {
             btnDelete.onclick = () => deleteChapter(c.id);
         } else {
             btnDelete.style.display = 'none';
         }
-
         list.appendChild(clone);
     });
 }
@@ -408,14 +310,7 @@ async function addChapter() {
 }
 
 async function deleteChapter(id) {
-    if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
-        const res = await api({ action: 'delete_chapter', chapter_id: id });
-        if (res && res.error) {
-            alert(res.error);
-        } else {
-            loadChapters();
-        }
-    }
+    if(confirm("Delete?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); }
 }
 
 
@@ -436,112 +331,153 @@ async function loadNotes() {
 
     data.notes.forEach(n => {
         const clone = template.content.cloneNode(true);
+        const card = clone.querySelector('.note-card');
 
-        // UPDATED: Use renderMedia for BOTH Header and Body
-        clone.querySelector('.note-header').innerHTML = renderMedia(n.header);
-        clone.querySelector('.note-body').innerHTML = renderMedia(n.body);
+        // 1. RENDER NORMAL VIEW
+        const viewMode = clone.querySelector('.note-view');
+        viewMode.querySelector('.note-header').innerHTML = renderMedia(n.header);
+        viewMode.querySelector('.note-body').innerHTML = renderMedia(n.body);
 
-        // Highlight weight
-        const weightSpan = clone.querySelector('.note-weight');
-        weightSpan.innerText = n.weight;
-        if (n.weight !== 10) weightSpan.style.fontWeight = 'bold';
+        const wSpan = clone.querySelector('.note-weight');
+        wSpan.innerText = n.weight;
+        if (n.weight !== 10) wSpan.style.fontWeight = 'bold';
 
-        // Reset Button
+        // 2. SETUP BUTTONS
         const btnReset = clone.querySelector('.btn-reset');
-        if (n.weight !== 10) {
-            btnReset.onclick = () => resetNoteWeight(n.id);
-        } else {
-            btnReset.style.display = 'none';
-        }
+        if (n.weight !== 10) btnReset.onclick = () => resetNoteWeight(n.id);
+        else btnReset.style.display = 'none';
 
-        // Delete Button
+        const canEdit = (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId));
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId)) {
+        const btnEdit = clone.querySelector('.btn-edit');
+
+        if (canEdit) {
             btnDelete.onclick = () => deleteNote(n.id);
+            btnEdit.onclick = () => enableEditMode(card, n);
         } else {
             btnDelete.style.display = 'none';
+            btnEdit.style.display = 'none';
         }
 
         list.appendChild(clone);
     });
 }
 
+// --- EDIT MODE LOGIC ---
+function enableEditMode(card, note) {
+    const view = card.querySelector('.note-view');
+    const edit = card.querySelector('.note-edit');
+
+    // Toggle visibility
+    view.style.display = 'none';
+    edit.style.display = 'block';
+
+    // Parse current content
+    const hData = parseContent(note.header);
+    const bData = parseContent(note.body);
+
+    // Fill Text Inputs
+    const hInput = edit.querySelector('.edit-header-text');
+    hInput.value = hData.text;
+
+    const bInput = edit.querySelector('.edit-body-text');
+    bInput.value = bData.text;
+
+    // Handle Header Image Controls
+    const hControls = edit.querySelector('.edit-header-img-controls');
+    hControls.innerHTML = '';
+    if (hData.img) {
+        hControls.innerHTML = `
+            <div style="font-size:0.8em; color: blue;">Current Image: <a href="${hData.img}" target="_blank">View</a></div>
+            <label style="font-size:0.8em; color: red; cursor:pointer;"><input type="checkbox" class="remove-header-img"> Remove Image</label>
+        `;
+    }
+
+    // Handle Body Image Controls
+    const bControls = edit.querySelector('.edit-body-img-controls');
+    bControls.innerHTML = '';
+    if (bData.img) {
+        bControls.innerHTML = `
+            <div style="font-size:0.8em; color: blue;">Current Image: <a href="${bData.img}" target="_blank">View</a></div>
+            <label style="font-size:0.8em; color: red; cursor:pointer;"><input type="checkbox" class="remove-body-img"> Remove Image</label>
+        `;
+    }
+
+    // Bind Actions
+    edit.querySelector('.btn-cancel-edit').onclick = () => {
+        view.style.display = 'block';
+        edit.style.display = 'none';
+    };
+
+    edit.querySelector('.btn-save-edit').onclick = async () => {
+        const formData = new FormData();
+        formData.append('action', 'edit_note');
+        formData.append('note_id', note.id);
+        formData.append('header', hInput.value);
+        formData.append('body', bInput.value);
+
+        // Check removals
+        const remH = edit.querySelector('.remove-header-img');
+        if (remH && remH.checked) formData.append('remove_header_img', 'true');
+
+        const remB = edit.querySelector('.remove-body-img');
+        if (remB && remB.checked) formData.append('remove_body_img', 'true');
+
+        // Check new files
+        const fileH = edit.querySelector('.edit-header-file').files[0];
+        if (fileH) formData.append('header_image', fileH);
+
+        const fileB = edit.querySelector('.edit-body-file').files[0];
+        if (fileB) formData.append('body_image', fileB);
+
+        const res = await api(formData, true);
+        if (res.error) alert(res.error);
+        else loadNotes(); // Reload to see changes
+    };
+}
+
 async function addNote() {
     const headerInput = document.getElementById('note-header').value;
     const bodyInput = document.getElementById('note-body').value;
 
-    const isHeaderImage = document.getElementById('header-mode-image').style.display !== 'none';
-    const isBodyImage = document.getElementById('body-mode-image').style.display !== 'none';
-
-    // Build FormData
     const formData = new FormData();
     formData.append('action', 'add_note');
     formData.append('chapter_id', currentChapterId);
+    formData.append('header', headerInput);
+    formData.append('body', bodyInput);
 
-    // 1. Handle Header
-    if (isHeaderImage) {
-        if (pendingHeaderFile) {
-            formData.append('header_image', pendingHeaderFile);
-        } else {
-            return alert("Please upload a Header Image");
-        }
+    if (pendingHeaderFile) formData.append('header_image', pendingHeaderFile);
+    if (pendingBodyFile) formData.append('body_image', pendingBodyFile);
+
+    const res = await api(formData, true);
+    if (res && res.error) {
+        alert(res.error);
     } else {
-        if (!headerInput) return alert("Header Text is required");
-        formData.append('header', headerInput);
+        // Reset Inputs
+        document.getElementById('note-header').value = '';
+        document.getElementById('note-body').value = '';
+        const ph = document.getElementById('preview-text-header'); if(ph) ph.style.display='none';
+        const pb = document.getElementById('preview-text-body'); if(pb) pb.style.display='none';
+        pendingHeaderFile = null;
+        pendingBodyFile = null;
+        loadNotes();
     }
-
-    // 2. Handle Body
-    if (isBodyImage) {
-        if (pendingBodyFile) {
-            formData.append('body_image', pendingBodyFile);
-        }
-    } else {
-        formData.append('body', bodyInput);
-    }
-
-    await api(formData, true); // True = isFile (multipart)
-
-    // Reset Inputs
-    document.getElementById('note-header').value = '';
-    document.getElementById('note-body').value = '';
-    pendingHeaderFile = null;
-    pendingBodyFile = null;
-
-    // Reset Previews
-    document.getElementById('preview-img-header').style.display = 'none';
-    document.getElementById('drop-area-header').innerText = "Click to Upload Header Image (or Paste)";
-    document.getElementById('preview-img-body').style.display = 'none';
-    document.getElementById('drop-area-body').innerText = "Click to Upload Answer Image (or Paste)";
-
-    loadNotes();
 }
 
 async function deleteNote(id) {
-    if(confirm("Delete?")) {
-        const res = await api({ action: 'delete_note', note_id: id });
-        if (res && res.error) {
-            alert(res.error);
-        } else {
-            loadNotes();
-        }
-    }
+    if(confirm("Delete?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); }
 }
 
 
 // --- VIEW LOGIC: QUIZ ENGINE ---
 async function startQuiz(returnTo = 'hub') {
     quizReturnView = returnTo;
-
     const boxes = document.querySelectorAll('.chap-select:checked');
     const ids = Array.from(boxes).map(b => b.value);
     if(ids.length === 0) return alert("Select chapters");
 
     const data = await api({ action: 'init_quiz', chapter_ids: ids });
-
-    if (!data.deck || data.deck.length === 0) {
-        alert("No notes found in these chapters.");
-        return;
-    }
+    if (!data.deck || data.deck.length === 0) return alert("No notes.");
 
     quizDeck = data.deck;
     router('quiz');
@@ -549,12 +485,7 @@ async function startQuiz(returnTo = 'hub') {
 
 async function nextQuestion() {
     const container = document.getElementById('quiz-container');
-
-    if (quizDeck.length === 0) {
-        container.innerHTML = "<h3>Error: Deck empty.</h3>";
-        return;
-    }
-
+    if (quizDeck.length === 0) { container.innerHTML = "<h3>Deck empty.</h3>"; return; }
     container.innerHTML = "<h3>Calculating...</h3>";
 
     let winner = null;
@@ -565,10 +496,7 @@ async function nextQuestion() {
 
     candidates.forEach(note => {
         let score = note.w * Math.random();
-        if (score > maxScore) {
-            maxScore = score;
-            winner = note;
-        }
+        if (score > maxScore) { maxScore = score; winner = note; }
     });
 
     lastQuizItemId = winner.id;
@@ -580,16 +508,13 @@ async function nextQuestion() {
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
 
-    // UPDATED: Render Header with renderMedia
+    // RENDER MIXED CONTENT
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
-
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
 
     const ansArea = clone.querySelector('.q-answer-area');
-    const btnShow = clone.querySelector('.btn-show-answer');
-    btnShow.onclick = () => { ansArea.style.display = 'block'; };
-
+    clone.querySelector('.btn-show-answer').onclick = () => { ansArea.style.display = 'block'; };
     clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);
     clone.querySelector('.btn-wrong').onclick = () => handleLocalAnswer(false);
 
@@ -597,14 +522,8 @@ async function nextQuestion() {
 }
 
 async function handleLocalAnswer(isCorrect) {
-    if (isCorrect) {
-        currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
-    }
-    api({
-        action: 'submit_answer',
-        note_id: currentQuizItem.id,
-        is_correct: isCorrect
-    });
+    if (isCorrect) currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
+    await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
     nextQuestion();
 }
 
@@ -614,7 +533,7 @@ async function resetNoteWeight(noteId) {
 }
 
 async function resetChapterWeights() {
-    if (confirm("Are you sure? This will wipe your memory progress for ALL notes in this chapter.")) {
+    if (confirm("Reset ALL progress for this chapter?")) {
         await api({ action: 'reset_chapter', chapter_id: currentChapterId });
         loadNotes();
     }
