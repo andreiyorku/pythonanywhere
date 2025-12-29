@@ -47,6 +47,7 @@
 
 <template id="note-item-template">
     <div class="note-card" style="border-bottom: 1px solid #ccc; padding: 10px; position: relative; background: white;">
+
         <div class="note-view">
             <div style="display: flex; align-items: flex-start; gap: 5px;">
                 <b>Q: </b> <div class="note-header" style="flex-grow: 1;"></div>
@@ -54,8 +55,10 @@
             <div style="margin-top:5px; display: flex; align-items: flex-start; gap: 5px;">
                 <span style="color: #666;">A: </span> <div class="note-body" style="flex-grow: 1;"></div>
             </div>
+
             <div style="margin-top:5px; display: flex; gap: 10px; align-items: center;">
                 <small>Weight: <span class="note-weight"></span></small>
+
                 <button class="btn-reset" style="background: #e0e0e0; font-size: 0.8em; padding: 2px 5px; cursor: pointer;">Reset</button>
                 <button class="btn-edit" style="background: #cce5ff; color: #004085; font-size: 0.8em; padding: 2px 5px; cursor: pointer;">Edit</button>
                 <button class="btn-delete" style="background: #ffcccc; color: #cc0000; font-size: 0.8em; padding: 2px 5px; cursor: pointer;">Delete</button>
@@ -64,14 +67,19 @@
 
         <div class="note-edit" style="display:none; background: #fff8e1; padding: 10px; border: 1px solid #ffeeba;">
             <label><b>Q:</b> <input type="text" class="edit-header-text" style="width: 90%"></label><br>
-            <div class="edit-header-img-controls"></div> <input type="file" class="edit-header-file" style="margin-top:5px;">
+            <div class="edit-header-img-controls"></div>
+            <input type="file" class="edit-header-file" style="margin-top:5px;">
             <hr>
+
             <label><b>A:</b> <textarea class="edit-body-text" style="width: 90%"></textarea></label><br>
-            <div class="edit-body-img-controls"></div> <input type="file" class="edit-body-file" style="margin-top:5px;">
+            <div class="edit-body-img-controls"></div>
+            <input type="file" class="edit-body-file" style="margin-top:5px;">
+
             <div style="margin-top: 10px;">
-                <button class="btn-save-edit" style="background: green; color: white;">Save</button>
-                <button class="btn-cancel-edit">Cancel</button>
+                <button class="btn-save-edit" style="background: green; color: white; cursor: pointer; padding: 3px 10px;">Save</button>
+                <button class="btn-cancel-edit" style="cursor: pointer; padding: 3px 10px;">Cancel</button>
             </div>
         </div>
+
     </div>
 </template>
