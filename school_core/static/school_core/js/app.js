@@ -6,12 +6,16 @@ let currentChapterName = "";
 let quizQueue = [];
 let currentQuizItem = null;
 let currentQuizChapterIds = [];
-let pendingImageFile = null;
 let lastQuizItemId = null;
 let quizReturnView = 'hub';
 let isRegisterMode = false;
-let currentUserIsAdmin = false; // NEW STATE
-let currentUserId = null; // NEW
+let currentUserIsAdmin = false;
+let currentUserId = null;
+
+// New Image State for Header and Body
+let pendingHeaderFile = null;
+let pendingBodyFile = null;
+let lastActiveUploadZone = 'body'; // Default target for paste events
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -39,8 +43,8 @@ async function checkLogin() {
     const data = await api({ action: 'get_current_user' });
 
     if (data && data.username) {
-        currentUserId = data.id; // <--- SAVE ID
-        currentUserIsAdmin = data.is_admin; // <--- SAVE THIS
+        currentUserId = data.id;
+        currentUserIsAdmin = data.is_admin;
         console.log("Logged in as:", data.username, "Admin:", currentUserIsAdmin);
 
         updateUserDisplay(data.username);
@@ -58,14 +62,11 @@ async function performAuth() {
     if (!user || !pass) return alert("Please enter both fields.");
 
     const action = isRegisterMode ? 'register' : 'login';
-
     const data = await api({ action: action, username: user, password: pass });
 
     if (data.status === 'success') {
-        // Success! Go to Hub
         checkLogin();
     } else {
-        // Show Error
         errorBox.innerText = data.error || "Authentication failed";
         errorBox.style.display = 'block';
     }
@@ -93,11 +94,10 @@ function toggleAuthMode() {
 
 async function logout() {
     await api({ action: 'logout' });
-    location.reload(); // Refresh page to clear state
+    location.reload();
 }
 
 function updateUserDisplay(username) {
-    // Create a small "Hello, User (Logout)" banner at the top
     let banner = document.getElementById('user-banner');
     if (!banner) {
         banner = document.createElement('div');
@@ -125,10 +125,7 @@ async function router(viewName) {
         return;
     }
 
-    if (viewName === 'auth') {
-        // No special data needed, just show the form
-        return;
-    }
+    if (viewName === 'auth') return;
 
     if (viewName === 'hub') {
         loadCourses();
@@ -156,60 +153,111 @@ async function router(viewName) {
 }
 
 
-// --- IMAGE HANDLING ---
-function setMode(mode) {
-    document.getElementById('mode-text').style.display = (mode === 'text') ? 'block' : 'none';
-    document.getElementById('mode-image').style.display = (mode === 'image') ? 'block' : 'none';
+// --- IMAGE HANDLING (UPDATED) ---
+
+function setMode(section, type) {
+    // section is 'header' or 'body', type is 'text' or 'image'
+    // Example ID: header-mode-text, body-mode-image
+    const textMode = document.getElementById(`${section}-mode-text`);
+    const imgMode = document.getElementById(`${section}-mode-image`);
+
+    if (textMode && imgMode) {
+        textMode.style.display = (type === 'text') ? 'block' : 'none';
+        imgMode.style.display = (type === 'image') ? 'block' : 'none';
+    }
+
+    // Update active zone for Paste events to know where to go
+    if (type === 'image') lastActiveUploadZone = section;
 }
 
-function handleFile(file) {
+function handleFile(file, section) {
     if (!file || !file.type.startsWith('image/')) return;
-    pendingImageFile = file;
 
     const reader = new FileReader();
     reader.onload = (e) => {
-        const img = document.getElementById('preview-img');
-        img.src = e.target.result;
-        img.style.display = 'block';
-        document.getElementById('drop-area').innerText = "Selected: " + file.name;
+        // Update Preview Image
+        const img = document.getElementById(`preview-img-${section}`);
+        if(img) {
+            img.src = e.target.result;
+            img.style.display = 'block';
+        }
+
+        // Update Drop Area Text
+        const dropText = document.getElementById(`drop-area-${section}`);
+        if(dropText) {
+            dropText.innerText = "Selected: " + file.name;
+        }
     };
     reader.readAsDataURL(file);
+
+    // Save to global state variables
+    if (section === 'header') pendingHeaderFile = file;
+    if (section === 'body') pendingBodyFile = file;
 }
 
-function attachImageHandlers() {
-    const dropArea = document.getElementById('drop-area');
-    if(dropArea) {
-        dropArea.onclick = () => document.getElementById('file-input').click();
-        dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.style.backgroundColor = '#e0e0e0'; });
-        dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); dropArea.style.backgroundColor = 'white'; });
-        dropArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropArea.style.backgroundColor = 'white';
-            if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
-        });
-    }
-}
-
+// Global Paste Listener - Intelligent Routing
 window.addEventListener('paste', (e) => {
-    const dropArea = document.getElementById('drop-area');
-    if (dropArea) {
+    // Check if we are in the chapter view (do drop areas exist?)
+    const hDrop = document.getElementById('drop-area-header');
+    const bDrop = document.getElementById('drop-area-body');
+
+    if (hDrop && bDrop) {
         const items = (e.clipboardData || e.originalEvent.clipboardData).items;
         for (let item of items) {
             if (item.kind === 'file' && item.type.startsWith('image/')) {
-                const radio = document.querySelector('input[name="nType"][onclick*="image"]');
-                if(radio) { radio.click(); radio.checked = true; }
-                handleFile(item.getAsFile());
+                // Determine target based on visible inputs or last click
+                const isHeaderImageMode = document.getElementById('header-mode-image').style.display !== 'none';
+                const isBodyImageMode = document.getElementById('body-mode-image').style.display !== 'none';
+
+                let target = lastActiveUploadZone;
+
+                // Fallback logic: if target is text mode, try the other one
+                if (target === 'header' && !isHeaderImageMode && isBodyImageMode) target = 'body';
+                if (target === 'body' && !isBodyImageMode && isHeaderImageMode) target = 'header';
+
+                // Auto-switch radio button if needed (optional UX polish)
+                if (target === 'header' && !isHeaderImageMode) {
+                    document.querySelector('input[name="hType"][value="image"]')?.click();
+                    setMode('header', 'image');
+                }
+                if (target === 'body' && !isBodyImageMode) {
+                    document.querySelector('input[name="bType"][value="image"]')?.click();
+                    setMode('body', 'image');
+                }
+
+                handleFile(item.getAsFile(), target);
             }
         }
     }
 });
 
-// --- HELPER: RENDER BODY ---
-function renderContent(text) {
+// Attach Drag & Drop handlers dynamically
+function attachImageHandlers() {
+    ['header', 'body'].forEach(section => {
+        const dropArea = document.getElementById(`drop-area-${section}`);
+        if(dropArea) {
+            dropArea.onclick = () => {
+                lastActiveUploadZone = section;
+                document.getElementById(`file-input-${section}`).click();
+            };
+            dropArea.addEventListener('dragover', (e) => { e.preventDefault(); dropArea.style.backgroundColor = '#e0e0e0'; });
+            dropArea.addEventListener('dragleave', (e) => { e.preventDefault(); dropArea.style.backgroundColor = 'white'; });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.style.backgroundColor = 'white';
+                if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0], section);
+            });
+        }
+    });
+}
+
+// --- RENDER HELPER ---
+function renderMedia(text) {
     if (text && text.startsWith('IMG:')) {
         const url = text.substring(4);
-        return `<img src="${url}" style="max-width:300px; display:block; border:1px solid #ccc; margin-top:5px;">`;
+        return `<img src="${url}" style="max-width:300px; display:block; border:1px solid #ccc; margin-top:5px; border-radius: 4px;">`;
     }
+    // Return text wrapped in div to maintain block structure
     return `<div>${text}</div>`;
 }
 
@@ -223,7 +271,6 @@ async function loadCourses() {
     list.innerHTML = '';
     if(!data || !data.courses) return;
 
-    // SAFETY CHECK: Ensure template exists before running
     if (!template) {
         console.error("ERROR: <template id='course-template'> is missing in hub.html");
         return;
@@ -244,7 +291,6 @@ async function loadCourses() {
         btnOpen.onclick = () => openCourse(c.id, c.name);
 
         const btnDelete = clone.querySelector('.btn-delete');
-        // Allow if Admin OR if I own it
         if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteCourse(c.id);
         } else {
@@ -252,7 +298,6 @@ async function loadCourses() {
         }
 
         clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
-
         list.appendChild(clone);
     });
 }
@@ -268,7 +313,6 @@ async function addCourse() {
 async function deleteCourse(id) {
     if(confirm("Delete this Subject?")) {
         const res = await api({ action: 'delete_course', course_id: id });
-
         if (res && res.error) {
             alert(res.error);
         } else {
@@ -277,7 +321,6 @@ async function deleteCourse(id) {
     }
 }
 
-// NEW: Load chapters for the Hub view (Lazy Loading)
 async function toggleHubChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
 
@@ -291,14 +334,11 @@ async function toggleHubChapters(courseId) {
 
             if (data && data.chapters) {
                 const template = document.getElementById('hub-chapter-template');
-
                 data.chapters.forEach(c => {
                     const clone = template.content.cloneNode(true);
-
                     const checkbox = clone.querySelector('.chap-select');
                     checkbox.value = c.id;
                     checkbox.classList.add(`course-chap-${courseId}`);
-
                     clone.querySelector('.chap-name').innerText = c.name;
                     container.appendChild(clone);
                 });
@@ -321,6 +361,7 @@ async function toggleCourseSelection(masterCheckbox, courseId) {
     const children = document.querySelectorAll(`.course-chap-${courseId}`);
     children.forEach(child => child.checked = masterCheckbox.checked);
 }
+
 
 // --- VIEW LOGIC: COURSE ---
 async function openCourse(id, name) {
@@ -348,7 +389,6 @@ async function loadChapters() {
         const btnNotes = clone.querySelector('.btn-notes');
         btnNotes.onclick = () => openChapter(c.id, c.name);
 
-        // --- UPDATED: HIDE DELETE IF NOT ADMIN ---
         const btnDelete = clone.querySelector('.btn-delete');
         if (currentUserIsAdmin || (currentUserId && c.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteChapter(c.id);
@@ -370,7 +410,6 @@ async function addChapter() {
 async function deleteChapter(id) {
     if(confirm("Delete this Chapter? All notes inside it will be lost.")) {
         const res = await api({ action: 'delete_chapter', chapter_id: id });
-
         if (res && res.error) {
             alert(res.error);
         } else {
@@ -378,6 +417,7 @@ async function deleteChapter(id) {
         }
     }
 }
+
 
 // --- VIEW LOGIC: CHAPTER ---
 async function openChapter(id, name) {
@@ -397,24 +437,24 @@ async function loadNotes() {
     data.notes.forEach(n => {
         const clone = template.content.cloneNode(true);
 
-        clone.querySelector('.note-header').innerText = n.header;
-        clone.querySelector('.note-body').innerHTML = renderContent(n.body);
+        // UPDATED: Use renderMedia for BOTH Header and Body
+        clone.querySelector('.note-header').innerHTML = renderMedia(n.header);
+        clone.querySelector('.note-body').innerHTML = renderMedia(n.body);
 
-        // Highlight weight if it is NOT default (10)
+        // Highlight weight
         const weightSpan = clone.querySelector('.note-weight');
         weightSpan.innerText = n.weight;
         if (n.weight !== 10) weightSpan.style.fontWeight = 'bold';
 
-        // --- NEW: Reset Button Logic ---
+        // Reset Button
         const btnReset = clone.querySelector('.btn-reset');
-        // Only show reset if the weight is not default (why reset if it's already 10?)
         if (n.weight !== 10) {
             btnReset.onclick = () => resetNoteWeight(n.id);
         } else {
-            btnReset.style.display = 'none'; // Hide if already default
+            btnReset.style.display = 'none';
         }
 
-        // --- Existing Delete Logic ---
+        // Delete Button
         const btnDelete = clone.querySelector('.btn-delete');
         if (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId)) {
             btnDelete.onclick = () => deleteNote(n.id);
@@ -427,28 +467,51 @@ async function loadNotes() {
 }
 
 async function addNote() {
-    const header = document.getElementById('note-header').value;
-    if (!header) { alert("Header required"); return; }
+    const headerInput = document.getElementById('note-header').value;
+    const bodyInput = document.getElementById('note-body').value;
 
-    const isImageMode = document.getElementById('mode-image').style.display !== 'none';
+    const isHeaderImage = document.getElementById('header-mode-image').style.display !== 'none';
+    const isBodyImage = document.getElementById('body-mode-image').style.display !== 'none';
 
-    if (isImageMode && pendingImageFile) {
-        const formData = new FormData();
-        formData.append('action', 'add_note');
-        formData.append('chapter_id', currentChapterId);
-        formData.append('header', header);
-        formData.append('image_file', pendingImageFile);
-        await api(formData, true);
+    // Build FormData
+    const formData = new FormData();
+    formData.append('action', 'add_note');
+    formData.append('chapter_id', currentChapterId);
+
+    // 1. Handle Header
+    if (isHeaderImage) {
+        if (pendingHeaderFile) {
+            formData.append('header_image', pendingHeaderFile);
+        } else {
+            return alert("Please upload a Header Image");
+        }
     } else {
-        const body = document.getElementById('note-body').value;
-        await api({ action: 'add_note', chapter_id: currentChapterId, header: header, body: body });
+        if (!headerInput) return alert("Header Text is required");
+        formData.append('header', headerInput);
     }
 
+    // 2. Handle Body
+    if (isBodyImage) {
+        if (pendingBodyFile) {
+            formData.append('body_image', pendingBodyFile);
+        }
+    } else {
+        formData.append('body', bodyInput);
+    }
+
+    await api(formData, true); // True = isFile (multipart)
+
+    // Reset Inputs
     document.getElementById('note-header').value = '';
-    if(document.getElementById('note-body')) document.getElementById('note-body').value = '';
-    pendingImageFile = null;
-    if(document.getElementById('preview-img')) document.getElementById('preview-img').style.display = 'none';
-    if(document.getElementById('drop-area')) document.getElementById('drop-area').innerText = "Paste Image (Ctrl+V), Drag & Drop, or Click here";
+    document.getElementById('note-body').value = '';
+    pendingHeaderFile = null;
+    pendingBodyFile = null;
+
+    // Reset Previews
+    document.getElementById('preview-img-header').style.display = 'none';
+    document.getElementById('drop-area-header').innerText = "Click to Upload Header Image (or Paste)";
+    document.getElementById('preview-img-body').style.display = 'none';
+    document.getElementById('drop-area-body').innerText = "Click to Upload Answer Image (or Paste)";
 
     loadNotes();
 }
@@ -456,7 +519,6 @@ async function addNote() {
 async function deleteNote(id) {
     if(confirm("Delete?")) {
         const res = await api({ action: 'delete_note', note_id: id });
-
         if (res && res.error) {
             alert(res.error);
         } else {
@@ -464,6 +526,7 @@ async function deleteNote(id) {
         }
     }
 }
+
 
 // --- VIEW LOGIC: QUIZ ENGINE ---
 async function startQuiz(returnTo = 'hub') {
@@ -517,8 +580,10 @@ async function nextQuestion() {
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
 
-    clone.querySelector('.q-header').innerText = content.header;
-    clone.querySelector('.q-body').innerHTML = renderContent(content.body);
+    // UPDATED: Render Header with renderMedia
+    clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
+    clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
+
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
 
     const ansArea = clone.querySelector('.q-answer-area');
@@ -544,9 +609,7 @@ async function handleLocalAnswer(isCorrect) {
 }
 
 async function resetNoteWeight(noteId) {
-    // No confirmation needed for single note, it's low risk
     await api({ action: 'reset_note', note_id: noteId });
-    // Reload to see the weight change back to 10.0
     loadNotes();
 }
 
