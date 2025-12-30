@@ -427,6 +427,65 @@ async function handleLocalAnswer(isCorrect) {
     nextQuestion();
 }
 
+// --- GLOBAL PASTE HANDLER ---
+window.addEventListener('paste', e => {
+    // 1. Get the image from the clipboard
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    let file = null;
+    for (let item of items) {
+        if (item.type.indexOf('image') === 0) {
+            file = item.getAsFile();
+            break;
+        }
+    }
+    // If clipboard contains no image, stop here (let text paste happen normally)
+    if (!file) return;
+
+    // 2. Figure out where the user is typing
+    const active = document.activeElement;
+    if (!active) return;
+
+    // --- CASE A: ADDING NEW NOTE ---
+    // If typing in the main "Question" or "Answer" inputs
+    if (active.id === 'note-header') {
+        handleFile(file, 'header');
+        return; // Stop further processing
+    }
+    if (active.id === 'note-body') {
+        handleFile(file, 'body');
+        return;
+    }
+
+    // --- CASE B: EDITING EXISTING NOTE ---
+    // If typing inside an Edit Form (Dynamic Inputs)
+    if (active.classList.contains('edit-header-text')) {
+        const container = active.closest('.note-edit');
+        if (container) {
+            const fileInput = container.querySelector('.edit-header-file');
+            // Programmatically set the file input
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+
+            // Visual feedback (optional, but nice)
+            active.style.backgroundColor = "#e8f0fe"; // Flash blue briefly
+            setTimeout(() => active.style.backgroundColor = "", 200);
+        }
+    }
+    else if (active.classList.contains('edit-body-text')) {
+        const container = active.closest('.note-edit');
+        if (container) {
+            const fileInput = container.querySelector('.edit-body-file');
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+
+            active.style.backgroundColor = "#e8f0fe";
+            setTimeout(() => active.style.backgroundColor = "", 200);
+        }
+    }
+});
+
 async function resetNoteWeight(noteId) { await api({ action: 'reset_note', note_id: noteId }); loadNotes(); }
 async function resetChapterWeights() { if (confirm("Reset ALL progress for this chapter?")) { await api({ action: 'reset_chapter', chapter_id: currentChapterId }); loadNotes(); } }
 

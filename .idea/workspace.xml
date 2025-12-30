@@ -5,7 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="edit questions">
-      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/riffmaker.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -55,6 +58,7 @@
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
     &quot;PowerShell.GetAllWorkFiles.ps1 (1).executor&quot;: &quot;Run&quot;,
     &quot;PowerShell.GetAllWorkFiles.ps1.executor&quot;: &quot;Run&quot;,
+    &quot;Python.riffmaker.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
@@ -67,7 +71,7 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\school_core\templates\school_core" />
     </key>
   </component>
-  <component name="RunManager" selected="Batch.start_server">
+  <component name="RunManager" selected="Python.riffmaker">
     <configuration name="start_server" type="BatchConfigurationType" factoryName="Batch" temporary="true">
       <module name="pythonanywhere" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -85,8 +89,31 @@
       <envs />
       <method v="2" />
     </configuration>
+    <configuration name="riffmaker" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/riffmaker.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.riffmaker" />
         <item itemvalue="Batch.start_server" />
         <item itemvalue="PowerShell.GetAllWorkFiles.ps1 (1)" />
         <item itemvalue="PowerShell.GetAllWorkFiles.ps1" />
@@ -107,14 +134,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00027" summary="static">
-      <option name="closed" value="true" />
-      <created>1766115781026</created>
-      <option name="number" value="00027" />
-      <option name="presentableId" value="LOCAL-00027" />
-      <option name="project" value="LOCAL" />
-      <updated>1766115781026</updated>
     </task>
     <task id="LOCAL-00028" summary="static v2">
       <option name="closed" value="true" />
@@ -500,7 +519,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767038779081</updated>
     </task>
-    <option name="localTasksCounter" value="76" />
+    <task id="LOCAL-00076" summary="edit questions">
+      <option name="closed" value="true" />
+      <created>1767038978184</created>
+      <option name="number" value="00076" />
+      <option name="presentableId" value="LOCAL-00076" />
+      <option name="project" value="LOCAL" />
+      <updated>1767038978184</updated>
+    </task>
+    <option name="localTasksCounter" value="77" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
