@@ -139,14 +139,6 @@
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
     </task>
-    <task id="LOCAL-00035" summary="updated quiz to be reshuffled each answer">
-      <option name="closed" value="true" />
-      <created>1766465744721</created>
-      <option name="number" value="00035" />
-      <option name="presentableId" value="LOCAL-00035" />
-      <option name="project" value="LOCAL" />
-      <updated>1766465744721</updated>
-    </task>
     <task id="LOCAL-00036" summary="updated quiz wint internal logic">
       <option name="closed" value="true" />
       <created>1766466289009</created>
@@ -531,7 +523,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767327658428</updated>
     </task>
-    <option name="localTasksCounter" value="84" />
+    <task id="LOCAL-00084" summary="staticsmith">
+      <option name="closed" value="true" />
+      <created>1767332133274</created>
+      <option name="number" value="00084" />
+      <option name="presentableId" value="LOCAL-00084" />
+      <option name="project" value="LOCAL" />
+      <updated>1767332133274</updated>
+    </task>
+    <option name="localTasksCounter" value="85" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
