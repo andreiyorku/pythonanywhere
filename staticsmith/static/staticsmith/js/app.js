@@ -5,10 +5,12 @@ const SECTION_COLORS = { 'intro': '#555', 'verse': '#4444aa', 'chorus': '#aa4444
 
 // --- STATE ---
 let RAW_XML = null;
-let CURRENT_XML_STRING = ""; // Stores raw XML for saving
+let CURRENT_XML_STRING = "";
 let LEVELS = {};
 let SECTIONS = [];
 let PHRASES = [];
+let CHORD_TEMPLATES = {};
+
 let CURRENT_NOTES = [];
 let CURRENT_ANCHORS = [];
 let SONG_LENGTH = 0;
@@ -16,9 +18,11 @@ let SONG_LENGTH = 0;
 // --- VIEW SETTINGS ---
 const BASE_RADIUS = 28;
 let ZOOM_FACTOR = 1.0;
-let ACTIVE_RADIUS = 28;
+// FIXED: Active Radius is now constant (same as 100% zoom)
+let ACTIVE_RADIUS = BASE_RADIUS;
 let ACTIVE_PPS = 150;
 let SCROLL_OFFSET = 0.0;
+let KEYBOARD_SPEED_MULTIPLIER = 5;
 
 // --- CANVAS ---
 let mainCanvas, mainCtx, miniCanvas, miniCtx;
@@ -33,13 +37,31 @@ function init() {
     miniCtx = miniCanvas.getContext('2d');
 
     window.addEventListener('resize', resize);
+    window.addEventListener('keydown', handleKeyDown);
+
     resize();
     setupControls();
-    refreshLibrary(); // Load saved songs on startup
+    refreshLibrary();
+}
+
+function handleKeyDown(e) {
+    if (SONG_LENGTH <= 0) return;
+    let jump = 0.5 * (KEYBOARD_SPEED_MULTIPLIER / 2);
+
+    if (e.key === "ArrowRight") {
+        SCROLL_OFFSET += jump;
+        if(SCROLL_OFFSET > SONG_LENGTH) SCROLL_OFFSET = SONG_LENGTH;
+        drawMain();
+        drawMinimap();
+    } else if (e.key === "ArrowLeft") {
+        SCROLL_OFFSET -= jump;
+        if(SCROLL_OFFSET < 0) SCROLL_OFFSET = 0;
+        drawMain();
+        drawMinimap();
+    }
 }
 
 function setupControls() {
-    // File Upload
     document.getElementById('file-upload').addEventListener('change', e => {
         const file = e.target.files[0];
         if (!file) return;
@@ -52,25 +74,29 @@ function setupControls() {
         reader.readAsText(file);
     });
 
-    // Difficulty Switcher
     document.getElementById('selDifficulty').addEventListener('change', e => {
         loadLevel(e.target.value);
     });
 
-    // Zoom Slider
     document.getElementById('zoomSlider').addEventListener('input', e => {
         ZOOM_FACTOR = parseFloat(e.target.value);
         document.getElementById('lblZoomVal').textContent = Math.round(ZOOM_FACTOR * 100) + "%";
         applyZoom();
     });
 
-    // --- SAVE BUTTON LOGIC ---
+    document.getElementById('speedSlider').addEventListener('input', e => {
+        KEYBOARD_SPEED_MULTIPLIER = parseInt(e.target.value);
+        let label = "Normal";
+        if (KEYBOARD_SPEED_MULTIPLIER < 4) label = "Slow";
+        if (KEYBOARD_SPEED_MULTIPLIER > 7) label = "Fast";
+        document.getElementById('lblScrollSpeed').textContent = label;
+    });
+
     const btnSave = document.getElementById('btnSaveCurrent');
     if(btnSave) {
         btnSave.addEventListener('click', () => {
             const title = document.getElementById('lblTitle').textContent;
             const artist = document.getElementById('lblArtist').textContent;
-
             if(!CURRENT_XML_STRING) return alert("No song loaded to save!");
 
             fetch('/staticsmith/api/save/', {
@@ -91,15 +117,12 @@ function setupControls() {
         });
     }
 
-    // --- LOAD BUTTON LOGIC ---
     const btnLoad = document.getElementById('btnLoadSaved');
     if(btnLoad) {
         btnLoad.addEventListener('click', () => {
             const filename = document.getElementById('selLibrary').value;
             if(!filename) return alert("Please select a song first.");
-
             document.getElementById('loading').style.display = 'flex';
-
             fetch(`/staticsmith/api/load/${filename}/`)
             .then(res => res.json())
             .then(data => {
@@ -117,7 +140,6 @@ function setupControls() {
         });
     }
 
-    // Mouse Interactions
     mainCanvas.addEventListener('mousedown', e => { isDraggingMain = true; lastMouseX = e.clientX; });
     window.addEventListener('mouseup', () => { isDraggingMain = false; isDraggingMini = false; });
     mainCanvas.addEventListener('mousemove', e => {
@@ -142,12 +164,12 @@ function refreshLibrary() {
         sel.innerHTML = '<option value="">-- Select Saved Song --</option>';
         data.songs.forEach(song => {
             const opt = document.createElement('option');
-            opt.value = song.id;   // Filename
-            opt.text = song.name;  // Display Name
+            opt.value = song.id;
+            opt.text = song.name;
             sel.appendChild(opt);
         });
     })
-    .catch(err => console.log("Library refresh failed (API might be offline):", err));
+    .catch(err => console.log("Library refresh failed:", err));
 }
 
 function handleMinimapClick(e) {
@@ -165,7 +187,7 @@ function handleMinimapClick(e) {
 
 // --- PARSING ---
 function parseFullXML(xmlString) {
-    CURRENT_XML_STRING = xmlString; // Store raw XML so we can save it later
+    CURRENT_XML_STRING = xmlString;
     const parser = new DOMParser();
     RAW_XML = parser.parseFromString(xmlString, "text/xml");
 
@@ -173,9 +195,20 @@ function parseFullXML(xmlString) {
     document.getElementById('lblArtist').textContent = getTag(RAW_XML, "artistName");
     SONG_LENGTH = parseFloat(getTag(RAW_XML, "songLength") || 200);
 
-    // Show the save button now that we have data
     const btnSave = document.getElementById('btnSaveCurrent');
     if(btnSave) btnSave.style.display = 'block';
+
+    CHORD_TEMPLATES = {};
+    const templates = RAW_XML.getElementsByTagName("chordTemplate");
+    for(let i=0; i<templates.length; i++) {
+        const node = templates[i];
+        let fingers = {};
+        for(let s=0; s<STRINGS; s++) {
+            let f = node.getAttribute("finger" + s);
+            if(f) fingers[s] = parseInt(f);
+        }
+        CHORD_TEMPLATES[i] = fingers;
+    }
 
     SECTIONS = [];
     RAW_XML.querySelectorAll("sections > section").forEach(node => {
@@ -213,13 +246,6 @@ function loadLevel(index) {
     const levelNode = LEVELS[index].node;
     CURRENT_NOTES = [];
 
-    levelNode.querySelectorAll("notes > note").forEach(n => CURRENT_NOTES.push(parseNote(n)));
-    levelNode.querySelectorAll("chords > chord").forEach(c => {
-            if(c.hasAttribute("fret")) CURRENT_NOTES.push(parseNote(c, true));
-            c.querySelectorAll("chordNote").forEach(cn => CURRENT_NOTES.push(parseNote(cn, true)));
-    });
-    CURRENT_NOTES.sort((a, b) => a.t - b.t);
-
     CURRENT_ANCHORS = [];
     let anchors = levelNode.querySelectorAll("anchors > anchor");
     if(anchors.length === 0) anchors = RAW_XML.querySelectorAll("transcriptionTrack > anchors > anchor");
@@ -229,13 +255,58 @@ function loadLevel(index) {
     }));
     CURRENT_ANCHORS.sort((a, b) => a.t - b.t);
 
+    levelNode.querySelectorAll("notes > note").forEach(n => {
+        let note = parseNote(n, false);
+        if (note.finger === -1) note.finger = calculateFinger(note.t, note.f);
+        CURRENT_NOTES.push(note);
+    });
+
+    levelNode.querySelectorAll("chords > chord").forEach(c => {
+        let cId = c.getAttribute("chordId");
+        let tpl = CHORD_TEMPLATES[cId] || {};
+
+        if(c.hasAttribute("fret")) {
+            let s = parseInt(c.getAttribute("string"));
+            let f = (tpl[s] !== undefined) ? tpl[s] : -1;
+            let note = parseNote(c, true, f);
+            if(note.finger === -1) note.finger = calculateFinger(note.t, note.f);
+            CURRENT_NOTES.push(note);
+        }
+        c.querySelectorAll("chordNote").forEach(cn => {
+            let s = parseInt(cn.getAttribute("string"));
+            let f = (tpl[s] !== undefined) ? tpl[s] : -1;
+            let note = parseNote(cn, true, f);
+            if(note.finger === -1) note.finger = calculateFinger(note.t, note.f);
+            CURRENT_NOTES.push(note);
+        });
+    });
+
+    CURRENT_NOTES.sort((a, b) => a.t - b.t);
     applyZoom();
     if(CURRENT_NOTES.length > 0) SCROLL_OFFSET = Math.max(0, CURRENT_NOTES[0].t - 2.0);
     drawMain();
     drawMinimap();
 }
 
-function parseNote(node, isChord=false) {
+function calculateFinger(time, fret) {
+    if(fret === 0) return 0;
+    let anchorFret = 1;
+    for (let i = CURRENT_ANCHORS.length - 1; i >= 0; i--) {
+        if (CURRENT_ANCHORS[i].t <= time) {
+            anchorFret = CURRENT_ANCHORS[i].fret;
+            break;
+        }
+    }
+    let finger = fret - anchorFret + 1;
+    if(finger < 1) finger = 1;
+    if(finger > 4) finger = 4;
+    return finger;
+}
+
+function parseNote(node, isChord=false, finger=-1) {
+    let xmlFinger = node.getAttribute("leftHand") || node.getAttribute("finger");
+    if(xmlFinger) finger = parseInt(xmlFinger);
+
     return {
         t: parseFloat(node.getAttribute("time")),
         s: parseInt(node.getAttribute("string")),
@@ -243,7 +314,8 @@ function parseNote(node, isChord=false) {
         sustain: parseFloat(node.getAttribute("sustain")) || 0,
         bend: parseFloat(node.getAttribute("bend")) || 0,
         slideTo: parseInt(node.getAttribute("slideTo")) || -1,
-        isChord: isChord
+        isChord: isChord,
+        finger: parseInt(finger)
     };
 }
 
@@ -253,48 +325,43 @@ function getTag(xml, tag) { return xml.querySelector(tag)?.textContent || ""; }
 function applyZoom() {
     if(CURRENT_NOTES.length === 0) return;
 
+    // 1. FIXED NOTE SIZE
+    // Radius is always BASE_RADIUS (28), it does not scale with zoom slider
+    ACTIVE_RADIUS = BASE_RADIUS;
+
+    // 2. CONSTANTS
     const spacing = height / 7;
-    const desiredDiameter = BASE_RADIUS * 2 * ZOOM_FACTOR;
-
-    let maxRequiredPPS = 100;
-
-    // 1. Calculate tightest fit based on "Full Size" notes
-    for(let i=0; i<CURRENT_NOTES.length-1; i++) {
-        let a = CURRENT_NOTES[i];
-        let b = CURRENT_NOTES[i+1];
-        let dt = b.t - a.t;
-        if(dt <= 0.001) continue;
-
-        let dy = Math.abs(a.s - b.s) * spacing;
-        if(dy >= desiredDiameter) continue;
-
-        let neededDX = Math.sqrt((desiredDiameter * desiredDiameter) - (dy * dy));
-        let neededPPS = neededDX / dt;
-        if(neededPPS > maxRequiredPPS) maxRequiredPPS = neededPPS;
-    }
-
-    // 2. Apply User Zoom
-    ACTIVE_RADIUS = BASE_RADIUS * ZOOM_FACTOR;
-
-    // 3. Recalculate PPS for the specific ACTIVE_RADIUS
-    let finalPPS = 100;
     const diameter = ACTIVE_RADIUS * 2;
 
+    // 3. BASELINE SPEED CALCULATION (Zero Gap at Fixed Radius)
+    // We calculate the minimum speed required to prevent overlap for notes of size 28.
+    let baseKissingPPS = 20; // Minimum floor
+
     for(let i=0; i<CURRENT_NOTES.length-1; i++) {
         let a = CURRENT_NOTES[i];
         let b = CURRENT_NOTES[i+1];
         let dt = b.t - a.t;
+
         if(dt <= 0.001) continue;
+
         let dy = Math.abs(a.s - b.s) * spacing;
         if(dy >= diameter) continue;
 
         let neededDX = Math.sqrt((diameter * diameter) - (dy * dy));
         let neededPPS = neededDX / dt;
-        if(neededPPS > finalPPS) finalPPS = neededPPS;
-    }
 
-    if(finalPPS > 1200) finalPPS = 1200; // Increased cap for extreme zoom
-    ACTIVE_PPS = finalPPS;
+        if(neededPPS > baseKissingPPS) {
+            baseKissingPPS = neededPPS;
+        }
+    }
+    if(baseKissingPPS > 1200) baseKissingPPS = 1200;
+
+    // 4. APPLY ZOOM SLIDER TO DENSITY
+    // The user wants "Kissing" (Zero Gap) specifically at Zoom 120 (1.2).
+    // So we normalize the slider: At 1.2, multiplier is 1.0 (Base Speed).
+    // At > 1.2, speed increases (Gaps). At < 1.2, speed decreases (Overlap).
+
+    ACTIVE_PPS = baseKissingPPS * (ZOOM_FACTOR / 1.2);
 
     drawMain();
     drawMinimap();
@@ -320,7 +387,7 @@ function resize() {
 
 function drawMain() {
     if(!mainCtx) return;
-    mainCtx.clearRect(0, 0, width, height);
+
     mainCtx.fillStyle = "#24150E";
     mainCtx.fillRect(0, 0, width, height);
 
@@ -348,19 +415,14 @@ function drawMain() {
     // ANCHORS
     CURRENT_ANCHORS.forEach((anchor, i) => {
         let x = playheadX + (anchor.t - SCROLL_OFFSET) * ACTIVE_PPS;
-        let nextT = (i < CURRENT_ANCHORS.length - 1) ? CURRENT_ANCHORS[i+1].t : anchor.t + 5;
-        let w = (nextT - anchor.t) * ACTIVE_PPS;
+        let w = (i < CURRENT_ANCHORS.length - 1) ? (CURRENT_ANCHORS[i+1].t - anchor.t) * ACTIVE_PPS : 100;
         if (x + w < 0 || x > width) return;
 
-        mainCtx.fillStyle = "#334455"; mainCtx.globalAlpha = 0.4;
-        mainCtx.fillRect(x, topMargin, w, spacing*0.8);
-        mainCtx.fillRect(x, height - spacing*0.8, w, spacing*0.8);
         mainCtx.fillStyle = "#FFF"; mainCtx.globalAlpha = 0.3;
-
-        // Prevent anchor text from vanishing at low zoom
-        let anchorFontSize = Math.max(10, ACTIVE_RADIUS);
-        mainCtx.font = `bold ${anchorFontSize}px Arial`;
-        mainCtx.fillText(anchor.fret, x + 5, topMargin + 25);
+        let fontSize = Math.max(12, ACTIVE_RADIUS);
+        mainCtx.font = `bold ${fontSize}px Arial`;
+        mainCtx.textAlign = "left";
+        mainCtx.fillText("P" + anchor.fret, x + 5, height - 10);
     });
 
     // STRINGS
@@ -368,16 +430,22 @@ function drawMain() {
     for (let i = 0; i < STRINGS; i++) {
         let y = topMargin + (spacing * (i + 0.5));
         let c = STRING_COLORS[i];
+
         mainCtx.shadowBlur = 15; mainCtx.shadowColor = c;
         mainCtx.lineWidth = 4; mainCtx.strokeStyle = c; mainCtx.globalAlpha = 0.3;
         mainCtx.beginPath(); mainCtx.moveTo(0, y); mainCtx.lineTo(width, y); mainCtx.stroke();
+
         mainCtx.shadowBlur = 0; mainCtx.lineWidth = 1; mainCtx.strokeStyle = "#FFF"; mainCtx.globalAlpha = 0.8;
         mainCtx.beginPath(); mainCtx.moveTo(0, y); mainCtx.lineTo(width, y); mainCtx.stroke();
     }
 
-    // NOTES
+    // NOTES & FINGERS
     mainCtx.globalAlpha = 1.0;
+    // Radius is constant now
     const r = ACTIVE_RADIUS;
+    let fontSize = Math.max(9, Math.floor(r * 1.3));
+    let fingerFont = `bold ${fontSize}px Arial`;
+
     CURRENT_NOTES.forEach(note => {
         let x = playheadX + (note.t - SCROLL_OFFSET) * ACTIVE_PPS;
         let y = topMargin + (spacing * (note.s + 0.5));
@@ -400,22 +468,29 @@ function drawMain() {
         // Note Head
         mainCtx.globalAlpha = 1.0;
         mainCtx.beginPath(); mainCtx.arc(x, y, r, 0, Math.PI * 2);
-
-        // Thinner lines for small notes
         mainCtx.lineWidth = Math.max(1, r * 0.15);
         mainCtx.strokeStyle = c; mainCtx.stroke();
 
         mainCtx.beginPath(); mainCtx.arc(x, y, r - 3, 0, Math.PI * 2);
         mainCtx.lineWidth = 1; mainCtx.strokeStyle = "white"; mainCtx.stroke();
 
-        // Text (Prevent disappearance)
+        // Fret Number
         mainCtx.fillStyle = "white";
-        let fontSize = Math.max(9, Math.floor(r * 1.3)); // Min font size 9px
-        mainCtx.font = `bold ${fontSize}px Arial`;
+        mainCtx.font = fingerFont;
         mainCtx.textAlign = "center"; mainCtx.textBaseline = "middle";
         mainCtx.lineWidth = 3; mainCtx.strokeStyle = "black";
         mainCtx.strokeText(note.f, x, y);
         mainCtx.fillText(note.f, x, y);
+
+        // Finger Number
+        if(note.finger > 0 && note.f > 0) {
+            let fingerY = y - r - (fontSize * 0.6);
+            if(note.bend > 0) fingerY -= 15;
+
+            mainCtx.fillStyle = "#FFD700";
+            mainCtx.font = `bold ${Math.max(10, fontSize)}px Arial`;
+            mainCtx.fillText(note.finger, x, fingerY);
+        }
     });
 
     // Playhead
@@ -449,11 +524,10 @@ function drawMinimap() {
     const viewStart = SCROLL_OFFSET * scaleX;
     const viewW = (width / ACTIVE_PPS) * scaleX;
 
-    miniCtx.strokeStyle = "#FFF"; miniCtx.lineWidth = 1;
+    // Clean Yellow Border
+    miniCtx.strokeStyle = "#FFFF00";
+    miniCtx.lineWidth = 2;
     miniCtx.strokeRect(viewStart, 0, viewW, miniHeight);
-    miniCtx.fillStyle = "white"; miniCtx.globalAlpha = 0.1;
-    miniCtx.fillRect(viewStart, 0, viewW, miniHeight);
 }
 
-// Start
 window.onload = init;
