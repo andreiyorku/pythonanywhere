@@ -26,16 +26,27 @@
             <select id="selDifficulty" disabled><option>Load File First...</option></select>
         </div>
 
+        <div class="control-group" style="border-top: 2px solid #999; margin-top: 20px; padding-top: 10px;">
+            <span class="label" style="color:#000;">Saved Library:</span>
+            <select id="selLibrary" style="margin-bottom: 5px; width: 100%;">
+                <option value="">Loading...</option>
+            </select>
+            <button id="btnLoadSaved" class="custom-file-upload" style="width:100%; text-align:center; margin-top:5px;">Load Selected</button>
+        </div>
+
+        <div class="control-group">
+             <button id="btnSaveCurrent" class="custom-file-upload" style="width:100%; background:#4444aa; display:none;">Save to Library</button>
+        </div>
+
         <div class="file-upload">
-            <label for="file-upload" class="custom-file-upload">Choose XML File</label>
+            <label for="file-upload" class="custom-file-upload">Upload XML File</label>
             <input id="file-upload" type="file" accept=".xml"/>
         </div>
 
         <p style="font-size:10px; color:#555; margin-top:10px; line-height:1.4;">
-            <strong>StaticSmith v2.4</strong><br>
-            • Zero-Gap Scaling<br>
-            • Kissing Notes Logic<br>
-            • Max Density
+            <strong>StaticSmith v2.5</strong><br>
+            • Save & Load Songs<br>
+            • Library Management
         </p>
     </div>
 

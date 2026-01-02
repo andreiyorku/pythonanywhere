@@ -5,18 +5,16 @@ const SECTION_COLORS = { 'intro': '#555', 'verse': '#4444aa', 'chorus': '#aa4444
 
 // --- STATE ---
 let RAW_XML = null;
+let CURRENT_XML_STRING = ""; // Stores raw XML for saving
 let LEVELS = {};
 let SECTIONS = [];
 let PHRASES = [];
-
 let CURRENT_NOTES = [];
 let CURRENT_ANCHORS = [];
 let SONG_LENGTH = 0;
 
 // --- VIEW SETTINGS ---
 const BASE_RADIUS = 28;
-
-// Active values
 let ZOOM_FACTOR = 1.0;
 let ACTIVE_RADIUS = 28;
 let ACTIVE_PPS = 150;
@@ -25,9 +23,7 @@ let SCROLL_OFFSET = 0.0;
 // --- CANVAS ---
 let mainCanvas, mainCtx, miniCanvas, miniCtx;
 let width, height, miniWidth, miniHeight;
-let isDraggingMain = false;
-let isDraggingMini = false;
-let lastMouseX = 0;
+let isDraggingMain = false, isDraggingMini = false, lastMouseX = 0;
 
 // --- INIT ---
 function init() {
@@ -39,6 +35,7 @@ function init() {
     window.addEventListener('resize', resize);
     resize();
     setupControls();
+    refreshLibrary(); // Load saved songs on startup
 }
 
 function setupControls() {
@@ -60,12 +57,65 @@ function setupControls() {
         loadLevel(e.target.value);
     });
 
-    // ZOOM SLIDER
+    // Zoom
     document.getElementById('zoomSlider').addEventListener('input', e => {
         ZOOM_FACTOR = parseFloat(e.target.value);
         document.getElementById('lblZoomVal').textContent = Math.round(ZOOM_FACTOR * 100) + "%";
         applyZoom();
     });
+
+    // --- SAVE BUTTON LOGIC ---
+    const btnSave = document.getElementById('btnSaveCurrent');
+    if(btnSave) {
+        btnSave.addEventListener('click', () => {
+            const title = document.getElementById('lblTitle').textContent;
+            const artist = document.getElementById('lblArtist').textContent;
+
+            if(!CURRENT_XML_STRING) return alert("No song loaded to save!");
+
+            fetch('/staticsmith/api/save/', {
+                method: 'POST',
+                body: JSON.stringify({ title: title, artist: artist, xml_data: CURRENT_XML_STRING }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert("Saved to Library: " + data.filename);
+                    refreshLibrary();
+                } else {
+                    alert("Error saving: " + data.message);
+                }
+            })
+            .catch(err => alert("API Error: " + err));
+        });
+    }
+
+    // --- LOAD BUTTON LOGIC ---
+    const btnLoad = document.getElementById('btnLoadSaved');
+    if(btnLoad) {
+        btnLoad.addEventListener('click', () => {
+            const filename = document.getElementById('selLibrary').value;
+            if(!filename) return alert("Please select a song first.");
+
+            document.getElementById('loading').style.display = 'flex';
+
+            fetch(`/staticsmith/api/load/${filename}/`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.xml_data) {
+                    parseFullXML(data.xml_data);
+                } else {
+                    alert("Error loading file.");
+                }
+                document.getElementById('loading').style.display = 'none';
+            })
+            .catch(err => {
+                document.getElementById('loading').style.display = 'none';
+                alert("API Error: " + err);
+            });
+        });
+    }
 
     // Mouse Interactions
     mainCanvas.addEventListener('mousedown', e => { isDraggingMain = true; lastMouseX = e.clientX; });
@@ -80,9 +130,23 @@ function setupControls() {
             drawMinimap();
         }
     });
-
     miniCanvas.addEventListener('mousedown', e => { isDraggingMini = true; handleMinimapClick(e); });
     miniCanvas.addEventListener('mousemove', e => { if(isDraggingMini) handleMinimapClick(e); });
+}
+
+function refreshLibrary() {
+    fetch('/staticsmith/api/library/')
+    .then(res => res.json())
+    .then(data => {
+        const sel = document.getElementById('selLibrary');
+        sel.innerHTML = '<option value="">-- Select Saved Song --</option>';
+        data.songs.forEach(song => {
+            const opt = document.createElement('option');
+            opt.value = song.id;   // Filename
+            opt.text = song.name;  // Display Name
+            sel.appendChild(opt);
+        });
+    });
 }
 
 function handleMinimapClick(e) {
@@ -100,12 +164,17 @@ function handleMinimapClick(e) {
 
 // --- PARSING ---
 function parseFullXML(xmlString) {
+    CURRENT_XML_STRING = xmlString; // Store raw XML so we can save it later
     const parser = new DOMParser();
     RAW_XML = parser.parseFromString(xmlString, "text/xml");
 
     document.getElementById('lblTitle').textContent = getTag(RAW_XML, "title");
     document.getElementById('lblArtist').textContent = getTag(RAW_XML, "artistName");
     SONG_LENGTH = parseFloat(getTag(RAW_XML, "songLength") || 200);
+
+    // Show the save button now that we have data
+    const btnSave = document.getElementById('btnSaveCurrent');
+    if(btnSave) btnSave.style.display = 'block';
 
     SECTIONS = [];
     RAW_XML.querySelectorAll("sections > section").forEach(node => {
@@ -160,7 +229,6 @@ function loadLevel(index) {
     CURRENT_ANCHORS.sort((a, b) => a.t - b.t);
 
     applyZoom();
-
     if(CURRENT_NOTES.length > 0) SCROLL_OFFSET = Math.max(0, CURRENT_NOTES[0].t - 2.0);
     drawMain();
     drawMinimap();
@@ -180,38 +248,31 @@ function parseNote(node, isChord=false) {
 
 function getTag(xml, tag) { return xml.querySelector(tag)?.textContent || ""; }
 
-// --- THE "TRUE KISS" LOGIC ---
+// --- ZOOM LOGIC ---
 function applyZoom() {
     if(CURRENT_NOTES.length === 0) return;
 
     const spacing = height / 7;
-    const desiredDiameter = BASE_RADIUS * 2 * ZOOM_FACTOR; // Full width at zoom
+    const desiredDiameter = BASE_RADIUS * 2 * ZOOM_FACTOR;
 
-    let maxRequiredPPS = 100; // Start conservative
+    let maxRequiredPPS = 100;
 
     for(let i=0; i<CURRENT_NOTES.length-1; i++) {
         let a = CURRENT_NOTES[i];
         let b = CURRENT_NOTES[i+1];
         let dt = b.t - a.t;
-
         if(dt <= 0.001) continue;
 
         let dy = Math.abs(a.s - b.s) * spacing;
         if(dy >= desiredDiameter) continue;
 
-        // Force zero gap
         let neededDX = Math.sqrt((desiredDiameter * desiredDiameter) - (dy * dy));
         let neededPPS = neededDX / dt;
-
-        if(neededPPS > maxRequiredPPS) {
-            maxRequiredPPS = neededPPS;
-        }
+        if(neededPPS > maxRequiredPPS) maxRequiredPPS = neededPPS;
     }
 
-    // Set Active Zoom
     ACTIVE_RADIUS = BASE_RADIUS * ZOOM_FACTOR;
 
-    // Check against radius-specific bottleneck
     let finalPPS = 100;
     const diameter = ACTIVE_RADIUS * 2;
 
@@ -225,7 +286,6 @@ function applyZoom() {
 
         let neededDX = Math.sqrt((diameter * diameter) - (dy * dy));
         let neededPPS = neededDX / dt;
-
         if(neededPPS > finalPPS) finalPPS = neededPPS;
     }
 
@@ -273,7 +333,6 @@ function drawMain() {
 
         let c = SECTION_COLORS['verse'];
         for(let key in SECTION_COLORS) if(sec.name.toLowerCase().includes(key)) c = SECTION_COLORS[key];
-
         mainCtx.fillStyle = c; mainCtx.globalAlpha = 0.5;
         mainCtx.fillRect(x, 0, w, 30);
         mainCtx.fillStyle = "white"; mainCtx.globalAlpha = 1.0; mainCtx.font = "bold 11px Arial";
@@ -292,7 +351,6 @@ function drawMain() {
         mainCtx.fillStyle = "#334455"; mainCtx.globalAlpha = 0.4;
         mainCtx.fillRect(x, topMargin, w, spacing*0.8);
         mainCtx.fillRect(x, height - spacing*0.8, w, spacing*0.8);
-
         mainCtx.fillStyle = "#FFF"; mainCtx.globalAlpha = 0.3;
         mainCtx.font = `bold ${ACTIVE_RADIUS}px Arial`;
         mainCtx.fillText(anchor.fret, x + 5, topMargin + 25);
@@ -317,9 +375,7 @@ function drawMain() {
         let x = playheadX + (note.t - SCROLL_OFFSET) * ACTIVE_PPS;
         let y = topMargin + (spacing * (note.s + 0.5));
         if (x + (note.sustain*ACTIVE_PPS) < -50 || x > width + 50) return;
-
         let c = STRING_COLORS[note.s];
-
         if(note.sustain > 0) {
             let tailW = note.sustain * ACTIVE_PPS;
             mainCtx.fillStyle = c; mainCtx.globalAlpha = 0.3;
@@ -330,14 +386,12 @@ function drawMain() {
             mainCtx.beginPath(); mainCtx.moveTo(x, y - r);
             mainCtx.quadraticCurveTo(x + 20, y - r - 30, x + 40, y - r - 10); mainCtx.stroke();
         }
-
         mainCtx.globalAlpha = 1.0;
         mainCtx.beginPath(); mainCtx.arc(x, y, r, 0, Math.PI * 2);
         mainCtx.lineWidth = Math.max(2, r * 0.15);
         mainCtx.strokeStyle = c; mainCtx.stroke();
         mainCtx.beginPath(); mainCtx.arc(x, y, r - 3, 0, Math.PI * 2);
         mainCtx.lineWidth = 1; mainCtx.strokeStyle = "white"; mainCtx.stroke();
-
         mainCtx.fillStyle = "white"; mainCtx.font = `bold ${Math.floor(r*1.3)}px Arial`;
         mainCtx.textAlign = "center"; mainCtx.textBaseline = "middle";
         mainCtx.lineWidth = 3; mainCtx.strokeStyle = "black";
@@ -381,5 +435,5 @@ function drawMinimap() {
     miniCtx.fillRect(viewStart, 0, viewW, miniHeight);
 }
 
-// Start when file loads
+// Start
 window.onload = init;
