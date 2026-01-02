@@ -8,8 +8,6 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/app.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/staticsmith/templates/staticsmith/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/templates/staticsmith/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/staticsmith/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/staticsmith/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -140,14 +138,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00033" summary="gitignore changes">
-      <option name="closed" value="true" />
-      <created>1766446820017</created>
-      <option name="number" value="00033" />
-      <option name="presentableId" value="LOCAL-00033" />
-      <option name="project" value="LOCAL" />
-      <updated>1766446820017</updated>
     </task>
     <task id="LOCAL-00034" summary="updated quiz to be random">
       <option name="closed" value="true" />
@@ -533,7 +523,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767326618702</updated>
     </task>
-    <option name="localTasksCounter" value="82" />
+    <task id="LOCAL-00082" summary="staticsmith">
+      <option name="closed" value="true" />
+      <created>1767327140208</created>
+      <option name="number" value="00082" />
+      <option name="presentableId" value="LOCAL-00082" />
+      <option name="project" value="LOCAL" />
+      <updated>1767327140208</updated>
+    </task>
+    <option name="localTasksCounter" value="83" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">

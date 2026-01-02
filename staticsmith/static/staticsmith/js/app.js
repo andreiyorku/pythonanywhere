@@ -57,7 +57,7 @@ function setupControls() {
         loadLevel(e.target.value);
     });
 
-    // Zoom
+    // Zoom Slider
     document.getElementById('zoomSlider').addEventListener('input', e => {
         ZOOM_FACTOR = parseFloat(e.target.value);
         document.getElementById('lblZoomVal').textContent = Math.round(ZOOM_FACTOR * 100) + "%";
@@ -146,7 +146,8 @@ function refreshLibrary() {
             opt.text = song.name;  // Display Name
             sel.appendChild(opt);
         });
-    });
+    })
+    .catch(err => console.log("Library refresh failed (API might be offline):", err));
 }
 
 function handleMinimapClick(e) {
@@ -257,6 +258,7 @@ function applyZoom() {
 
     let maxRequiredPPS = 100;
 
+    // 1. Calculate tightest fit based on "Full Size" notes
     for(let i=0; i<CURRENT_NOTES.length-1; i++) {
         let a = CURRENT_NOTES[i];
         let b = CURRENT_NOTES[i+1];
@@ -271,8 +273,10 @@ function applyZoom() {
         if(neededPPS > maxRequiredPPS) maxRequiredPPS = neededPPS;
     }
 
+    // 2. Apply User Zoom
     ACTIVE_RADIUS = BASE_RADIUS * ZOOM_FACTOR;
 
+    // 3. Recalculate PPS for the specific ACTIVE_RADIUS
     let finalPPS = 100;
     const diameter = ACTIVE_RADIUS * 2;
 
@@ -289,7 +293,7 @@ function applyZoom() {
         if(neededPPS > finalPPS) finalPPS = neededPPS;
     }
 
-    if(finalPPS > 800) finalPPS = 800;
+    if(finalPPS > 1200) finalPPS = 1200; // Increased cap for extreme zoom
     ACTIVE_PPS = finalPPS;
 
     drawMain();
@@ -352,7 +356,10 @@ function drawMain() {
         mainCtx.fillRect(x, topMargin, w, spacing*0.8);
         mainCtx.fillRect(x, height - spacing*0.8, w, spacing*0.8);
         mainCtx.fillStyle = "#FFF"; mainCtx.globalAlpha = 0.3;
-        mainCtx.font = `bold ${ACTIVE_RADIUS}px Arial`;
+
+        // Prevent anchor text from vanishing at low zoom
+        let anchorFontSize = Math.max(10, ACTIVE_RADIUS);
+        mainCtx.font = `bold ${anchorFontSize}px Arial`;
         mainCtx.fillText(anchor.fret, x + 5, topMargin + 25);
     });
 
@@ -376,26 +383,39 @@ function drawMain() {
         let y = topMargin + (spacing * (note.s + 0.5));
         if (x + (note.sustain*ACTIVE_PPS) < -50 || x > width + 50) return;
         let c = STRING_COLORS[note.s];
+
+        // Sustain
         if(note.sustain > 0) {
             let tailW = note.sustain * ACTIVE_PPS;
             mainCtx.fillStyle = c; mainCtx.globalAlpha = 0.3;
             mainCtx.fillRect(x, y - (r*0.3), tailW, r*0.6);
         }
+        // Bend
         if(note.bend > 0) {
             mainCtx.strokeStyle = "#FFD700"; mainCtx.lineWidth = 3; mainCtx.globalAlpha = 0.9;
             mainCtx.beginPath(); mainCtx.moveTo(x, y - r);
             mainCtx.quadraticCurveTo(x + 20, y - r - 30, x + 40, y - r - 10); mainCtx.stroke();
         }
+
+        // Note Head
         mainCtx.globalAlpha = 1.0;
         mainCtx.beginPath(); mainCtx.arc(x, y, r, 0, Math.PI * 2);
-        mainCtx.lineWidth = Math.max(2, r * 0.15);
+
+        // Thinner lines for small notes
+        mainCtx.lineWidth = Math.max(1, r * 0.15);
         mainCtx.strokeStyle = c; mainCtx.stroke();
+
         mainCtx.beginPath(); mainCtx.arc(x, y, r - 3, 0, Math.PI * 2);
         mainCtx.lineWidth = 1; mainCtx.strokeStyle = "white"; mainCtx.stroke();
-        mainCtx.fillStyle = "white"; mainCtx.font = `bold ${Math.floor(r*1.3)}px Arial`;
+
+        // Text (Prevent disappearance)
+        mainCtx.fillStyle = "white";
+        let fontSize = Math.max(9, Math.floor(r * 1.3)); // Min font size 9px
+        mainCtx.font = `bold ${fontSize}px Arial`;
         mainCtx.textAlign = "center"; mainCtx.textBaseline = "middle";
         mainCtx.lineWidth = 3; mainCtx.strokeStyle = "black";
-        mainCtx.strokeText(note.f, x, y); mainCtx.fillText(note.f, x, y);
+        mainCtx.strokeText(note.f, x, y);
+        mainCtx.fillText(note.f, x, y);
     });
 
     // Playhead
