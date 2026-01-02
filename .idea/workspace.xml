@@ -4,20 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="copy and paste images">
-      <change afterPath="$PROJECT_DIR$/staticsmith/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/apps.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/css/styles.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/app.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/templates/staticsmith/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/staticsmith/views.py" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="staticsmith">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/git_update.sh" beforeDir="false" afterPath="$PROJECT_DIR$/git_update.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mysite/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mysite/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/templates/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/mysite/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -148,14 +136,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00029" summary="delete buttons for course and chapter">
-      <option name="closed" value="true" />
-      <created>1766437422298</created>
-      <option name="number" value="00029" />
-      <option name="presentableId" value="LOCAL-00029" />
-      <option name="project" value="LOCAL" />
-      <updated>1766437422298</updated>
     </task>
     <task id="LOCAL-00030" summary="gitignore changes">
       <option name="closed" value="true" />
@@ -541,11 +521,18 @@
       <option name="project" value="LOCAL" />
       <updated>1767123087848</updated>
     </task>
-    <option name="localTasksCounter" value="78" />
+    <task id="LOCAL-00078" summary="staticsmith">
+      <option name="closed" value="true" />
+      <created>1767325842899</created>
+      <option name="number" value="00078" />
+      <option name="presentableId" value="LOCAL-00078" />
+      <option name="project" value="LOCAL" />
+      <updated>1767325842899</updated>
+    </task>
+    <option name="localTasksCounter" value="79" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="static v2" />
     <MESSAGE value="delete buttons for course and chapter" />
     <MESSAGE value="gitignore changes" />
     <MESSAGE value="updated quiz to be random" />
@@ -570,6 +557,7 @@
     <MESSAGE value="quiz question image" />
     <MESSAGE value="edit questions" />
     <MESSAGE value="copy and paste images" />
-    <option name="LAST_COMMIT_MESSAGE" value="copy and paste images" />
+    <MESSAGE value="staticsmith" />
+    <option name="LAST_COMMIT_MESSAGE" value="staticsmith" />
   </component>
 </project>
