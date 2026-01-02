@@ -1,0 +1,61 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StaticSmith - Django App</title>
+    <link rel="stylesheet" href="{% static 'staticsmith/css/styles.css' %}">
+</head>
+<body>
+
+    <div id="sidebar">
+        <h1>StaticSmith</h1>
+        <div class="separator"></div>
+
+        <div class="info-row"><span class="label">Title:</span> <span id="lblTitle">...</span></div>
+        <div class="info-row"><span class="label">Artist:</span> <span id="lblArtist">...</span></div>
+        <div class="info-row"><span class="label">Time:</span> <span id="lblTime">0:00</span></div>
+
+        <div class="control-group">
+            <div class="info-row"><span class="label">Zoom Scale:</span> <span id="lblZoomVal">100%</span></div>
+            <input type="range" id="zoomSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <span class="label">Difficulty:</span>
+            <select id="selDifficulty" disabled><option>Load File First...</option></select>
+        </div>
+
+        <div class="file-upload">
+            <label for="file-upload" class="custom-file-upload">Choose XML File</label>
+            <input id="file-upload" type="file" accept=".xml"/>
+        </div>
+
+        <p style="font-size:10px; color:#555; margin-top:10px; line-height:1.4;">
+            <strong>StaticSmith v2.4</strong><br>
+            • Zero-Gap Scaling<br>
+            • Kissing Notes Logic<br>
+            • Max Density
+        </p>
+    </div>
+
+    <div id="main-view">
+        <div id="top-bar">
+            <span>File &nbsp; View &nbsp; Tools &nbsp; Help</span>
+            <span style="font-weight:bold; color:#666;">Django Integration</span>
+        </div>
+
+        <div id="canvas-wrapper">
+            <canvas id="fretboardCanvas"></canvas>
+            <div id="loading">Processing...</div>
+        </div>
+
+        <div id="minimap-container">
+            <canvas id="minimapCanvas"></canvas>
+        </div>
+    </div>
+
+    <script src="{% static 'staticsmith/js/app.js' %}"></script>
+
+</body>
+</html>

@@ -429,7 +429,7 @@ async function handleLocalAnswer(isCorrect) {
 
 // --- GLOBAL PASTE HANDLER ---
 window.addEventListener('paste', e => {
-    // 1. Get the image from the clipboard
+    // 1. Get the image from the clipboar
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     let file = null;
     for (let item of items) {

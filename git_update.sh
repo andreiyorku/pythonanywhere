@@ -12,6 +12,7 @@ BRANCH=$(git branch --show-current)
 git reset --hard origin/$BRANCH
 
 git update-index --chmod=+x git_update.sh
+git update-index --chmod=+x git_sync_db.sh
 
 echo "--- Pulled successfully on branch: $BRANCH ---"
 
