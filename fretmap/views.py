@@ -1,6 +1,10 @@
 from django.shortcuts import render
 from django.http import JsonResponse
-import json
+import sqlite3
+import os
+
+# Ensure path is relative to your Django project root
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fretmap', 'fretmap.db')
 
 def index(request):
     return render(request, 'fretmap/index.html')
