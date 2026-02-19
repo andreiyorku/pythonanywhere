@@ -5,7 +5,8 @@ import json
 def fretmap_home(request):
     return render(request, 'fretmap/index.html')
 
+# This replaces your Flask save_transition route
 def save_transition(request):
     if request.method == 'POST':
-        # Your logic to save to fretmap.db goes here
+        # Logic to save to your .db file or Django models
         return JsonResponse({'status': 'saved'})

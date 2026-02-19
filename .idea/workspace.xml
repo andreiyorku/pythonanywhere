@@ -5,7 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
-      <change beforePath="$PROJECT_DIR$/mysite/templates/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/mysite/templates/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -198,14 +199,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00039" summary="something">
-      <option name="closed" value="true" />
-      <created>1766468651883</created>
-      <option name="number" value="00039" />
-      <option name="presentableId" value="LOCAL-00039" />
-      <option name="project" value="LOCAL" />
-      <updated>1766468651883</updated>
     </task>
     <task id="LOCAL-00040" summary="test sql">
       <option name="closed" value="true" />
@@ -591,7 +584,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771475311290</updated>
     </task>
-    <option name="localTasksCounter" value="88" />
+    <task id="LOCAL-00088" summary="fretmap">
+      <option name="closed" value="true" />
+      <created>1771475751914</created>
+      <option name="number" value="00088" />
+      <option name="presentableId" value="LOCAL-00088" />
+      <option name="project" value="LOCAL" />
+      <updated>1771475751914</updated>
+    </task>
+    <option name="localTasksCounter" value="89" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
