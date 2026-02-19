@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 import json
 
-def fretmap_home(request):
+def index(request):
     return render(request, 'fretmap/index.html')
 
 # This replaces your Flask save_transition route
