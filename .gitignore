@@ -11,4 +11,4 @@ env/
 
 # Ignore specific directories (adjust to your case)
 myapp_db.sqlite3
-fretmap/fretmap.db
+#fretmap/fretmap.db
