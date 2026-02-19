@@ -5,11 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
+      <change afterPath="$PROJECT_DIR$/fretmap/db_clear.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/css/style.css" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/css/style.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +81,7 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\staticsmith" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.thing">
+  <component name="RunManager" selected="Python.db_clear">
     <configuration name="start_server" type="BatchConfigurationType" factoryName="Batch" temporary="true">
       <module name="pythonanywhere" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -114,6 +113,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="db_clear" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fretmap" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fretmap/db_clear.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="make_sweet_child" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="pythonanywhere" />
       <option name="ENV_FILES" value="" />
@@ -128,28 +149,6 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/make_sweet_child.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="riffmaker" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="pythonanywhere" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/riffmaker.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -182,11 +181,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.db_clear" />
         <item itemvalue="Python.thing" />
         <item itemvalue="Python.app" />
         <item itemvalue="Python.make_sweet_child" />
         <item itemvalue="Batch.start_server" />
-        <item itemvalue="Python.riffmaker" />
       </list>
     </recent_temporary>
   </component>
@@ -204,14 +203,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00051" summary="course quiz">
-      <option name="closed" value="true" />
-      <created>1766611809165</created>
-      <option name="number" value="00051" />
-      <option name="presentableId" value="LOCAL-00051" />
-      <option name="project" value="LOCAL" />
-      <updated>1766611809165</updated>
     </task>
     <task id="LOCAL-00052" summary="back button fix">
       <option name="closed" value="true" />
@@ -597,7 +588,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771479364990</updated>
     </task>
-    <option name="localTasksCounter" value="100" />
+    <task id="LOCAL-00100" summary="fretmap">
+      <option name="closed" value="true" />
+      <created>1771479757172</created>
+      <option name="number" value="00100" />
+      <option name="presentableId" value="LOCAL-00100" />
+      <option name="project" value="LOCAL" />
+      <updated>1771479757172</updated>
+    </task>
+    <option name="localTasksCounter" value="101" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
