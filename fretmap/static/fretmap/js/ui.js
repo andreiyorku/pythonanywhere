@@ -31,8 +31,61 @@ function saveSettingsToDB() {
     }).catch(e => console.log("Settings save failed"));
 }
 
+// --- AUDIO MATH HELPERS ---
+function getNoteInfo(freq) {
+    if(freq === -1) return { note: "--", cents: 0, octave: 0 };
+    const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+    const noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
+    const noteIndex = Math.round(noteNum) % 12;
+    return {
+        note: noteNames[noteIndex],
+        val: noteNum,
+        cents: Math.floor((noteNum - Math.round(noteNum)) * 100)
+    };
+}
+
+// --- LIVE MONITORING ---
+function updateMonitor(a) {
+    const monHz = document.getElementById('mon-hz');
+    const monNote = document.getElementById('mon-note');
+    const liveDot = document.getElementById('live-dot');
+
+    if(a.pitch === -1) {
+        if(monHz) monHz.innerText = "-- Hz";
+        if(monNote) monNote.innerText = "Silence";
+        if(liveDot) liveDot.style.display = 'none';
+        return;
+    }
+
+    let info = getNoteInfo(a.pitch);
+    if(monHz) monHz.innerText = Math.round(a.pitch) + " Hz";
+    if(monNote) monNote.innerText = info.note;
+
+    let bestMatch = { diff: 9999, string: 0, fret: 0 };
+    STRINGS.forEach((str, sIdx) => {
+        let fretVal = 12 * Math.log2(a.pitch / str.freq);
+        let fretRound = Math.round(fretVal);
+        let diff = Math.abs(fretVal - fretRound);
+
+        if(diff < bestMatch.diff) bestMatch = { diff: diff, string: sIdx, fret: fretRound };
+    });
+
+    // Only show the live red dot if you are playing inside the 9-12 visible window
+    if(bestMatch.diff < 0.4 && liveDot && bestMatch.fret >= FIXED_MIN && bestMatch.fret <= FIXED_MAX) {
+        liveDot.style.display = 'block';
+        let topPct = 15 + (bestMatch.string * 14);
+        let leftPct = ((bestMatch.fret - FIXED_MIN) * FIXED_WIDTH_PCT) + (FIXED_WIDTH_PCT / 2);
+
+        liveDot.style.top = topPct + "%";
+        liveDot.style.left = leftPct + "%";
+    } else if(liveDot) {
+        liveDot.style.display = 'none';
+    }
+}
+
+// --- FRETBOARD RENDERING ---
 function renderFretboard() {
-    // We lock the visual board to strictly 4 frets (9, 10, 11, 12)
+    // Lock visual board to strictly 4 frets (9, 10, 11, 12)
     const fretsLayer = document.getElementById('frets-layer');
     if(!fretsLayer) return;
     fretsLayer.innerHTML = '';
@@ -59,7 +112,7 @@ function drawBoard() {
     if(!layer) return;
     layer.innerHTML = '';
 
-    // Reset indicators
+    // Reset out-of-bounds indicators
     document.getElementById('split-left').style.display = 'none';
     document.getElementById('split-right').style.display = 'none';
 
@@ -70,14 +123,14 @@ function drawBoard() {
 }
 
 function createDot(data, cssClass, label) {
-    // OVERFLOW LOGIC: Check if it's outside the 9-12 range
+    // OVERFLOW LOGIC: Check if note is outside the 9-12 range
     if (data.fret < FIXED_MIN) {
         document.getElementById('split-left').style.display = 'block';
-        return; // Don't draw the dot, just show the indicator
+        return; // Don't draw dot, just flash the left warning bar
     }
     if (data.fret > FIXED_MAX) {
         document.getElementById('split-right').style.display = 'block';
-        return; // Don't draw the dot
+        return; // Don't draw dot, just flash the right warning bar
     }
 
     let dot = document.createElement('div');
