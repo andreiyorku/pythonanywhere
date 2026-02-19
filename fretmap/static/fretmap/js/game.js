@@ -126,12 +126,13 @@ function triggerLevelUp() {
 }
 
 
-// --- SMART GENERATOR (WORST-FIRST + NEW TERRITORY PRIORITY) ---
+// --- SMART GENERATOR (WORST-FIRST + EXPLORATION PRIORITY) ---
 function generateSmartNote(originNote) {
     if(!originNote) return createRandomNote();
 
     let candidates = [];
-    for(let i=0; i<8; i++) candidates.push(createRandomNote());
+    // Increase radar from 8 to 15 to find empty combinations faster
+    for(let i=0; i<15; i++) candidates.push(createRandomNote());
 
     let worstCandidate = candidates[0];
     let worstAvg = -1;
@@ -142,11 +143,14 @@ function generateSmartNote(originNote) {
 
         let key = `${originNote.string}-${originNote.fret}_${cand.string}-${cand.fret}`;
         let stat = transitionStats[key];
-        let avg = stat ? stat.avg : 0; // 0 means unexplored (high priority later, but we rely on randomness to find it)
+
+        // THE FIX: If unexplored, treat it as infinitely slow (99999ms)
+        // to force the algorithm to calibrate it immediately.
+        let avg = stat ? stat.avg : 99999;
 
         // Artificial Priority Boost: Force user to visit newly unlocked frets
         if (newlyUnlockedFrets.includes(cand.fret)) {
-            avg += 500; // Treat as if it's 500ms slower to force selection
+            avg += 500;
         }
 
         if(avg > worstAvg) {
