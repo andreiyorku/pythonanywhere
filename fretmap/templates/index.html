@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="{% static 'fretmap/css/style.css' %}">
 </head>
 <body>
+
+    <script src="{% static 'fretmap/js/audio.js' %}"></script>
+    <script src="{% static 'fretmap/js/ui.js' %}"></script>
+    <script src="{% static 'fretmap/js/game.js' %}"></script>
     <div id="overlay">
         <h1>FRETMAP</h1>
         <div id="calib-msg">Plug In & Click Start</div>
@@ -26,9 +30,5 @@
         <div id="mon-hz">-- Hz</div>
         <div id="mon-note">--</div>
     </div>
-
-    <script src="{{ url_for('static', filename='fretmap/js/audio.js') }}"></script>
-    <script src="{{ url_for('static', filename='fretmap/js/ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='fretmap/js/game.js') }}"></script>
 </body>
 </html>
