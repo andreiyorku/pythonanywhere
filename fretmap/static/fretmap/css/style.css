@@ -1,264 +1,139 @@
-:root {
-    --bg: #121212;
-    --text: #e0e0e0;
-    --accent: #00e676;
-    --wrong: #ff1744;
-    --ghost: #555;
-    --dim: #424242;
-}
+:root { --bg: #121212; --text: #e0e0e0; --accent: #00e676; --wrong: #ff1744; --dim: #424242; }
 
-body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Courier New', monospace;
-    margin: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-}
+        body { background: var(--bg); color: var(--text); font-family: 'Courier New', monospace; margin: 0; overflow: hidden; display: flex; flex-direction: column; height: 100vh; }
 
-/* --- CALIBRATION OVERLAY --- */
-#overlay {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.95);
-    z-index: 200;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
 
-.msg-large {
-    font-size: 40px;
-    margin-bottom: 20px;
-    color: #fff;
-    text-align: center;
-}
 
-.bar-bg {
-    width: 300px;
-    height: 10px;
-    background: #333;
-    margin-top: 20px;
-    border-radius: 5px;
-    overflow: hidden;
-}
+        header { padding: 15px; border-bottom: 1px solid var(--dim); display: flex; justify-content: space-between; align-items: center; background: #000; }
 
-.bar-fill {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.1s;
-}
+        .logo { font-size: 20px; font-weight: bold; letter-spacing: 2px; color: var(--accent); }
 
-button.btn-main {
-    font-size: 24px;
-    padding: 20px 50px;
-    background: var(--accent);
-    border: none;
-    cursor: pointer;
-    border-radius: 50px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-top: 30px;
-}
 
-/* --- HEADER & STATS --- */
-header {
-    padding: 15px;
-    background: #000;
-    border-bottom: 1px solid var(--dim);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
 
-.logo {
-    font-size: 20px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    color: var(--accent);
-}
+        #controls { display: flex; gap: 20px; align-items: center; }
 
-.controls {
-    display: flex;
-    gap: 20px;
-}
+        .ctrl-group { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #888; }
 
-.ctrl-group {
-    display: flex;
-    flex-direction: column;
-    font-size: 10px;
-    color: #888;
-    text-align: center;
-}
+        input[type=range] { width: 80px; accent-color: var(--accent); cursor: pointer; }
 
-input[type=range] {
-    width: 80px;
-    accent-color: var(--accent);
-    cursor: pointer;
-}
 
-/* --- GAME AREA --- */
-#game-area {
-    flex-grow: 1;
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
 
-#big-note {
-    font-size: 100px;
-    font-weight: bold;
-    line-height: 1;
-    text-shadow: 0 0 30px rgba(0,230,118,0.4);
-    color: #fff;
-    text-align: center;
-    margin-bottom: 10px;
-}
+        #calibration-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 200; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 
-#string-info {
-    font-size: 24px;
-    color: var(--accent);
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 30px;
-}
+        .calib-step { font-size: 40px; margin-bottom: 20px; color: #fff; text-align: center; }
 
-/* --- FRETBOARD --- */
-#fretboard {
-    width: 700px;
-    height: 280px;
-    background: #222;
-    position: relative;
-    border-radius: 4px;
-    box-shadow: 0 10px 50px rgba(0,0,0,0.8);
-}
+        .calib-progress { width: 300px; height: 10px; background: #333; margin-top: 20px; border-radius: 5px; overflow: hidden; }
 
-/* Strings (S6=Top/Thick, S1=Bottom/Thin) */
-.string {
-    position: absolute;
-    left: 0; right: 0;
-    background: #888;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    z-index: 5;
-}
+        .calib-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.1s; }
 
-.s6 { top: 15%; height: 5px; background: #aaa; }
-.s5 { top: 29%; height: 4px; }
-.s4 { top: 43%; height: 3px; }
-.s3 { top: 57%; height: 2px; }
-.s2 { top: 71%; height: 1.5px; }
-.s1 { top: 85%; height: 1px; }
 
-/* Fret Wires - Only span from S6 to S1 */
-.fret-wire {
-    position: absolute;
-    top: 15%;
-    bottom: 15%;
-    width: 4px;
-    background: #555;
-    border-right: 1px solid #111;
-    z-index: 1;
-}
 
-.f9 { left: 25%; } .f10 { left: 50%; } .f11 { left: 75%; }
+        #game-area { flex-grow: 1; display: none; flex-direction: column; justify-content: center; align-items: center; position: relative; }
 
-.fret-num {
-    position: absolute;
-    bottom: -30px;
-    font-size: 18px;
-    color: #666;
-    transform: translateX(-50%);
-    font-weight: bold;
-}
 
-/* --- DOTS --- */
-.dot {
-    position: absolute;
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.8);
-    color: #000;
-    z-index: 10;
-}
 
-.target-dot {
-    background: var(--accent);
-    z-index: 50;
-    border: 3px solid #fff;
-    box-shadow: 0 0 25px var(--accent);
-    animation: pulse 0.8s infinite;
-}
+        #queue-bar { display: flex; gap: 30px; margin-bottom: 20px; opacity: 0.9; }
 
-.ghost-dot {
-    background: #444;
-    color: #bbb;
-    z-index: 9;
-    border: 2px solid #666;
-    font-size: 14px;
-}
+        .queue-text { font-size: 16px; color: #888; border: 1px solid #333; padding: 8px 15px; border-radius: 4px; background: #1a1a1a; }
 
-#live-dot {
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    background: var(--wrong);
-    border-radius: 50%;
-    z-index: 100;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 0 15px var(--wrong);
-    display: none;
-    pointer-events: none;
-}
 
-/* --- MONITOR --- */
-#monitor {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: rgba(0,0,0,0.9);
-    border: 1px solid #555;
-    padding: 15px;
-    border-radius: 8px;
-    text-align: right;
-    min-width: 140px;
-}
 
-.hz-disp {
-    font-size: 28px;
-    font-weight: bold;
-    color: #fff;
-}
+        #target-display { margin-bottom: 20px; text-align: center; }
 
-.note-disp {
-    font-size: 14px;
-    color: #888;
-    margin-top: 5px;
-}
+        #big-note { font-size: 100px; font-weight: bold; line-height: 1; text-shadow: 0 0 30px rgba(0,230,118,0.4); color: #fff; }
 
-#attack-flash {
-    height: 4px;
-    width: 0%;
-    background: #ffeb3b;
-    position: absolute;
-    top: 0; left: 0;
-    transition: width 0.05s;
-}
+        #string-info { font-size: 24px; color: var(--accent); margin-top: 5px; font-weight: bold; }
 
-@keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.15); }
-    100% { transform: translate(-50%, -50%) scale(1); }
-}/* Visual Styling */
+
+
+        #fretboard {
+
+            width: 700px; height: 280px; background: #222; position: relative;
+
+            border-radius: 4px; box-shadow: 0 10px 50px rgba(0,0,0,0.8);
+
+        }
+
+
+
+        .string { position: absolute; left: 0; right: 0; background: #888; box-shadow: 0 2px 4px rgba(0,0,0,0.5); z-index: 5; }
+
+        .s6 { top: 15%; height: 5px; background: #aaa; }
+
+        .s5 { top: 29%; height: 4px; }
+
+        .s4 { top: 43%; height: 3px; }
+
+        .s3 { top: 57%; height: 2px; }
+
+        .s2 { top: 71%; height: 1.5px; }
+
+        .s1 { top: 85%; height: 1px; }
+
+
+
+        .fret-wire { position: absolute; top: 15%; bottom: 15%; width: 4px; background: #555; border-right: 1px solid #111; z-index: 1; }
+
+        .f9 { left: 25%; } .f10 { left: 50%; } .f11 { left: 75%; }
+
+        .fret-num { position: absolute; bottom: -30px; font-size: 18px; color: #666; transform: translateX(-50%); font-weight: bold; }
+
+
+
+        .dot {
+
+            position: absolute; width: 34px; height: 34px; border-radius: 50%;
+
+            transform: translate(-50%, -50%); display: flex; justify-content: center; align-items: center;
+
+            font-weight: bold; font-size: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.8); color: #000; z-index: 10;
+
+        }
+
+
+
+        .target-dot { background: var(--accent); z-index: 50; border: 3px solid #fff; box-shadow: 0 0 25px var(--accent); animation: pulse 0.8s infinite; }
+
+        .ghost-dot { background: #444; color: #bbb; z-index: 9; border: 2px solid #666; font-size: 14px; }
+
+
+
+        #live-dot {
+
+            position: absolute; width: 20px; height: 20px; background: var(--wrong);
+
+            border-radius: 50%; z-index: 100; transform: translate(-50%, -50%);
+
+            box-shadow: 0 0 15px var(--wrong); display: none; pointer-events: none;
+
+            transition: top 0.1s, left 0.1s;
+
+        }
+
+
+
+        #live-monitor {
+
+            position: fixed; bottom: 20px; right: 20px;
+
+            background: rgba(0,0,0,0.9); border: 1px solid #555;
+
+            padding: 15px; border-radius: 8px; text-align: right; min-width: 140px;
+
+        }
+
+        .live-hz { font-size: 28px; font-weight: bold; color: #fff; }
+
+        .live-note { font-size: 14px; color: #888; margin-top: 5px; }
+
+
+
+        /* THE ATTACK METER */
+
+        #attack-bar { height: 4px; width: 0%; background: #ffeb3b; position: absolute; top: 0; left: 0; transition: width 0.05s; }
+
+
+
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.15); } 100% { transform: translate(-50%, -50%) scale(1); } }
+
+        button#start-btn { font-size: 24px; padding: 20px 50px; background: var(--accent); border: none; cursor: pointer; border-radius: 50px; font-weight: bold; text-transform: uppercase; }

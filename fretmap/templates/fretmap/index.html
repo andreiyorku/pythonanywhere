@@ -3,34 +3,65 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FretMap | Production</title>
-    {% load static %}
+    <title>FretMap: Attack Detection</title>
     <link rel="stylesheet" href="{% static 'fretmap/css/style.css' %}">
 </head>
 <body>
 
-    <script src="{% static 'fretmap/js/audio.js' %}"></script>
-    <script src="{% static 'fretmap/js/ui.js' %}"></script>
-    <script src="{% static 'fretmap/js/game.js' %}"></script>
-
-    <div id="overlay">
-        <h1>FRETMAP</h1>
-        <div id="calib-msg">Plug In & Click Start</div>
-        <div class="bar-bg"><div id="calib-bar" class="bar-fill"></div></div>
-        <button onclick="initApp()">START ENGINE</button>
+    <div id="calibration-overlay">
+        <h1 style="color:var(--accent)">GUITAR SETUP</h1>
+        <div id="calib-msg" class="calib-step">Plug In & Click Start</div>
+        <div class="calib-progress"><div id="calib-bar" class="calib-bar"></div></div>
+        <button id="start-btn" onclick="initAudio()">START ENGINE</button>
     </div>
 
+    <header>
+        <div class="logo">FRETMAP</div>
+        <div id="controls">
+            <div class="ctrl-group">
+                <span>STRICTNESS</span>
+                <input type="range" min="1" max="100" value="70" oninput="updateStrict(this.value)">
+            </div>
+            <div class="ctrl-group">
+                <span>ATTACK SENS</span>
+                <input type="range" min="1" max="100" value="80" oninput="updateAttack(this.value)">
+            </div>
+        </div>
+    </header>
+
     <div id="game-area">
-        <div id="big-note">--</div>
+        <div id="queue-bar">
+            <div class="queue-text">1. <span id="q1-txt">--</span></div>
+            <div class="queue-text">2. <span id="q2-txt">--</span></div>
+            <div class="queue-text">3. <span id="q3-txt">--</span></div>
+        </div>
+
+        <div id="target-display">
+            <div id="big-note">--</div>
+            <div id="string-info">--</div>
+        </div>
+
         <div id="fretboard">
-            <div id="dots-layer"></div>
+            <div class="string s6"></div> <div class="string s5"></div> <div class="string s4"></div>
+            <div class="string s3"></div> <div class="string s2"></div> <div class="string s1"></div>
+
+            <div class="fret-wire f9"></div><div class="fret-num" style="left:12.5%">9</div>
+            <div class="fret-wire f10"></div><div class="fret-num" style="left:37.5%">10</div>
+            <div class="fret-wire f11"></div><div class="fret-num" style="left:62.5%">11</div>
+            <div class="fret-num" style="left:87.5%">12</div>
+
             <div id="live-dot"></div>
+            <div id="dots-layer"></div>
         </div>
     </div>
 
-    <div id="monitor">
-        <div id="mon-hz">-- Hz</div>
-        <div id="mon-note">--</div>
+    <div id="live-monitor">
+        <div id="attack-bar"></div> <div class="live-hz" id="mon-hz">-- Hz</div>
+        <div class="live-note" id="mon-note">--</div>
     </div>
+
+    <script src="{% static 'fretmap/js/audio.js' %}"></script>
+    <script src="{% static 'fretmap/js/ui.js' %}"></script>
+    <script src="{% static 'fretmap/js/game.js' %}"></script>
 </body>
 </html>
