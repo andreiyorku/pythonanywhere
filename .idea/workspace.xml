@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -69,9 +74,11 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\static" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\fretmap\static\fretmap" />
+      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\fretmap\templates\fretmap" />
+      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\fretmap\templates" />
+      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\mysite\templates\fretmap" />
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\staticsmith" />
-      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\js_playground\static\js_playground" />
-      <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\school_core\templates\school_core" />
     </key>
   </component>
   <component name="RunManager" selected="Python.thing">
@@ -196,14 +203,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00048" summary="add git update">
-      <option name="closed" value="true" />
-      <created>1766608024948</created>
-      <option name="number" value="00048" />
-      <option name="presentableId" value="LOCAL-00048" />
-      <option name="project" value="LOCAL" />
-      <updated>1766608024948</updated>
     </task>
     <task id="LOCAL-00049" summary="add git update">
       <option name="closed" value="true" />
@@ -589,7 +588,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771478852594</updated>
     </task>
-    <option name="localTasksCounter" value="97" />
+    <task id="LOCAL-00097" summary="fretmap">
+      <option name="closed" value="true" />
+      <created>1771478955459</created>
+      <option name="number" value="00097" />
+      <option name="presentableId" value="LOCAL-00097" />
+      <option name="project" value="LOCAL" />
+      <updated>1771478955459</updated>
+    </task>
+    <option name="localTasksCounter" value="98" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
