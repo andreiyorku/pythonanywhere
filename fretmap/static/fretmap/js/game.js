@@ -31,11 +31,21 @@ async function loadDatabaseHistory() {
         if (data.history) transitionStats = data.history;
         currentZoneIndex = data.zone_index || 0;
 
+        // Apply loaded slider settings
+        if (data.strictness) {
+            document.getElementById('strict-slider').value = data.strictness;
+            updateStrict(data.strictness);
+        }
+        if (data.attack) {
+            document.getElementById('attack-slider').value = data.attack;
+            updateAttack(data.attack);
+        }
+
         console.log("DB Loaded. Current Zone:", currentZoneIndex);
         buildActiveFretboard();
+        updateMasteryUI(); // Update persistent HUD immediately
     } catch(e) {
-        console.log("Running without backend history. Starting at Zone 0.");
-        currentZoneIndex = 0;
+        console.log("Running without backend history.");
         buildActiveFretboard();
     }
 }
@@ -79,6 +89,11 @@ function buildActiveFretboard() {
     }
     newlyUnlockedFrets = PENDULUM[currentZoneIndex];
     console.log("Active Frets:", activeFrets);
+
+    // Tell UI.js to dynamically redraw the visual fretboard
+    if (typeof renderFretboard === "function") {
+        renderFretboard(activeFrets);
+    }
 }
 
 function checkMastery(stat, recentTime) {
@@ -93,21 +108,37 @@ function checkMastery(stat, recentTime) {
 }
 
 function updateMasteryUI() {
-    // Calculate total possible one-way transitions in the current active zone
-    // Formula: (Total Notes) * (Total Notes - 1)
     let totalNotes = activeFrets.length * 6;
     let totalPairs = totalNotes * (totalNotes - 1);
-    let masteredCount = 0;
+
+    let exploredCount = 0; // Played at least once
+    let masteredCount = 0; // Beat the gatekeeper math
 
     for (const [id, stat] of Object.entries(transitionStats)) {
-        if (stat.mastery === 1) masteredCount++;
+        // Only count stats that belong to the currently unlocked frets
+        let parts = id.replace('_', '-').split('-');
+        if (activeFrets.includes(parseInt(parts[1])) && activeFrets.includes(parseInt(parts[3]))) {
+            if (stat.count > 0) exploredCount++;
+            if (stat.mastery === 1) masteredCount++;
+        }
     }
 
-    let percent = Math.min(100, Math.floor((masteredCount / Math.max(1, totalPairs)) * 100));
-    console.log(`Zone Mastery: ${percent}% (${masteredCount}/${totalPairs})`);
+    let calibPercent = Math.min(100, Math.floor((exploredCount / Math.max(1, totalPairs)) * 100));
+    let mastPercent = Math.min(100, Math.floor((masteredCount / Math.max(1, totalPairs)) * 100));
 
-    // Trigger Level Up if 100% mastered and there are more zones left
-    if (percent === 100 && totalPairs > 0 && currentZoneIndex < PENDULUM.length - 1) {
+    // Update Persistent HUD
+    let zoneLabel = document.getElementById('zone-label');
+    let calibLabel = document.getElementById('calib-pct');
+    let mastLabel = document.getElementById('mastery-pct');
+    let fillBar = document.getElementById('mastery-fill');
+
+    if (zoneLabel) zoneLabel.innerText = `ZONE ${currentZoneIndex}: FRETS ${Math.min(...activeFrets)}-${Math.max(...activeFrets)}`;
+    if (calibLabel) calibLabel.innerText = `CALIBRATED: ${calibPercent}%`;
+    if (mastLabel) mastLabel.innerText = `MASTERED: ${mastPercent}%`;
+    if (fillBar) fillBar.style.width = `${mastPercent}%`;
+
+    // Trigger Level Up if Mastered reaches 100%
+    if (mastPercent === 100 && totalPairs > 0 && currentZoneIndex < PENDULUM.length - 1) {
         triggerLevelUp();
     }
 }
@@ -138,8 +169,13 @@ function generateSmartNote(originNote) {
     let worstAvg = -1;
 
     candidates.forEach(cand => {
-        // Anti-Ping-Pong Rule (No A -> B -> A)
-        if(prevNote && cand.string === prevNote.string && cand.fret === prevNote.fret) return;
+        // NEW RULE 1: No repeating the exact same note (A -> A)
+        if (originNote && cand.string === originNote.string && cand.fret === originNote.fret) return;
+
+        // NEW RULE 2: True Anti-Ping-Pong (A -> B -> A)
+        // Check the note immediately before the origin in the queue
+        let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
+        if (twoNotesBack && cand.string === twoNotesBack.string && cand.fret === twoNotesBack.fret) return;
 
         let key = `${originNote.string}-${originNote.fret}_${cand.string}-${cand.fret}`;
         let stat = transitionStats[key];
@@ -195,6 +231,11 @@ function startTraining() {
     phase = 'GAME';
     document.getElementById('calibration-overlay').style.display = 'none';
     document.getElementById('game-area').style.display = 'flex';
+
+    let masteryHud = document.getElementById('mastery-hud');
+    if (masteryHud) masteryHud.style.display = 'block';
+
+    updateMasteryUI(); // Initialize the mastery bar
 
     queue.push(generateSmartNote(null));
     queue.push(generateSmartNote(queue[0]));
@@ -285,5 +326,7 @@ function nextTurn() {
     document.getElementById('q2-txt').innerText = queue[1].note;
     document.getElementById('q3-txt').innerText = queue[2].note;
 
-    drawBoard();
+    if (typeof drawBoard === "function") {
+        drawBoard();
+    }
 }
