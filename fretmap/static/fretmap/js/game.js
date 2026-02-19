@@ -334,10 +334,16 @@ function successTrigger() {
         // Run Gatekeeper Math
         stat.mastery = checkMastery(stat, timeTaken);
 
+        // --- NEW: Print exactly what the engine recorded ---
+        console.log(`✅ HIT RECORDED: ${transitionKey} | Time: ${Math.round(timeTaken)}ms | New Avg: ${Math.round(stat.avg)}ms | Mastered: ${stat.mastery === 1 ? 'YES' : 'NO'}`);
+
         // Save to Django DB
         saveToDatabase(transitionKey, timeTaken, stat.mastery);
 
         updateMasteryUI();
+    } else {
+        // Print for the very first note of the session
+        console.log(`✅ FIRST NOTE HIT: Timer started.`);
     }
 
     nextTurn();
@@ -361,6 +367,9 @@ function nextTurn() {
     document.getElementById('q1-txt').innerText = queue[0].note;
     document.getElementById('q2-txt').innerText = queue[1].note;
     document.getElementById('q3-txt').innerText = queue[2].note;
+
+    // --- NEW: Print what the engine is currently waiting to hear ---
+    console.log(`🎯 WAITING FOR: String ${6 - activeTarget.string}, Fret ${activeTarget.fret} (${activeTarget.note})`);
 
     if (typeof drawBoard === "function") {
         drawBoard();
