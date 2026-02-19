@@ -1,6 +1,6 @@
 // --- STATE & PENDULUM PROGRESSION ---
 const PENDULUM = [
-    [9, 10, 11, 12], // Zone 0: The Kernel (Ergonomic Start)
+    [9, 10, 11, 12], // Zone 0: The Kernel
     [8],  // Zone 1: Expand Low
     [13], // Zone 2: Expand High
     [7],  // Zone 3: Expand Low
@@ -10,8 +10,8 @@ const PENDULUM = [
 
 let transitionStats = {};
 let currentZoneIndex = 0;
-let activeFrets = []; // All frets available up to current zone
-let newlyUnlockedFrets = []; // Frets specifically in the current zone
+let activeFrets = [];
+let newlyUnlockedFrets = [];
 
 // Game Engine State
 let phase = 'CALIB';
@@ -34,19 +34,21 @@ async function loadDatabaseHistory() {
         // Apply loaded slider settings
         if (data.strictness) {
             document.getElementById('strict-slider').value = data.strictness;
-            updateStrict(data.strictness);
+            if(typeof updateStrict === 'function') updateStrict(data.strictness);
         }
         if (data.attack) {
             document.getElementById('attack-slider').value = data.attack;
-            updateAttack(data.attack);
+            if(typeof updateAttack === 'function') updateAttack(data.attack);
         }
 
         console.log("DB Loaded. Current Zone:", currentZoneIndex);
         buildActiveFretboard();
-        updateMasteryUI(); // Update persistent HUD immediately
+        updateMasteryUI();
     } catch(e) {
-        console.log("Running without backend history.");
+        console.log("Running without backend history. Starting at Zone 0.");
+        currentZoneIndex = 0;
         buildActiveFretboard();
+        updateMasteryUI();
     }
 }
 
@@ -55,7 +57,7 @@ function saveToDatabase(id, timeTaken, masteryStatus) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken') // Django Security Requirement
+            'X-CSRFToken': getCookie('csrftoken')
         },
         body: JSON.stringify({
             id: id,
@@ -90,9 +92,8 @@ function buildActiveFretboard() {
     newlyUnlockedFrets = PENDULUM[currentZoneIndex];
     console.log("Active Frets:", activeFrets);
 
-    // Tell UI.js to dynamically redraw the visual fretboard
     if (typeof renderFretboard === "function") {
-        renderFretboard(activeFrets);
+        renderFretboard();
     }
 }
 
@@ -100,10 +101,7 @@ function checkMastery(stat, recentTime) {
     // Require at least 3 attempts to prove mastery
     if (stat.count < 3) return 0;
 
-    // Formula from Document: Target = Average - (Average - PersonalBest)/2
     let target = stat.avg - ((stat.avg - stat.best) / 2);
-
-    // If the recent execution time beats the target threshold, it is mastered
     return recentTime <= target ? 1 : 0;
 }
 
@@ -111,8 +109,8 @@ function updateMasteryUI() {
     let totalNotes = activeFrets.length * 6;
     let totalPairs = totalNotes * (totalNotes - 1);
 
-    let exploredCount = 0; // Played at least once
-    let masteredCount = 0; // Beat the gatekeeper math
+    let exploredCount = 0;
+    let masteredCount = 0;
 
     for (const [id, stat] of Object.entries(transitionStats)) {
         // Only count stats that belong to the currently unlocked frets
@@ -148,7 +146,6 @@ function triggerLevelUp() {
     currentZoneIndex++;
     buildActiveFretboard();
 
-    // Send Level Up update to Django Backend
     fetch('/fretmap/save/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
@@ -157,55 +154,96 @@ function triggerLevelUp() {
 }
 
 
-// --- SMART GENERATOR (WORST-FIRST + EXPLORATION PRIORITY) ---
+// --- SMART GENERATOR (GLOBAL HUNTER AI) ---
 function generateSmartNote(originNote) {
     if(!originNote) return createRandomNote();
 
-    let candidates = [];
-    // Increase radar from 8 to 15 to find empty combinations faster
-    for(let i=0; i<15; i++) candidates.push(createRandomNote());
+    let validCandidates = [];
+    let unexploredImmediate = [];
 
-    let worstCandidate = candidates[0];
+    // 1. Build a list of ALL immediate valid destinations
+    for(let s = 0; s < 6; s++) {
+        for(let i = 0; i < activeFrets.length; i++) {
+            let f = activeFrets[i];
+
+            // Rule 1 & 2: No A -> A, and True Anti-Ping-Pong
+            if (s === originNote.string && f === originNote.fret) continue;
+            let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
+            if (twoNotesBack && s === twoNotesBack.string && f === twoNotesBack.fret) continue;
+
+            validCandidates.push({string: s, fret: f});
+        }
+    }
+
+    let worstCandidate = validCandidates[0];
     let worstAvg = -1;
 
-    candidates.forEach(cand => {
-        // NEW RULE 1: No repeating the exact same note (A -> A)
-        if (originNote && cand.string === originNote.string && cand.fret === originNote.fret) return;
-
-        // NEW RULE 2: True Anti-Ping-Pong (A -> B -> A)
-        // Check the note immediately before the origin in the queue
-        let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
-        if (twoNotesBack && cand.string === twoNotesBack.string && cand.fret === twoNotesBack.fret) return;
-
+    // 2. Scan immediate destinations
+    validCandidates.forEach(cand => {
         let key = `${originNote.string}-${originNote.fret}_${cand.string}-${cand.fret}`;
         let stat = transitionStats[key];
 
-        // THE FIX: If unexplored, treat it as infinitely slow (99999ms)
-        // to force the algorithm to calibrate it immediately.
-        let avg = stat ? stat.avg : 99999;
-
-        // Artificial Priority Boost: Force user to visit newly unlocked frets
-        if (newlyUnlockedFrets.includes(cand.fret)) {
-            avg += 500;
-        }
-
-        if(avg > worstAvg) {
-            worstAvg = avg;
-            worstCandidate = cand;
+        if (!stat || stat.count === 0) {
+            unexploredImmediate.push(cand); // Found an empty path right next to us!
+        } else {
+            let avg = stat.avg;
+            if (newlyUnlockedFrets.includes(cand.fret)) avg += 500;
+            if (avg > worstAvg) { worstAvg = avg; worstCandidate = cand; }
         }
     });
 
-    return worstCandidate;
+    // 3. IMMEDIATE LOCK: If we are standing next to an empty path, take it immediately.
+    if (unexploredImmediate.length > 0) {
+        let pick = unexploredImmediate[Math.floor(Math.random() * unexploredImmediate.length)];
+        return formatNoteObj(pick.string, pick.fret);
+    }
+
+    // 4. GLOBAL HUNTER: We are fully calibrated from this note. Is there anything missing globally?
+    let missingOrigins = [];
+    for(let s1 = 0; s1 < 6; s1++){
+        for(let f1 of activeFrets) {
+            for(let s2 = 0; s2 < 6; s2++) {
+                for(let f2 of activeFrets) {
+                    if(s1 === s2 && f1 === f2) continue;
+
+                    let testKey = `${s1}-${f1}_${s2}-${f2}`;
+                    let testStat = transitionStats[testKey];
+
+                    // Found a missing path somewhere else on the neck!
+                    if(!testStat || testStat.count === 0) {
+                        missingOrigins.push({string: s1, fret: f1});
+                    }
+                }
+            }
+        }
+    }
+
+    // If missing path globally exists, force engine to travel to its starting point.
+    if (missingOrigins.length > 0) {
+        let huntTarget = missingOrigins[Math.floor(Math.random() * missingOrigins.length)];
+
+        let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
+        if (twoNotesBack && huntTarget.string === twoNotesBack.string && huntTarget.fret === twoNotesBack.fret) {
+             return formatNoteObj(worstCandidate.string, worstCandidate.fret); // Fallback for one turn to break loop
+        }
+        return formatNoteObj(huntTarget.string, huntTarget.fret);
+    }
+
+    // 5. ZONE MASTERED: 100% Calibrated. Return to normal "Worst-First" Mastery mode.
+    return formatNoteObj(worstCandidate.string, worstCandidate.fret);
 }
 
 function createRandomNote() {
     let sIdx = Math.floor(Math.random() * 6);
-    // Pick strictly from currently unlocked frets
     let fret = activeFrets[Math.floor(Math.random() * activeFrets.length)];
+    return formatNoteObj(sIdx, fret);
+}
+
+function formatNoteObj(sIdx, fret) {
     let base = STRINGS[sIdx].freq;
     let targetFreq = base * Math.pow(2, fret/12);
-    let info = getNoteInfo(targetFreq);
-
+    // Safety check to ensure UI function is loaded
+    let info = typeof getNoteInfo === "function" ? getNoteInfo(targetFreq) : {note: "--"};
     return { note: info.note, string: sIdx, fret: fret, freq: targetFreq };
 }
 
@@ -235,7 +273,7 @@ function startTraining() {
     let masteryHud = document.getElementById('mastery-hud');
     if (masteryHud) masteryHud.style.display = 'block';
 
-    updateMasteryUI(); // Initialize the mastery bar
+    updateMasteryUI();
 
     queue.push(generateSmartNote(null));
     queue.push(generateSmartNote(queue[0]));
@@ -282,7 +320,6 @@ function successTrigger() {
         let transitionKey = `${prevNote.string}-${prevNote.fret}_${activeTarget.string}-${activeTarget.fret}`;
         let timeTaken = now - lastTurnTime;
 
-        // Ensure stats object exists locally
         if(!transitionStats[transitionKey]) {
             transitionStats[transitionKey] = { avg: timeTaken, best: timeTaken, count: 0, mastery: 0 };
         }
@@ -300,7 +337,6 @@ function successTrigger() {
         // Save to Django DB
         saveToDatabase(transitionKey, timeTaken, stat.mastery);
 
-        // Check if Zone is 100% complete
         updateMasteryUI();
     }
 
