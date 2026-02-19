@@ -1,25 +1,58 @@
-import sqlite3, os
+import sqlite3
+import os
 
+# Set the path
 DB_PATH = os.path.abspath('fretmap.db')
-try:
+
+def analyze():
+    if not os.path.exists(DB_PATH):
+        print(f"Error: {DB_PATH} not found.")
+        return
+
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    print("\n=== USER SETTINGS & PROGRESS ===")
-    try:
-        user = c.execute("SELECT zone_index, strictness, attack FROM user_progress WHERE id=1").fetchone()
-        if user:
-            print(f"Zone: {user[0]} | Strictness: {user[1]} | Attack: {user[2]}")
-        else:
-            print("No user data yet.")
-    except sqlite3.OperationalError:
-        print("⚠️ user_progress table missing! (Refresh your live web page to generate it).")
 
-    print("\n=== TRANSITIONS (Top 15 Slowest) ===")
-    rows = c.execute(
-        "SELECT id, avg_time, best_time, total_attempts, mastery_status FROM transitions ORDER BY avg_time DESC LIMIT 15").fetchall()
-    for r in rows: print(
-        f"{r[0]:<12} | Avg: {r[1]:<6.1f} | Best: {r[2]:<6.1f} | Count: {r[3]:<3} | Mastered: {'✅' if r[4] == 1 else '❌'}")
-    if not rows: print("No transitions logged yet.")
+    # 1. Fetch all real transitions
+    rows = c.execute("SELECT id, avg_time, total_attempts, mastery_status FROM transitions WHERE id != 'REPAIR-TEST'").fetchall()
+
+    if not rows:
+        print("\n[!] Database is empty. Play some notes first!")
+        return
+
+    # 2. Perform Calculations
+    times = [r[1] for r in rows]
+    min_time = min(times)
+    max_time = max(times)
+    avg_total = sum(times) / len(times)
+    total_mastered = sum(1 for r in rows if r[3] == 1)
+
+    # 3. Display Overview
+    print("\n" + "="*55)
+    print("      🎸 FRETBOARD ENGINE: GLOBAL PERFORMANCE 🎸")
+    print("="*55)
+    print(f"Total Unique Jumps: {len(rows):<10} | Mastered: {total_mastered}")
+    print(f"Fastest Speed:      {min_time:>7.0f}ms   | Slowest:  {max_time:>7.0f}ms")
+    print(f"Overall Average:    {avg_total:>7.0f}ms")
+    print("-" * 55)
+
+    # 4. Detailed List
+    print(f"{'TRANSITION':<20} | {'AVG TIME':<10} | {'ATTEMPTS'}")
+    print("-" * 55)
+
+    for r in rows:
+        # Decode the ID (e.g., 5-9_4-11 -> S1F9 to S2F11)
+        try:
+            p = r[0].replace('_', '-').split('-')
+            # Assuming standard 6-string mapping (0=High E, 5=Low E)
+            label = f"S{6-int(p[0])}F{p[1]:<2} -> S{6-int(p[2])}F{p[3]:<2}"
+        except:
+            label = r[0]
+
+        status = "✅" if r[3] == 1 else "  "
+        print(f"{label:<20} | {r[1]:>7.0f}ms {status} | {r[2]:>5}")
+
+    print("="*55 + "\n")
     conn.close()
-except Exception as e:
-    print("Error:", e)
+
+if __name__ == "__main__":
+    analyze()
