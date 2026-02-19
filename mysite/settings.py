@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'school_core',
     'js_playgrounds',
     'staticsmith',
+    'fretmap',  # Add this line
 ]
 
 MIDDLEWARE = [

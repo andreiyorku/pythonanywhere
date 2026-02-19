@@ -24,6 +24,7 @@ urlpatterns = [
     path('school_core/', include('school_core.urls')),
     path('js_playgrounds/', include('js_playgrounds.urls')),
     path('staticsmith/', include('staticsmith.urls')),
+    path('fretmap/', include('fretmap.urls')), # Add this line
 ]
 
 from django.conf import settings
