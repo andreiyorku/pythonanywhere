@@ -9,8 +9,14 @@ DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fretmap', 'f
 def index(request):
     return render(request, 'fretmap/index.html')
 
-# This replaces your Flask save_transition route
+def get_user_data(request):
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    rows = conn.execute('SELECT * FROM transitions').fetchall()
+    history = {r['id']: {'avg': r['avg_time'], 'count': r['total_attempts']} for r in rows}
+    conn.close()
+    return JsonResponse({'history': history})
+
 def save_transition(request):
-    if request.method == 'POST':
-        # Logic to save to your .db file or Django models
-        return JsonResponse({'status': 'saved'})
+    # Port your save logic here using JsonResponse
+    return JsonResponse({'status': 'ok'})
