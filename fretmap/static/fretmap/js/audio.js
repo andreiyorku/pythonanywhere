@@ -69,3 +69,20 @@ function autoCorrelate(buf, sampleRate) {
 
     return { pitch: sampleRate/maxpos, rms: rms };
 }
+
+// Add this inside your audioLoop function in audio.js
+function audioLoop() {
+    if (!isListening) return;
+    analyser.getFloatTimeDomainData(dataArray);
+    let result = autoCorrelate(dataArray, audioCtx.sampleRate);
+
+    updateMonitor(result); // Defined in ui.js
+
+    // Trigger game logic defined in game.js
+    if (typeof runGameLogic === "function") {
+        runGameLogic(result.pitch, result.rms);
+    }
+
+    lastRMS = result.rms;
+    requestAnimationFrame(audioLoop);
+}
