@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FretMap | Production</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fretmap/css/style.css') }}">
+</head>
+<body>
+    <div id="overlay">
+        <h1>FRETMAP</h1>
+        <div id="calib-msg">Plug In & Click Start</div>
+        <div class="bar-bg"><div id="calib-bar" class="bar-fill"></div></div>
+        <button onclick="initApp()">START ENGINE</button>
+    </div>
+
+    <div id="game-area">
+        <div id="big-note">--</div>
+        <div id="fretboard">
+            <div id="dots-layer"></div>
+            <div id="live-dot"></div>
+        </div>
+    </div>
+
+    <div id="monitor">
+        <div id="mon-hz">-- Hz</div>
+        <div id="mon-note">--</div>
+    </div>
+
+    <script src="{{ url_for('static', filename='fretmap/js/audio.js') }}"></script>
+    <script src="{{ url_for('static', filename='fretmap/js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='fretmap/js/game.js') }}"></script>
+</body>
+</html>

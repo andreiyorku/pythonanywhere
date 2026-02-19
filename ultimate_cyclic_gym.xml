@@ -1,0 +1,782 @@
+<?xml version="1.0" ?>
+<song version="14">
+  <title>Ultimate Cyclic Gym</title>
+  <artistName>Python Coach</artistName>
+  <tuning string0="0" string1="0" string2="0" string3="0" string4="0" string5="0"/>
+  <ebeats count="384">
+    <ebeat time="0.000" measure="1"/>
+    <ebeat time="0.500" measure="-1"/>
+    <ebeat time="1.000" measure="-1"/>
+    <ebeat time="1.500" measure="-1"/>
+    <ebeat time="2.000" measure="-1"/>
+    <ebeat time="2.500" measure="-1"/>
+    <ebeat time="3.000" measure="-1"/>
+    <ebeat time="3.500" measure="-1"/>
+    <ebeat time="4.000" measure="1"/>
+    <ebeat time="4.500" measure="-1"/>
+    <ebeat time="5.000" measure="-1"/>
+    <ebeat time="5.500" measure="-1"/>
+    <ebeat time="6.000" measure="-1"/>
+    <ebeat time="6.500" measure="-1"/>
+    <ebeat time="7.000" measure="-1"/>
+    <ebeat time="7.500" measure="-1"/>
+    <ebeat time="8.000" measure="1"/>
+    <ebeat time="8.500" measure="-1"/>
+    <ebeat time="9.000" measure="-1"/>
+    <ebeat time="9.500" measure="-1"/>
+    <ebeat time="10.000" measure="-1"/>
+    <ebeat time="10.500" measure="-1"/>
+    <ebeat time="11.000" measure="-1"/>
+    <ebeat time="11.500" measure="-1"/>
+    <ebeat time="12.000" measure="1"/>
+    <ebeat time="12.500" measure="-1"/>
+    <ebeat time="13.000" measure="-1"/>
+    <ebeat time="13.500" measure="-1"/>
+    <ebeat time="14.000" measure="-1"/>
+    <ebeat time="14.500" measure="-1"/>
+    <ebeat time="15.000" measure="-1"/>
+    <ebeat time="15.500" measure="-1"/>
+    <ebeat time="16.000" measure="1"/>
+    <ebeat time="16.500" measure="-1"/>
+    <ebeat time="17.000" measure="-1"/>
+    <ebeat time="17.500" measure="-1"/>
+    <ebeat time="18.000" measure="-1"/>
+    <ebeat time="18.500" measure="-1"/>
+    <ebeat time="19.000" measure="-1"/>
+    <ebeat time="19.500" measure="-1"/>
+    <ebeat time="20.000" measure="1"/>
+    <ebeat time="20.500" measure="-1"/>
+    <ebeat time="21.000" measure="-1"/>
+    <ebeat time="21.500" measure="-1"/>
+    <ebeat time="22.000" measure="-1"/>
+    <ebeat time="22.500" measure="-1"/>
+    <ebeat time="23.000" measure="-1"/>
+    <ebeat time="23.500" measure="-1"/>
+    <ebeat time="24.000" measure="1"/>
+    <ebeat time="24.500" measure="-1"/>
+    <ebeat time="25.000" measure="-1"/>
+    <ebeat time="25.500" measure="-1"/>
+    <ebeat time="26.000" measure="-1"/>
+    <ebeat time="26.500" measure="-1"/>
+    <ebeat time="27.000" measure="-1"/>
+    <ebeat time="27.500" measure="-1"/>
+    <ebeat time="28.000" measure="1"/>
+    <ebeat time="28.500" measure="-1"/>
+    <ebeat time="29.000" measure="-1"/>
+    <ebeat time="29.500" measure="-1"/>
+    <ebeat time="30.000" measure="-1"/>
+    <ebeat time="30.500" measure="-1"/>
+    <ebeat time="31.000" measure="-1"/>
+    <ebeat time="31.500" measure="-1"/>
+    <ebeat time="32.000" measure="1"/>
+    <ebeat time="32.500" measure="-1"/>
+    <ebeat time="33.000" measure="-1"/>
+    <ebeat time="33.500" measure="-1"/>
+    <ebeat time="34.000" measure="-1"/>
+    <ebeat time="34.500" measure="-1"/>
+    <ebeat time="35.000" measure="-1"/>
+    <ebeat time="35.500" measure="-1"/>
+    <ebeat time="36.000" measure="1"/>
+    <ebeat time="36.500" measure="-1"/>
+    <ebeat time="37.000" measure="-1"/>
+    <ebeat time="37.500" measure="-1"/>
+    <ebeat time="38.000" measure="-1"/>
+    <ebeat time="38.500" measure="-1"/>
+    <ebeat time="39.000" measure="-1"/>
+    <ebeat time="39.500" measure="-1"/>
+    <ebeat time="40.000" measure="1"/>
+    <ebeat time="40.500" measure="-1"/>
+    <ebeat time="41.000" measure="-1"/>
+    <ebeat time="41.500" measure="-1"/>
+    <ebeat time="42.000" measure="-1"/>
+    <ebeat time="42.500" measure="-1"/>
+    <ebeat time="43.000" measure="-1"/>
+    <ebeat time="43.500" measure="-1"/>
+    <ebeat time="44.000" measure="1"/>
+    <ebeat time="44.500" measure="-1"/>
+    <ebeat time="45.000" measure="-1"/>
+    <ebeat time="45.500" measure="-1"/>
+    <ebeat time="46.000" measure="-1"/>
+    <ebeat time="46.500" measure="-1"/>
+    <ebeat time="47.000" measure="-1"/>
+    <ebeat time="47.500" measure="-1"/>
+    <ebeat time="48.000" measure="1"/>
+    <ebeat time="48.500" measure="-1"/>
+    <ebeat time="49.000" measure="-1"/>
+    <ebeat time="49.500" measure="-1"/>
+    <ebeat time="50.000" measure="-1"/>
+    <ebeat time="50.500" measure="-1"/>
+    <ebeat time="51.000" measure="-1"/>
+    <ebeat time="51.500" measure="-1"/>
+    <ebeat time="52.000" measure="1"/>
+    <ebeat time="52.500" measure="-1"/>
+    <ebeat time="53.000" measure="-1"/>
+    <ebeat time="53.500" measure="-1"/>
+    <ebeat time="54.000" measure="-1"/>
+    <ebeat time="54.500" measure="-1"/>
+    <ebeat time="55.000" measure="-1"/>
+    <ebeat time="55.500" measure="-1"/>
+    <ebeat time="56.000" measure="1"/>
+    <ebeat time="56.500" measure="-1"/>
+    <ebeat time="57.000" measure="-1"/>
+    <ebeat time="57.500" measure="-1"/>
+    <ebeat time="58.000" measure="-1"/>
+    <ebeat time="58.500" measure="-1"/>
+    <ebeat time="59.000" measure="-1"/>
+    <ebeat time="59.500" measure="-1"/>
+    <ebeat time="60.000" measure="1"/>
+    <ebeat time="60.500" measure="-1"/>
+    <ebeat time="61.000" measure="-1"/>
+    <ebeat time="61.500" measure="-1"/>
+    <ebeat time="62.000" measure="-1"/>
+    <ebeat time="62.500" measure="-1"/>
+    <ebeat time="63.000" measure="-1"/>
+    <ebeat time="63.500" measure="-1"/>
+    <ebeat time="64.000" measure="1"/>
+    <ebeat time="64.500" measure="-1"/>
+    <ebeat time="65.000" measure="-1"/>
+    <ebeat time="65.500" measure="-1"/>
+    <ebeat time="66.000" measure="-1"/>
+    <ebeat time="66.500" measure="-1"/>
+    <ebeat time="67.000" measure="-1"/>
+    <ebeat time="67.500" measure="-1"/>
+    <ebeat time="68.000" measure="1"/>
+    <ebeat time="68.500" measure="-1"/>
+    <ebeat time="69.000" measure="-1"/>
+    <ebeat time="69.500" measure="-1"/>
+    <ebeat time="70.000" measure="-1"/>
+    <ebeat time="70.500" measure="-1"/>
+    <ebeat time="71.000" measure="-1"/>
+    <ebeat time="71.500" measure="-1"/>
+    <ebeat time="72.000" measure="1"/>
+    <ebeat time="72.500" measure="-1"/>
+    <ebeat time="73.000" measure="-1"/>
+    <ebeat time="73.500" measure="-1"/>
+    <ebeat time="74.000" measure="-1"/>
+    <ebeat time="74.500" measure="-1"/>
+    <ebeat time="75.000" measure="-1"/>
+    <ebeat time="75.500" measure="-1"/>
+    <ebeat time="76.000" measure="1"/>
+    <ebeat time="76.500" measure="-1"/>
+    <ebeat time="77.000" measure="-1"/>
+    <ebeat time="77.500" measure="-1"/>
+    <ebeat time="78.000" measure="-1"/>
+    <ebeat time="78.500" measure="-1"/>
+    <ebeat time="79.000" measure="-1"/>
+    <ebeat time="79.500" measure="-1"/>
+    <ebeat time="80.000" measure="1"/>
+    <ebeat time="80.500" measure="-1"/>
+    <ebeat time="81.000" measure="-1"/>
+    <ebeat time="81.500" measure="-1"/>
+    <ebeat time="82.000" measure="-1"/>
+    <ebeat time="82.500" measure="-1"/>
+    <ebeat time="83.000" measure="-1"/>
+    <ebeat time="83.500" measure="-1"/>
+    <ebeat time="84.000" measure="1"/>
+    <ebeat time="84.500" measure="-1"/>
+    <ebeat time="85.000" measure="-1"/>
+    <ebeat time="85.500" measure="-1"/>
+    <ebeat time="86.000" measure="-1"/>
+    <ebeat time="86.500" measure="-1"/>
+    <ebeat time="87.000" measure="-1"/>
+    <ebeat time="87.500" measure="-1"/>
+    <ebeat time="88.000" measure="1"/>
+    <ebeat time="88.500" measure="-1"/>
+    <ebeat time="89.000" measure="-1"/>
+    <ebeat time="89.500" measure="-1"/>
+    <ebeat time="90.000" measure="-1"/>
+    <ebeat time="90.500" measure="-1"/>
+    <ebeat time="91.000" measure="-1"/>
+    <ebeat time="91.500" measure="-1"/>
+    <ebeat time="92.000" measure="1"/>
+    <ebeat time="92.500" measure="-1"/>
+    <ebeat time="93.000" measure="-1"/>
+    <ebeat time="93.500" measure="-1"/>
+    <ebeat time="94.000" measure="-1"/>
+    <ebeat time="94.500" measure="-1"/>
+    <ebeat time="95.000" measure="-1"/>
+    <ebeat time="95.500" measure="-1"/>
+    <ebeat time="96.000" measure="1"/>
+    <ebeat time="96.500" measure="-1"/>
+    <ebeat time="97.000" measure="-1"/>
+    <ebeat time="97.500" measure="-1"/>
+    <ebeat time="98.000" measure="-1"/>
+    <ebeat time="98.500" measure="-1"/>
+    <ebeat time="99.000" measure="-1"/>
+    <ebeat time="99.500" measure="-1"/>
+    <ebeat time="100.000" measure="1"/>
+    <ebeat time="100.500" measure="-1"/>
+    <ebeat time="101.000" measure="-1"/>
+    <ebeat time="101.500" measure="-1"/>
+    <ebeat time="102.000" measure="-1"/>
+    <ebeat time="102.500" measure="-1"/>
+    <ebeat time="103.000" measure="-1"/>
+    <ebeat time="103.500" measure="-1"/>
+    <ebeat time="104.000" measure="1"/>
+    <ebeat time="104.500" measure="-1"/>
+    <ebeat time="105.000" measure="-1"/>
+    <ebeat time="105.500" measure="-1"/>
+    <ebeat time="106.000" measure="-1"/>
+    <ebeat time="106.500" measure="-1"/>
+    <ebeat time="107.000" measure="-1"/>
+    <ebeat time="107.500" measure="-1"/>
+    <ebeat time="108.000" measure="1"/>
+    <ebeat time="108.500" measure="-1"/>
+    <ebeat time="109.000" measure="-1"/>
+    <ebeat time="109.500" measure="-1"/>
+    <ebeat time="110.000" measure="-1"/>
+    <ebeat time="110.500" measure="-1"/>
+    <ebeat time="111.000" measure="-1"/>
+    <ebeat time="111.500" measure="-1"/>
+    <ebeat time="112.000" measure="1"/>
+    <ebeat time="112.500" measure="-1"/>
+    <ebeat time="113.000" measure="-1"/>
+    <ebeat time="113.500" measure="-1"/>
+    <ebeat time="114.000" measure="-1"/>
+    <ebeat time="114.500" measure="-1"/>
+    <ebeat time="115.000" measure="-1"/>
+    <ebeat time="115.500" measure="-1"/>
+    <ebeat time="116.000" measure="1"/>
+    <ebeat time="116.500" measure="-1"/>
+    <ebeat time="117.000" measure="-1"/>
+    <ebeat time="117.500" measure="-1"/>
+    <ebeat time="118.000" measure="-1"/>
+    <ebeat time="118.500" measure="-1"/>
+    <ebeat time="119.000" measure="-1"/>
+    <ebeat time="119.500" measure="-1"/>
+    <ebeat time="120.000" measure="1"/>
+    <ebeat time="120.500" measure="-1"/>
+    <ebeat time="121.000" measure="-1"/>
+    <ebeat time="121.500" measure="-1"/>
+    <ebeat time="122.000" measure="-1"/>
+    <ebeat time="122.500" measure="-1"/>
+    <ebeat time="123.000" measure="-1"/>
+    <ebeat time="123.500" measure="-1"/>
+    <ebeat time="124.000" measure="1"/>
+    <ebeat time="124.500" measure="-1"/>
+    <ebeat time="125.000" measure="-1"/>
+    <ebeat time="125.500" measure="-1"/>
+    <ebeat time="126.000" measure="-1"/>
+    <ebeat time="126.500" measure="-1"/>
+    <ebeat time="127.000" measure="-1"/>
+    <ebeat time="127.500" measure="-1"/>
+    <ebeat time="128.000" measure="1"/>
+    <ebeat time="128.500" measure="-1"/>
+    <ebeat time="129.000" measure="-1"/>
+    <ebeat time="129.500" measure="-1"/>
+    <ebeat time="130.000" measure="-1"/>
+    <ebeat time="130.500" measure="-1"/>
+    <ebeat time="131.000" measure="-1"/>
+    <ebeat time="131.500" measure="-1"/>
+    <ebeat time="132.000" measure="1"/>
+    <ebeat time="132.500" measure="-1"/>
+    <ebeat time="133.000" measure="-1"/>
+    <ebeat time="133.500" measure="-1"/>
+    <ebeat time="134.000" measure="-1"/>
+    <ebeat time="134.500" measure="-1"/>
+    <ebeat time="135.000" measure="-1"/>
+    <ebeat time="135.500" measure="-1"/>
+    <ebeat time="136.000" measure="1"/>
+    <ebeat time="136.500" measure="-1"/>
+    <ebeat time="137.000" measure="-1"/>
+    <ebeat time="137.500" measure="-1"/>
+    <ebeat time="138.000" measure="-1"/>
+    <ebeat time="138.500" measure="-1"/>
+    <ebeat time="139.000" measure="-1"/>
+    <ebeat time="139.500" measure="-1"/>
+    <ebeat time="140.000" measure="1"/>
+    <ebeat time="140.500" measure="-1"/>
+    <ebeat time="141.000" measure="-1"/>
+    <ebeat time="141.500" measure="-1"/>
+    <ebeat time="142.000" measure="-1"/>
+    <ebeat time="142.500" measure="-1"/>
+    <ebeat time="143.000" measure="-1"/>
+    <ebeat time="143.500" measure="-1"/>
+    <ebeat time="144.000" measure="1"/>
+    <ebeat time="144.500" measure="-1"/>
+    <ebeat time="145.000" measure="-1"/>
+    <ebeat time="145.500" measure="-1"/>
+    <ebeat time="146.000" measure="-1"/>
+    <ebeat time="146.500" measure="-1"/>
+    <ebeat time="147.000" measure="-1"/>
+    <ebeat time="147.500" measure="-1"/>
+    <ebeat time="148.000" measure="1"/>
+    <ebeat time="148.500" measure="-1"/>
+    <ebeat time="149.000" measure="-1"/>
+    <ebeat time="149.500" measure="-1"/>
+    <ebeat time="150.000" measure="-1"/>
+    <ebeat time="150.500" measure="-1"/>
+    <ebeat time="151.000" measure="-1"/>
+    <ebeat time="151.500" measure="-1"/>
+    <ebeat time="152.000" measure="1"/>
+    <ebeat time="152.500" measure="-1"/>
+    <ebeat time="153.000" measure="-1"/>
+    <ebeat time="153.500" measure="-1"/>
+    <ebeat time="154.000" measure="-1"/>
+    <ebeat time="154.500" measure="-1"/>
+    <ebeat time="155.000" measure="-1"/>
+    <ebeat time="155.500" measure="-1"/>
+    <ebeat time="156.000" measure="1"/>
+    <ebeat time="156.500" measure="-1"/>
+    <ebeat time="157.000" measure="-1"/>
+    <ebeat time="157.500" measure="-1"/>
+    <ebeat time="158.000" measure="-1"/>
+    <ebeat time="158.500" measure="-1"/>
+    <ebeat time="159.000" measure="-1"/>
+    <ebeat time="159.500" measure="-1"/>
+    <ebeat time="160.000" measure="1"/>
+    <ebeat time="160.500" measure="-1"/>
+    <ebeat time="161.000" measure="-1"/>
+    <ebeat time="161.500" measure="-1"/>
+    <ebeat time="162.000" measure="-1"/>
+    <ebeat time="162.500" measure="-1"/>
+    <ebeat time="163.000" measure="-1"/>
+    <ebeat time="163.500" measure="-1"/>
+    <ebeat time="164.000" measure="1"/>
+    <ebeat time="164.500" measure="-1"/>
+    <ebeat time="165.000" measure="-1"/>
+    <ebeat time="165.500" measure="-1"/>
+    <ebeat time="166.000" measure="-1"/>
+    <ebeat time="166.500" measure="-1"/>
+    <ebeat time="167.000" measure="-1"/>
+    <ebeat time="167.500" measure="-1"/>
+    <ebeat time="168.000" measure="1"/>
+    <ebeat time="168.500" measure="-1"/>
+    <ebeat time="169.000" measure="-1"/>
+    <ebeat time="169.500" measure="-1"/>
+    <ebeat time="170.000" measure="-1"/>
+    <ebeat time="170.500" measure="-1"/>
+    <ebeat time="171.000" measure="-1"/>
+    <ebeat time="171.500" measure="-1"/>
+    <ebeat time="172.000" measure="1"/>
+    <ebeat time="172.500" measure="-1"/>
+    <ebeat time="173.000" measure="-1"/>
+    <ebeat time="173.500" measure="-1"/>
+    <ebeat time="174.000" measure="-1"/>
+    <ebeat time="174.500" measure="-1"/>
+    <ebeat time="175.000" measure="-1"/>
+    <ebeat time="175.500" measure="-1"/>
+    <ebeat time="176.000" measure="1"/>
+    <ebeat time="176.500" measure="-1"/>
+    <ebeat time="177.000" measure="-1"/>
+    <ebeat time="177.500" measure="-1"/>
+    <ebeat time="178.000" measure="-1"/>
+    <ebeat time="178.500" measure="-1"/>
+    <ebeat time="179.000" measure="-1"/>
+    <ebeat time="179.500" measure="-1"/>
+    <ebeat time="180.000" measure="1"/>
+    <ebeat time="180.500" measure="-1"/>
+    <ebeat time="181.000" measure="-1"/>
+    <ebeat time="181.500" measure="-1"/>
+    <ebeat time="182.000" measure="-1"/>
+    <ebeat time="182.500" measure="-1"/>
+    <ebeat time="183.000" measure="-1"/>
+    <ebeat time="183.500" measure="-1"/>
+    <ebeat time="184.000" measure="1"/>
+    <ebeat time="184.500" measure="-1"/>
+    <ebeat time="185.000" measure="-1"/>
+    <ebeat time="185.500" measure="-1"/>
+    <ebeat time="186.000" measure="-1"/>
+    <ebeat time="186.500" measure="-1"/>
+    <ebeat time="187.000" measure="-1"/>
+    <ebeat time="187.500" measure="-1"/>
+    <ebeat time="188.000" measure="1"/>
+    <ebeat time="188.500" measure="-1"/>
+    <ebeat time="189.000" measure="-1"/>
+    <ebeat time="189.500" measure="-1"/>
+    <ebeat time="190.000" measure="-1"/>
+    <ebeat time="190.500" measure="-1"/>
+    <ebeat time="191.000" measure="-1"/>
+    <ebeat time="191.500" measure="-1"/>
+  </ebeats>
+  <levels count="1">
+    <level difficulty="0">
+      <notes count="384">
+        <note time="2.000" string="3" fret="12" finger="1" sustain="0.100"/>
+        <note time="2.250" string="1" fret="15" finger="4" sustain="0.100"/>
+        <note time="2.500" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="2.750" string="2" fret="12" finger="1" sustain="0.100"/>
+        <note time="3.000" string="0" fret="15" finger="4" sustain="0.100"/>
+        <note time="3.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="3.500" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="3.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="4.000" string="4" fret="12" finger="1" sustain="0.100"/>
+        <note time="4.250" string="2" fret="15" finger="4" sustain="0.100"/>
+        <note time="4.500" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="4.750" string="3" fret="12" finger="1" sustain="0.100"/>
+        <note time="5.000" string="1" fret="15" finger="4" sustain="0.100"/>
+        <note time="5.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="5.500" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="5.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="6.000" string="5" fret="12" finger="1" sustain="0.100"/>
+        <note time="6.250" string="3" fret="15" finger="4" sustain="0.100"/>
+        <note time="6.500" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="6.750" string="4" fret="12" finger="1" sustain="0.100"/>
+        <note time="7.000" string="2" fret="15" finger="4" sustain="0.100"/>
+        <note time="7.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="7.500" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="7.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="8.000" string="0" fret="12" finger="1" sustain="0.100"/>
+        <note time="8.250" string="4" fret="15" finger="4" sustain="0.100"/>
+        <note time="8.500" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="8.750" string="5" fret="12" finger="1" sustain="0.100"/>
+        <note time="9.000" string="3" fret="15" finger="4" sustain="0.100"/>
+        <note time="9.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="9.500" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="9.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="10.000" string="1" fret="12" finger="1" sustain="0.100"/>
+        <note time="10.250" string="5" fret="15" finger="4" sustain="0.100"/>
+        <note time="10.500" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="10.750" string="0" fret="12" finger="1" sustain="0.100"/>
+        <note time="11.000" string="4" fret="15" finger="4" sustain="0.100"/>
+        <note time="11.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="11.500" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="11.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="12.000" string="2" fret="12" finger="1" sustain="0.100"/>
+        <note time="12.250" string="0" fret="15" finger="4" sustain="0.100"/>
+        <note time="12.500" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="12.750" string="1" fret="12" finger="1" sustain="0.100"/>
+        <note time="13.000" string="5" fret="15" finger="4" sustain="0.100"/>
+        <note time="13.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="13.500" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="13.750" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="14.000" string="3" fret="12" finger="1" sustain="0.100"/>
+        <note time="14.250" string="1" fret="15" finger="4" sustain="0.100"/>
+        <note time="14.500" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="14.750" string="2" fret="12" finger="1" sustain="0.100"/>
+        <note time="15.000" string="0" fret="15" finger="4" sustain="0.100"/>
+        <note time="15.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="15.500" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="15.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="16.000" string="4" fret="12" finger="1" sustain="0.100"/>
+        <note time="16.250" string="2" fret="15" finger="4" sustain="0.100"/>
+        <note time="16.500" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="16.750" string="3" fret="12" finger="1" sustain="0.100"/>
+        <note time="17.000" string="1" fret="15" finger="4" sustain="0.100"/>
+        <note time="17.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="17.500" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="17.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="18.000" string="5" fret="12" finger="1" sustain="0.100"/>
+        <note time="18.250" string="3" fret="15" finger="4" sustain="0.100"/>
+        <note time="18.500" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="18.750" string="4" fret="12" finger="1" sustain="0.100"/>
+        <note time="19.000" string="2" fret="15" finger="4" sustain="0.100"/>
+        <note time="19.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="19.500" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="19.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="20.000" string="0" fret="12" finger="1" sustain="0.100"/>
+        <note time="20.250" string="4" fret="15" finger="4" sustain="0.100"/>
+        <note time="20.500" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="20.750" string="5" fret="12" finger="1" sustain="0.100"/>
+        <note time="21.000" string="3" fret="15" finger="4" sustain="0.100"/>
+        <note time="21.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="21.500" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="21.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="22.000" string="1" fret="12" finger="1" sustain="0.100"/>
+        <note time="22.250" string="5" fret="15" finger="4" sustain="0.100"/>
+        <note time="22.500" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="22.750" string="0" fret="12" finger="1" sustain="0.100"/>
+        <note time="23.000" string="4" fret="15" finger="4" sustain="0.100"/>
+        <note time="23.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="23.500" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="23.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="24.000" string="2" fret="12" finger="1" sustain="0.100"/>
+        <note time="24.250" string="0" fret="15" finger="4" sustain="0.100"/>
+        <note time="24.500" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="24.750" string="1" fret="12" finger="1" sustain="0.100"/>
+        <note time="25.000" string="5" fret="15" finger="4" sustain="0.100"/>
+        <note time="25.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="25.500" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="25.750" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="26.000" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="26.250" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="26.500" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="26.750" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="27.000" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="27.250" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="27.500" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="27.750" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="28.000" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="28.250" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="28.500" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="28.750" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="29.000" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="29.250" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="29.500" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="29.750" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="30.000" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="30.250" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="30.500" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="30.750" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="31.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="31.250" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="31.500" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="31.750" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="32.000" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="32.250" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="32.500" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="32.750" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="33.000" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="33.250" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="33.500" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="33.750" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="34.000" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="34.250" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="34.500" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="34.750" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="35.000" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="35.250" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="35.500" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="35.750" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="36.000" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="36.250" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="36.500" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="36.750" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="37.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="37.250" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="37.500" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="37.750" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="38.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="38.250" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="38.500" string="2" fret="8" finger="4" sustain="0.100"/>
+        <note time="38.750" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="39.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="39.250" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="39.500" string="2" fret="8" finger="4" sustain="0.100"/>
+        <note time="39.750" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="40.000" string="5" fret="4" finger="1" sustain="0.100"/>
+        <note time="40.250" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="40.500" string="3" fret="8" finger="4" sustain="0.100"/>
+        <note time="40.750" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="41.000" string="5" fret="4" finger="1" sustain="0.100"/>
+        <note time="41.250" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="41.500" string="3" fret="8" finger="4" sustain="0.100"/>
+        <note time="41.750" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="42.000" string="0" fret="4" finger="1" sustain="0.100"/>
+        <note time="42.250" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="42.500" string="4" fret="8" finger="4" sustain="0.100"/>
+        <note time="42.750" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="43.000" string="0" fret="4" finger="1" sustain="0.100"/>
+        <note time="43.250" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="43.500" string="4" fret="8" finger="4" sustain="0.100"/>
+        <note time="43.750" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="44.000" string="1" fret="4" finger="1" sustain="0.100"/>
+        <note time="44.250" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="44.500" string="5" fret="8" finger="4" sustain="0.100"/>
+        <note time="44.750" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="45.000" string="1" fret="4" finger="1" sustain="0.100"/>
+        <note time="45.250" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="45.500" string="5" fret="8" finger="4" sustain="0.100"/>
+        <note time="45.750" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="46.000" string="2" fret="4" finger="1" sustain="0.100"/>
+        <note time="46.250" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="46.500" string="0" fret="8" finger="4" sustain="0.100"/>
+        <note time="46.750" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="47.000" string="2" fret="4" finger="1" sustain="0.100"/>
+        <note time="47.250" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="47.500" string="0" fret="8" finger="4" sustain="0.100"/>
+        <note time="47.750" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="48.000" string="3" fret="4" finger="1" sustain="0.100"/>
+        <note time="48.250" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="48.500" string="1" fret="8" finger="4" sustain="0.100"/>
+        <note time="48.750" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="49.000" string="3" fret="4" finger="1" sustain="0.100"/>
+        <note time="49.250" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="49.500" string="1" fret="8" finger="4" sustain="0.100"/>
+        <note time="49.750" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="50.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="50.250" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="50.500" string="2" fret="8" finger="4" sustain="0.100"/>
+        <note time="50.750" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="51.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="51.250" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="51.500" string="2" fret="8" finger="4" sustain="0.100"/>
+        <note time="51.750" string="3" fret="6" finger="2" sustain="0.100"/>
+        <note time="52.000" string="5" fret="4" finger="1" sustain="0.100"/>
+        <note time="52.250" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="52.500" string="3" fret="8" finger="4" sustain="0.100"/>
+        <note time="52.750" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="53.000" string="5" fret="4" finger="1" sustain="0.100"/>
+        <note time="53.250" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="53.500" string="3" fret="8" finger="4" sustain="0.100"/>
+        <note time="53.750" string="4" fret="6" finger="2" sustain="0.100"/>
+        <note time="54.000" string="0" fret="4" finger="1" sustain="0.100"/>
+        <note time="54.250" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="54.500" string="4" fret="8" finger="4" sustain="0.100"/>
+        <note time="54.750" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="55.000" string="0" fret="4" finger="1" sustain="0.100"/>
+        <note time="55.250" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="55.500" string="4" fret="8" finger="4" sustain="0.100"/>
+        <note time="55.750" string="5" fret="6" finger="2" sustain="0.100"/>
+        <note time="56.000" string="1" fret="4" finger="1" sustain="0.100"/>
+        <note time="56.250" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="56.500" string="5" fret="8" finger="4" sustain="0.100"/>
+        <note time="56.750" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="57.000" string="1" fret="4" finger="1" sustain="0.100"/>
+        <note time="57.250" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="57.500" string="5" fret="8" finger="4" sustain="0.100"/>
+        <note time="57.750" string="0" fret="6" finger="2" sustain="0.100"/>
+        <note time="58.000" string="2" fret="4" finger="1" sustain="0.100"/>
+        <note time="58.250" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="58.500" string="0" fret="8" finger="4" sustain="0.100"/>
+        <note time="58.750" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="59.000" string="2" fret="4" finger="1" sustain="0.100"/>
+        <note time="59.250" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="59.500" string="0" fret="8" finger="4" sustain="0.100"/>
+        <note time="59.750" string="1" fret="6" finger="2" sustain="0.100"/>
+        <note time="60.000" string="3" fret="4" finger="1" sustain="0.100"/>
+        <note time="60.250" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="60.500" string="1" fret="8" finger="4" sustain="0.100"/>
+        <note time="60.750" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="61.000" string="3" fret="4" finger="1" sustain="0.100"/>
+        <note time="61.250" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="61.500" string="1" fret="8" finger="4" sustain="0.100"/>
+        <note time="61.750" string="2" fret="6" finger="2" sustain="0.100"/>
+        <note time="62.000" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="62.250" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="62.500" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="62.750" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="63.000" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="63.250" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="63.500" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="63.750" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="64.000" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="64.250" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="64.500" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="64.750" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="65.000" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="65.250" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="65.500" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="65.750" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="66.000" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="66.250" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="66.500" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="66.750" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="67.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="67.250" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="67.500" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="67.750" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="68.000" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="68.250" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="68.500" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="68.750" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="69.000" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="69.250" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="69.500" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="69.750" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="70.000" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="70.250" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="70.500" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="70.750" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="71.000" string="1" fret="12" finger="4" sustain="0.100"/>
+        <note time="71.250" string="2" fret="11" finger="3" sustain="0.100"/>
+        <note time="71.500" string="2" fret="9" finger="1" sustain="0.100"/>
+        <note time="71.750" string="3" fret="10" finger="4" sustain="0.100"/>
+        <note time="72.000" string="3" fret="9" finger="3" sustain="0.100"/>
+        <note time="72.250" string="3" fret="7" finger="1" sustain="0.100"/>
+        <note time="72.500" string="4" fret="7" finger="4" sustain="0.100"/>
+        <note time="72.750" string="4" fret="5" finger="2" sustain="0.100"/>
+        <note time="73.000" string="4" fret="4" finger="1" sustain="0.100"/>
+        <note time="73.250" string="5" fret="5" finger="4" sustain="0.100"/>
+        <note time="73.500" string="5" fret="3" finger="2" sustain="0.100"/>
+        <note time="73.750" string="5" fret="2" finger="1" sustain="0.100"/>
+        <note time="74.000" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="74.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="74.500" string="1" fret="13" finger="1" sustain="0.100"/>
+        <note time="74.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="75.000" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="75.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="75.500" string="2" fret="13" finger="1" sustain="0.100"/>
+        <note time="75.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="76.000" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="76.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="76.500" string="3" fret="13" finger="1" sustain="0.100"/>
+        <note time="76.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="77.000" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="77.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="77.500" string="4" fret="13" finger="1" sustain="0.100"/>
+        <note time="77.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="78.000" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="78.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="78.500" string="5" fret="13" finger="1" sustain="0.100"/>
+        <note time="78.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="79.000" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="79.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="79.500" string="0" fret="13" finger="1" sustain="0.100"/>
+        <note time="79.750" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="80.000" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="80.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="80.500" string="1" fret="13" finger="1" sustain="0.100"/>
+        <note time="80.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="81.000" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="81.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="81.500" string="2" fret="13" finger="1" sustain="0.100"/>
+        <note time="81.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="82.000" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="82.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="82.500" string="3" fret="13" finger="1" sustain="0.100"/>
+        <note time="82.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="83.000" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="83.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="83.500" string="4" fret="13" finger="1" sustain="0.100"/>
+        <note time="83.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="84.000" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="84.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="84.500" string="5" fret="13" finger="1" sustain="0.100"/>
+        <note time="84.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="85.000" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="85.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="85.500" string="0" fret="13" finger="1" sustain="0.100"/>
+        <note time="85.750" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="86.000" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="86.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="86.500" string="1" fret="13" finger="1" sustain="0.100"/>
+        <note time="86.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="87.000" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="87.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="87.500" string="2" fret="13" finger="1" sustain="0.100"/>
+        <note time="87.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="88.000" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="88.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="88.500" string="3" fret="13" finger="1" sustain="0.100"/>
+        <note time="88.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="89.000" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="89.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="89.500" string="4" fret="13" finger="1" sustain="0.100"/>
+        <note time="89.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="90.000" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="90.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="90.500" string="5" fret="13" finger="1" sustain="0.100"/>
+        <note time="90.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="91.000" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="91.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="91.500" string="0" fret="13" finger="1" sustain="0.100"/>
+        <note time="91.750" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="92.000" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="92.250" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="92.500" string="1" fret="13" finger="1" sustain="0.100"/>
+        <note time="92.750" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="93.000" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="93.250" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="93.500" string="2" fret="13" finger="1" sustain="0.100"/>
+        <note time="93.750" string="3" fret="14" finger="3" sustain="0.100"/>
+        <note time="94.000" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="94.250" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="94.500" string="3" fret="13" finger="1" sustain="0.100"/>
+        <note time="94.750" string="4" fret="14" finger="3" sustain="0.100"/>
+        <note time="95.000" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="95.250" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="95.500" string="4" fret="13" finger="1" sustain="0.100"/>
+        <note time="95.750" string="5" fret="14" finger="3" sustain="0.100"/>
+        <note time="96.000" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="96.250" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="96.500" string="5" fret="13" finger="1" sustain="0.100"/>
+        <note time="96.750" string="0" fret="14" finger="3" sustain="0.100"/>
+        <note time="97.000" string="2" fret="14" finger="3" sustain="0.100"/>
+        <note time="97.250" string="1" fret="14" finger="3" sustain="0.100"/>
+        <note time="97.500" string="0" fret="13" finger="1" sustain="0.100"/>
+        <note time="97.750" string="1" fret="14" finger="3" sustain="0.100"/>
+      </notes>
+    </level>
+  </levels>
+</song>

@@ -5,6 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="staticsmith">
+      <change afterPath="$PROJECT_DIR$/fretmap/app.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/fretmap/thing.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/make_sweet_child.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/controls.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/main.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/parser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/renderer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/state.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/static/staticsmith/js/app.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/staticsmith/templates/staticsmith/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/staticsmith/templates/staticsmith/index.html" afterDir="false" />
@@ -18,8 +27,8 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Python Script" />
         <option value="HTML File" />
+        <option value="Python Script" />
       </list>
     </option>
   </component>
@@ -57,7 +66,10 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "PowerShell.GetAllWorkFiles.ps1 (1).executor": "Run",
     "PowerShell.GetAllWorkFiles.ps1.executor": "Run",
+    "Python.app.executor": "Run",
+    "Python.make_sweet_child.executor": "Run",
     "Python.riffmaker.executor": "Run",
+    "Python.thing.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
@@ -75,7 +87,7 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\school_core\templates\school_core" />
     </key>
   </component>
-  <component name="RunManager" selected="Batch.start_server">
+  <component name="RunManager" selected="Python.thing">
     <configuration name="start_server" type="BatchConfigurationType" factoryName="Batch" temporary="true">
       <module name="pythonanywhere" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -85,12 +97,48 @@
       <option name="PARAMETERS" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="GetAllWorkFiles.ps1 (1)" type="PowerShellRunType" factoryName="PowerShell" temporary="true" scriptUrl="$PROJECT_DIR$/MyManager/GetAllWorkFiles.ps1" executablePath="$PROJECT_DIR$/../../../../../Windows/System32/WindowsPowerShell/v1.0/powershell.exe">
-      <envs />
+    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fretmap" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fretmap/app.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="GetAllWorkFiles.ps1" type="PowerShellRunType" factoryName="PowerShell" temporary="true" scriptUrl="$PROJECT_DIR$/MyManager/GetAllWorkFiles.ps1" executablePath="$PROJECT_DIR$/../../../../../Windows/System32/WindowsPowerShell/v1.0/powershell.exe">
-      <envs />
+    <configuration name="make_sweet_child" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/make_sweet_child.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
     <configuration name="riffmaker" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -115,12 +163,35 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="thing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fretmap" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fretmap/thing.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.thing" />
+        <item itemvalue="Python.app" />
+        <item itemvalue="Python.make_sweet_child" />
         <item itemvalue="Batch.start_server" />
         <item itemvalue="Python.riffmaker" />
-        <item itemvalue="PowerShell.GetAllWorkFiles.ps1 (1)" />
-        <item itemvalue="PowerShell.GetAllWorkFiles.ps1" />
       </list>
     </recent_temporary>
   </component>
@@ -138,14 +209,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00036" summary="updated quiz wint internal logic">
-      <option name="closed" value="true" />
-      <created>1766466289009</created>
-      <option name="number" value="00036" />
-      <option name="presentableId" value="LOCAL-00036" />
-      <option name="project" value="LOCAL" />
-      <updated>1766466289009</updated>
     </task>
     <task id="LOCAL-00037" summary="removed my app">
       <option name="closed" value="true" />
@@ -531,7 +594,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767332133274</updated>
     </task>
-    <option name="localTasksCounter" value="85" />
+    <task id="LOCAL-00085" summary="staticsmith">
+      <option name="closed" value="true" />
+      <created>1767394720815</created>
+      <option name="number" value="00085" />
+      <option name="presentableId" value="LOCAL-00085" />
+      <option name="project" value="LOCAL" />
+      <updated>1767394720815</updated>
+    </task>
+    <option name="localTasksCounter" value="86" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
