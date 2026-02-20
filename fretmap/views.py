@@ -7,6 +7,8 @@ from django.views.decorators.csrf import csrf_exempt
 # Point exactly to your new prepopulated database
 DB_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'myapp_db.sqlite3'))
 
+def index(request):
+    return render(request, 'fretmap/index.html')
 
 def get_user_data(request):
     """Loads ALL 19,000 combinations + settings into JS at startup"""
