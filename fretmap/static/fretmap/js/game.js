@@ -39,14 +39,15 @@ async function loadDatabaseHistory() {
             currentZoneIndex = userSettings.zone_index || 0;
 
             // Apply loaded slider settings to UI
-            if (userSettings.strictness) {
-                let slider = document.getElementById('strict-slider');
-                if (slider) slider.value = userSettings.strictness;
+            let strictSlider = document.getElementById('strict-slider');
+            let attackSlider = document.getElementById('attack-slider');
+
+            if (userSettings.strictness && strictSlider) {
+                strictSlider.value = userSettings.strictness;
                 if(typeof updateStrict === 'function') updateStrict(userSettings.strictness);
             }
-            if (userSettings.attack) {
-                let slider = document.getElementById('attack-slider');
-                if (slider) slider.value = userSettings.attack;
+            if (userSettings.attack && attackSlider) {
+                attackSlider.value = userSettings.attack;
                 if(typeof updateAttack === 'function') updateAttack(userSettings.attack);
             }
         }
@@ -108,7 +109,6 @@ function buildActiveFretboard() {
         activeFrets = activeFrets.concat(PENDULUM[i]);
     }
     newlyUnlockedFrets = PENDULUM[currentZoneIndex];
-    console.log("Active Frets:", activeFrets);
 
     if (typeof renderFretboard === "function") {
         renderFretboard();
@@ -119,7 +119,7 @@ function checkMastery(stat, recentTime) {
     // Require at least 3 attempts to prove mastery
     if (stat.count < 3) return 0;
 
-    let target = stat.avg - ((stat.avg - stat.min) / 2); // Using new min logic
+    let target = stat.avg - ((stat.avg - stat.min) / 2);
     return recentTime <= target ? 1 : 0;
 }
 
@@ -131,7 +131,6 @@ function updateMasteryUI() {
     let masteredCount = 0;
 
     for (const [id, stat] of Object.entries(transitionStats)) {
-        // Only count stats that belong to the currently unlocked frets
         let parts = id.replace('_', '-').split('-');
         if (parts.length >= 4) {
             let f1 = parseInt(parts[1]);
@@ -157,7 +156,7 @@ function updateMasteryUI() {
     if (mastLabel) mastLabel.innerText = `MASTERED: ${mastPercent}%`;
     if (fillBar) fillBar.style.width = `${mastPercent}%`;
 
-    // Trigger Level Up if Mastered reaches 100%
+    // Level Up Trigger
     if (mastPercent === 100 && totalPairs > 0 && currentZoneIndex < PENDULUM.length - 1) {
         triggerLevelUp();
     }
@@ -168,7 +167,7 @@ function triggerLevelUp() {
     currentZoneIndex++;
     buildActiveFretboard();
 
-    // Custom save ping for System settings
+    // Custom save ping for System Level Up
     fetch('/fretmap/save_transition/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
@@ -183,7 +182,7 @@ function generateSmartNote(originNote) {
     let validCandidates = [];
     let unexploredImmediate = [];
 
-    // 1. Build list of immediate valid destinations
+    // 1. Valid destinations
     for(let s = 0; s < 6; s++) {
         for(let i = 0; i < activeFrets.length; i++) {
             let f = activeFrets[i];
@@ -199,28 +198,27 @@ function generateSmartNote(originNote) {
     let worstCandidate = validCandidates[0];
     let worstAvg = -1;
 
-    // 2. Scan immediate destinations
+    // 2. Scan targets
     validCandidates.forEach(cand => {
         let key = `${originNote.string}-${originNote.fret}_${cand.string}-${cand.fret}`;
         let stat = transitionStats[key];
 
-        // Since DB is pre-populated, unplayed notes have count === 0
         if (!stat || stat.count === 0) {
             unexploredImmediate.push(cand);
         } else {
             let avg = stat.avg;
-            if (newlyUnlockedFrets.includes(cand.fret)) avg += 500; // Prioritize new frets
+            if (newlyUnlockedFrets.includes(cand.fret)) avg += 500;
             if (avg > worstAvg) { worstAvg = avg; worstCandidate = cand; }
         }
     });
 
-    // 3. IMMEDIATE LOCK: Prioritize completely blank paths
+    // 3. Prioritize completely blank paths
     if (unexploredImmediate.length > 0) {
         let pick = unexploredImmediate[Math.floor(Math.random() * unexploredImmediate.length)];
         return formatNoteObj(pick.string, pick.fret);
     }
 
-    // 4. GLOBAL HUNTER: Fully calibrated locally? Find global gaps.
+    // 4. Global Hunter
     let missingOrigins = [];
     for(let s1 = 0; s1 < 6; s1++){
         for(let f1 of activeFrets) {
@@ -239,7 +237,6 @@ function generateSmartNote(originNote) {
         }
     }
 
-    // Hunt missing paths
     if (missingOrigins.length > 0) {
         let huntTarget = missingOrigins[Math.floor(Math.random() * missingOrigins.length)];
         let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
@@ -250,7 +247,6 @@ function generateSmartNote(originNote) {
         return formatNoteObj(huntTarget.string, huntTarget.fret);
     }
 
-    // 5. ZONE MASTERED: Return to normal "Worst-First" Mastery mode.
     return formatNoteObj(worstCandidate.string, worstCandidate.fret);
 }
 
@@ -341,13 +337,12 @@ function successTrigger() {
         let transitionKey = `${prevNote.string}-${prevNote.fret}_${activeTarget.string}-${activeTarget.fret}`;
         let timeTaken = now - lastTurnTime;
 
-        // Pull the exact note pairing from JS RAM
         let stat = transitionStats[transitionKey];
 
-        // Fallback in case the DB failed to load completely
+        // Fail-safe if DB glitch occurs
         if(!stat) stat = { avg: 99999, min: 99999, max: 0, count: 0, mastery: 0 };
 
-        // Do the math instantly in the browser
+        // Do the math instantly
         if (stat.count === 0) {
             stat.avg = timeTaken;
             stat.min = timeTaken;
@@ -358,21 +353,11 @@ function successTrigger() {
             if (timeTaken > stat.max) stat.max = timeTaken;
         }
         stat.count++;
-
-        // Gatekeeper Check
         stat.mastery = checkMastery(stat, timeTaken);
 
-        // Save back to RAM
         transitionStats[transitionKey] = stat;
-
-        console.log(`✅ ${transitionKey} | Speed: ${Math.round(timeTaken)}ms | Min: ${Math.round(stat.min)}ms | Avg: ${Math.round(stat.avg)}ms`);
-
-        // Instantly sync to Django in the background
         saveToDatabase(transitionKey, stat);
-
         updateMasteryUI();
-    } else {
-        console.log("✅ FIRST NOTE HIT: Timer started.");
     }
 
     nextTurn();
@@ -402,8 +387,6 @@ function nextTurn() {
     if (q1) q1.innerText = queue[0].note;
     if (q2) q2.innerText = queue[1].note;
     if (q3) q3.innerText = queue[2].note;
-
-    console.log(`🎯 WAITING FOR: String ${6 - activeTarget.string}, Fret ${activeTarget.fret} (${activeTarget.note})`);
 
     if (typeof drawBoard === "function") {
         drawBoard();

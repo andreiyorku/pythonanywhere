@@ -9,6 +9,6 @@ urlpatterns = [
     path('save_transition/', views.save_transition, name='save_transition'),
     path('save_settings/', views.save_settings, name='save_settings'),
 
-    # Catch-all fallback for the old save function just in case
+    # Fallback to prevent crashes if old JS code tries to hit the old URL
     path('save/', views.save_transition, name='save'),
 ]
