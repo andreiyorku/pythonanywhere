@@ -1,176 +1,142 @@
-let VOL_FLOOR = 0.005;
-let HOLD_FRAMES = 8;
-let ATTACK_THRESH = 1.5;
+// --- GLOBAL UI SETTINGS ---
+var VOL_FLOOR = 0.005;
+var HOLD_FRAMES = 8;
+var ATTACK_THRESH = 1.5;
 
-// The Fixed Fret Window (Always 9-12)
-const FIXED_MIN = 9;
-const FIXED_MAX = 12;
-const FIXED_WIDTH_PCT = 25; // 4 frets = 25% each
+const COLORS = {
+    bg: '#121212',
+    panel: '#1a1a1a',
+    accent: '#4caf50',
+    target: '#2e7d32',
+    fret: '#444',
+    string: '#555'
+};
 
-// --- UPDATED MATH (Double Strictness) ---
-function updateStrict(val) {
-    // Math adjusted to allow much higher noise floors and longer stability requirements
-    VOL_FLOOR = 0.002 + ((val/100) * 0.04); // Doubled from 0.02
-    HOLD_FRAMES = 4 + Math.floor(val/7);    // Roughly doubled (was val/15)
-    saveSettingsToDB();
+const STR_SPACING = 14;
+const FRET_WIDTH = 25;
+
+// Helper to create elements with styles
+function createEl(tag, props = {}, style = {}) {
+    const el = document.createElement(tag);
+    Object.assign(el, props);
+    Object.assign(el.style, style);
+    return el;
 }
 
-function updateAttack(val) {
-    ATTACK_THRESH = 3.0 - ((val/100) * 1.9);
-    saveSettingsToDB();
-}
+function buildUI() {
+    const root = document.getElementById('app-root');
+    if (!root) return;
+    root.innerHTML = '';
 
-function saveSettingsToDB() {
-    let strictVal = document.getElementById('strict-slider').value;
-    let attackVal = document.getElementById('attack-slider').value;
-
-    fetch('/fretmap/save_settings/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-        body: JSON.stringify({ strictness: strictVal, attack: attackVal })
-    }).catch(e => console.log("Settings save failed"));
-}
-
-// --- AUDIO MATH HELPERS ---
-function getNoteInfo(freq) {
-    if(freq === -1) return { note: "--", cents: 0, octave: 0 };
-    const noteNames = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-    const noteNum = 12 * (Math.log(freq / 440) / Math.log(2)) + 69;
-    const noteIndex = Math.round(noteNum) % 12;
-    return {
-        note: noteNames[noteIndex],
-        val: noteNum,
-        cents: Math.floor((noteNum - Math.round(noteNum)) * 100)
-    };
-}
-
-// --- LIVE MONITORING ---
-function updateMonitor(a) {
-    const monHz = document.getElementById('mon-hz');
-    const monNote = document.getElementById('mon-note');
-    const liveDot = document.getElementById('live-dot');
-
-    if(a.pitch === -1) {
-        if(monHz) monHz.innerText = "-- Hz";
-        if(monNote) monNote.innerText = "Silence";
-        if(liveDot) liveDot.style.display = 'none';
-        return;
-    }
-
-    let info = getNoteInfo(a.pitch);
-    if(monHz) monHz.innerText = Math.round(a.pitch) + " Hz";
-    if(monNote) monNote.innerText = info.note;
-
-    let bestMatch = { diff: 9999, string: 0, fret: 0 };
-    STRINGS.forEach((str, sIdx) => {
-        let fretVal = 12 * Math.log2(a.pitch / str.freq);
-        let fretRound = Math.round(fretVal);
-        let diff = Math.abs(fretVal - fretRound);
-
-        if(diff < bestMatch.diff) bestMatch = { diff: diff, string: sIdx, fret: fretRound };
+    // 1. CALIBRATION OVERLAY
+    const overlay = createEl('div', { id: 'calibration-overlay' }, {
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        background: COLORS.bg, zIndex: 1000, display: 'flex',
+        flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
     });
 
-    // Only show the live red dot if you are playing inside the 9-12 visible window
-    if(bestMatch.diff < 0.4 && liveDot && bestMatch.fret >= FIXED_MIN && bestMatch.fret <= FIXED_MAX) {
-        liveDot.style.display = 'block';
-        let topPct = 15 + (bestMatch.string * 14);
-        let leftPct = ((bestMatch.fret - FIXED_MIN) * FIXED_WIDTH_PCT) + (FIXED_WIDTH_PCT / 2);
+    overlay.appendChild(createEl('h2', { innerText: 'GUITAR CONNECTED' }, { color: COLORS.accent, margin: '0 0 10px 0' }));
+    overlay.appendChild(createEl('p', { id: 'calib-msg', innerText: 'Initialize audio to begin' }, { color: '#888', margin: '0 0 20px 0' }));
 
-        liveDot.style.top = topPct + "%";
-        liveDot.style.left = leftPct + "%";
-    } else if(liveDot) {
-        liveDot.style.display = 'none';
-    }
+    const pBg = overlay.appendChild(createEl('div', {}, { width: '300px', height: '10px', background: '#333', borderRadius: '5px', overflow: 'hidden', marginBottom: '30px' }));
+    pBg.appendChild(createEl('div', { id: 'calib-bar' }, { width: '0%', height: '100%', background: COLORS.accent }));
+
+    overlay.appendChild(createEl('button', { id: 'start-btn', innerText: 'START MICROPHONE', onclick: () => initAudio() }, {
+        padding: '15px 40px', background: COLORS.target, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px'
+    }));
+
+    overlay.appendChild(createEl('button', { innerText: 'SKIP CALIBRATION', onclick: () => skipCalibration() }, {
+        marginTop: '20px', background: 'transparent', color: '#555', border: 'none', cursor: 'pointer', textDecoration: 'underline'
+    }));
+
+    root.appendChild(overlay);
+
+    // 2. MASTERY HUD
+    const hud = createEl('div', { id: 'mastery-hud' }, {
+        padding: '15px 20px', background: COLORS.panel, borderBottom: '1px solid #333', display: 'none'
+    });
+    const hTop = hud.appendChild(createEl('div', {}, { display: 'flex', justifyContent: 'space-between', alignItems: 'center' }));
+    hTop.appendChild(createEl('div', { id: 'zone-label', innerText: 'ZONE 0' }, { fontWeight: 'bold', color: COLORS.accent }));
+    hTop.appendChild(createEl('div', { id: 'mastery-pct', innerText: 'MASTERED: 0' }, { color: '#888' }));
+
+    const mBar = hud.appendChild(createEl('div', {}, { width: '100%', height: '4px', background: '#222', marginTop: '10px' }));
+    mBar.appendChild(createEl('div', { id: 'mastery-fill' }, { width: '0%', height: '100%', background: COLORS.accent }));
+    root.appendChild(hud);
+
+    // 3. GAME AREA
+    const game = createEl('div', { id: 'game-area' }, {
+        flex: 1, display: 'none', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+    });
+
+    game.appendChild(createEl('div', { id: 'big-note', innerText: '--' }, { fontSize: '120px', fontWeight: 'bold', margin: '0' }));
+    game.appendChild(createEl('div', { id: 'string-info', innerText: 'WAITING...' }, { color: COLORS.accent, letterSpacing: '2px', marginBottom: '40px' }));
+
+    const qBox = game.appendChild(createEl('div', {}, { display: 'flex', gap: '15px', marginBottom: '50px', opacity: '0.4' }));
+    ['q1-txt', 'q2-txt', 'q3-txt'].forEach(id => {
+        qBox.appendChild(createEl('div', { id, innerText: '--' }, {
+            width: '45px', height: '45px', border: '1px solid #444', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'
+        }));
+    });
+
+    // Fretboard Container
+    const boardWrap = game.appendChild(createEl('div', {}, { width: '90%', maxWidth: '800px', position: 'relative' }));
+    const board = boardWrap.appendChild(createEl('div', { id: 'fretboard-relative' }, {
+        height: '240px', background: '#181818', border: '1px solid #333', position: 'relative'
+    }));
+
+    board.appendChild(createEl('div', { id: 'frets-layer' }, { position: 'absolute', width: '100%', height: '100%' }));
+    board.appendChild(createEl('div', { id: 'dots-layer' }, { position: 'absolute', width: '100%', height: '100%', zIndex: 5 }));
+    board.appendChild(createEl('div', { id: 'live-dot' }, {
+        position: 'absolute', width: '14px', height: '14px', background: 'red',
+        borderRadius: '50%', display: 'none', zIndex: 10, boxShadow: '0 0 10px red'
+    }));
+
+    root.appendChild(game);
 }
 
-// --- FRETBOARD RENDERING ---
+// Draw the Grid
 function renderFretboard() {
-    // Lock visual board to strictly 4 frets (9, 10, 11, 12)
-    const fretsLayer = document.getElementById('frets-layer');
-    if(!fretsLayer) return;
-    fretsLayer.innerHTML = '';
-
-    for (let i = 0; i < 4; i++) {
-        let fretNum = FIXED_MIN + i;
-        let leftPos = i * FIXED_WIDTH_PCT;
-
-        let wire = document.createElement('div');
-        wire.className = 'fret-wire';
-        wire.style.left = leftPos + '%';
-        fretsLayer.appendChild(wire);
-
-        let num = document.createElement('div');
-        num.className = 'fret-num';
-        num.style.left = (leftPos + (FIXED_WIDTH_PCT / 2)) + '%';
-        num.innerText = fretNum;
-        fretsLayer.appendChild(num);
-    }
-}
-
-function drawBoard() {
-    const layer = document.getElementById('dots-layer');
-    if(!layer) return;
+    const layer = document.getElementById('frets-layer');
+    if (!layer) return;
     layer.innerHTML = '';
 
-    // Reset out-of-bounds indicators
-    document.getElementById('split-left').style.display = 'none';
-    document.getElementById('split-right').style.display = 'none';
-
-    if(activeTarget) createDot(activeTarget, 'target-dot', activeTarget.note);
-    if(queue[0]) createDot(queue[0], 'ghost-dot', '1');
-    if(queue[1]) createDot(queue[1], 'ghost-dot', '2');
-    if(queue[2]) createDot(queue[2], 'ghost-dot', '3');
-}
-
-function createDot(data, cssClass, label) {
-    // OVERFLOW LOGIC: Check if note is outside the 9-12 range
-    if (data.fret < FIXED_MIN) {
-        document.getElementById('split-left').style.display = 'block';
-        return; // Don't draw dot, just flash the left warning bar
-    }
-    if (data.fret > FIXED_MAX) {
-        document.getElementById('split-right').style.display = 'block';
-        return; // Don't draw dot, just flash the right warning bar
+    // Strings (Horizontal)
+    for (let i = 0; i < 6; i++) {
+        let top = 15 + (i * STR_SPACING);
+        layer.appendChild(createEl('div', {}, {
+            position: 'absolute', left: 0, width: '100%', top: top + '%',
+            height: (1 + i/2) + 'px', background: COLORS.string, opacity: 0.6
+        }));
     }
 
-    let dot = document.createElement('div');
-    dot.className = `dot ${cssClass}`;
-    dot.innerText = label;
-
-    let topPct = 15 + (data.string * 14);
-    let leftPct = ((data.fret - FIXED_MIN) * FIXED_WIDTH_PCT) + (FIXED_WIDTH_PCT / 2);
-
-    dot.style.top = topPct + "%";
-    dot.style.left = leftPct + "%";
-    document.getElementById('dots-layer').appendChild(dot);
+    // Frets (Vertical)
+    for (let i = 0; i <= 4; i++) {
+        let left = i * FRET_WIDTH;
+        layer.appendChild(createEl('div', {}, {
+            position: 'absolute', top: 0, bottom: 0, left: left + '%',
+            width: '2px', background: COLORS.fret
+        }));
+    }
 }
 
-// --- DB VIEWER MODAL LOGIC ---
-function openDbViewer() {
-    document.getElementById('db-modal').style.display = 'block';
-    let tbody = document.getElementById('db-tbody');
-    tbody.innerHTML = '';
+// Draw the Target Dot
+function drawBoard() {
+    const layer = document.getElementById('dots-layer');
+    if (!layer || !activeTarget) return;
+    layer.innerHTML = '';
 
-    // Convert JS object to array and sort by Slowest Average First
-    let sortedStats = Object.entries(transitionStats).map(([id, stat]) => {
-        return { id, ...stat };
-    }).sort((a, b) => b.avg - a.avg);
-
-    sortedStats.forEach(stat => {
-        let tr = document.createElement('tr');
-        tr.style.borderBottom = "1px solid #333";
-        let masteryIcon = stat.mastery === 1 ? '✅' : '❌';
-        tr.innerHTML = `
-            <td style="padding: 8px;">${stat.id}</td>
-            <td style="padding: 8px;">${stat.avg.toFixed(1)}</td>
-            <td style="padding: 8px;">${stat.best.toFixed(1)}</td>
-            <td style="padding: 8px;">${stat.count}</td>
-            <td style="padding: 8px;">${masteryIcon}</td>
-        `;
-        tbody.appendChild(tr);
+    const dot = createEl('div', { innerText: activeTarget.note }, {
+        position: 'absolute', width: '44px', height: '44px', borderRadius: '50%',
+        background: COLORS.target, color: 'white', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', fontWeight: 'bold',
+        fontSize: '20px', transform: 'translate(-50%, -50%)', zIndex: 10
     });
-}
 
-function closeDbViewer() {
-    document.getElementById('db-modal').style.display = 'none';
+    let top = 15 + (activeTarget.string * STR_SPACING);
+    let left = ((activeTarget.fret - 9) * FRET_WIDTH) + (FRET_WIDTH / 2);
+
+    dot.style.top = top + '%';
+    dot.style.left = left + '%';
+    layer.appendChild(dot);
 }
