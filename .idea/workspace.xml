@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
-      <change beforePath="$PROJECT_DIR$/git_update.sh" beforeDir="false" afterPath="$PROJECT_DIR$/git_update.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_db_update.sh" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,7 +81,16 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\staticsmith" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.init_db">
+  <component name="RunManager" selected="Batch.start_server">
+    <configuration name="start_server" type="BatchConfigurationType" factoryName="Batch" temporary="true">
+      <module name="pythonanywhere" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="WORKING_DIRECTORY" value="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SCRIPT_NAME" value="start_server.bat" />
+      <option name="PARAMETERS" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="pythonanywhere" />
       <option name="ENV_FILES" value="" />
@@ -148,28 +157,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="make_sweet_child" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="pythonanywhere" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/make_sweet_child.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration name="thing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="pythonanywhere" />
       <option name="ENV_FILES" value="" />
@@ -194,11 +181,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Batch.start_server" />
         <item itemvalue="Python.init_db" />
         <item itemvalue="Python.db_clear" />
         <item itemvalue="Python.thing" />
         <item itemvalue="Python.app" />
-        <item itemvalue="Python.make_sweet_child" />
       </list>
     </recent_temporary>
   </component>
@@ -216,14 +203,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00071" summary="edit questions">
-      <option name="closed" value="true" />
-      <created>1767037275571</created>
-      <option name="number" value="00071" />
-      <option name="presentableId" value="LOCAL-00071" />
-      <option name="project" value="LOCAL" />
-      <updated>1767037275571</updated>
     </task>
     <task id="LOCAL-00072" summary="edit questions">
       <option name="closed" value="true" />
@@ -609,7 +588,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771549885108</updated>
     </task>
-    <option name="localTasksCounter" value="120" />
+    <task id="LOCAL-00120" summary="fretmap">
+      <option name="closed" value="true" />
+      <created>1771550250900</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1771550250900</updated>
+    </task>
+    <option name="localTasksCounter" value="121" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

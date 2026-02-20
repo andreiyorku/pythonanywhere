@@ -8,8 +8,4 @@ env/
 # Ignore local configs
 *.local
 *.env
-
-# Ignore specific directories (adjust to your case)
-myapp_db.sqlite3
-fretmap/fretmap.db
 ## test
