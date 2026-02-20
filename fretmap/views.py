@@ -12,7 +12,7 @@ DB_PATH = os.path.join(settings.BASE_DIR, 'myapp_db.sqlite3')
 
 def index(request):
     """Renders the main FretMap HTML page."""
-    return render(request, 'fretmap/index.html')
+    return render(request, 'fretmap')
 
 
 def get_user_data(request):
