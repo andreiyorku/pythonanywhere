@@ -8,7 +8,9 @@ const PENDULUM = [
     [6], [15], [5], [16], [4], [17], [3], [18], [2], [19], [1], [20], [0], [21], [22]
 ];
 
+// Global Memory (Holds all 19k rows)
 let transitionStats = {};
+let userSettings = {};
 let currentZoneIndex = 0;
 let activeFrets = [];
 let newlyUnlockedFrets = [];
@@ -23,48 +25,64 @@ let prevNote = null;
 let lastTurnTime = 0;
 let hitStability = 0;
 
-// --- DATABASE SYNC ---
+// --- 1. THE STARTUP LOADER (RAM CACHE) ---
 async function loadDatabaseHistory() {
     try {
+        console.log("Downloading Fretboard data...");
         const res = await fetch('/fretmap/get_user_data/');
         const data = await res.json();
-        if (data.history) transitionStats = data.history;
-        currentZoneIndex = data.zone_index || 0;
 
-        // Apply loaded slider settings
-        if (data.strictness) {
-            document.getElementById('strict-slider').value = data.strictness;
-            if(typeof updateStrict === 'function') updateStrict(data.strictness);
-        }
-        if (data.attack) {
-            document.getElementById('attack-slider').value = data.attack;
-            if(typeof updateAttack === 'function') updateAttack(data.attack);
+        if (data.transitions) transitionStats = data.transitions;
+
+        if (data.settings) {
+            userSettings = data.settings;
+            currentZoneIndex = userSettings.zone_index || 0;
+
+            // Apply loaded slider settings to UI
+            if (userSettings.strictness) {
+                let slider = document.getElementById('strict-slider');
+                if (slider) slider.value = userSettings.strictness;
+                if(typeof updateStrict === 'function') updateStrict(userSettings.strictness);
+            }
+            if (userSettings.attack) {
+                let slider = document.getElementById('attack-slider');
+                if (slider) slider.value = userSettings.attack;
+                if(typeof updateAttack === 'function') updateAttack(userSettings.attack);
+            }
         }
 
-        console.log("DB Loaded. Current Zone:", currentZoneIndex);
+        console.log(`✅ DB Loaded. ${Object.keys(transitionStats).length} combos in RAM. Current Zone: ${currentZoneIndex}`);
         buildActiveFretboard();
         updateMasteryUI();
     } catch(e) {
-        console.log("Running without backend history. Starting at Zone 0.");
+        console.log("Running without backend history. Starting at Zone 0.", e);
         currentZoneIndex = 0;
         buildActiveFretboard();
         updateMasteryUI();
     }
 }
 
-function saveToDatabase(id, timeTaken, masteryStatus) {
-    fetch('/fretmap/save/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            id: id,
-            time: timeTaken,
-            mastery: masteryStatus
-        })
-    }).catch(e => console.log("DB Save Failed", e));
+// --- 2. THE BACKGROUND SAVER ---
+async function saveToDatabase(id, stat) {
+    try {
+        await fetch('/fretmap/save_transition/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                id: id,
+                avg: stat.avg,
+                min: stat.min,
+                max: stat.max,
+                count: stat.count,
+                mastery: stat.mastery
+            })
+        });
+    } catch (error) {
+        console.error("Background Save Failed:", error);
+    }
 }
 
 // Django CSRF Helper
@@ -101,7 +119,7 @@ function checkMastery(stat, recentTime) {
     // Require at least 3 attempts to prove mastery
     if (stat.count < 3) return 0;
 
-    let target = stat.avg - ((stat.avg - stat.best) / 2);
+    let target = stat.avg - ((stat.avg - stat.min) / 2); // Using new min logic
     return recentTime <= target ? 1 : 0;
 }
 
@@ -115,9 +133,13 @@ function updateMasteryUI() {
     for (const [id, stat] of Object.entries(transitionStats)) {
         // Only count stats that belong to the currently unlocked frets
         let parts = id.replace('_', '-').split('-');
-        if (activeFrets.includes(parseInt(parts[1])) && activeFrets.includes(parseInt(parts[3]))) {
-            if (stat.count > 0) exploredCount++;
-            if (stat.mastery === 1) masteredCount++;
+        if (parts.length >= 4) {
+            let f1 = parseInt(parts[1]);
+            let f2 = parseInt(parts[3]);
+            if (activeFrets.includes(f1) && activeFrets.includes(f2)) {
+                if (stat.count > 0) exploredCount++;
+                if (stat.mastery === 1) masteredCount++;
+            }
         }
     }
 
@@ -146,13 +168,13 @@ function triggerLevelUp() {
     currentZoneIndex++;
     buildActiveFretboard();
 
-    fetch('/fretmap/save/', {
+    // Custom save ping for System settings
+    fetch('/fretmap/save_transition/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-        body: JSON.stringify({ id: "SYS_UPDATE", time: 0, mastery: 0, new_zone: currentZoneIndex })
-    });
+        body: JSON.stringify({ id: "SYS_UPDATE", avg: 0, min: 0, max: 0, count: 0, mastery: 0, new_zone: currentZoneIndex })
+    }).catch(e => console.log(e));
 }
-
 
 // --- SMART GENERATOR (GLOBAL HUNTER AI) ---
 function generateSmartNote(originNote) {
@@ -161,12 +183,11 @@ function generateSmartNote(originNote) {
     let validCandidates = [];
     let unexploredImmediate = [];
 
-    // 1. Build a list of ALL immediate valid destinations
+    // 1. Build list of immediate valid destinations
     for(let s = 0; s < 6; s++) {
         for(let i = 0; i < activeFrets.length; i++) {
             let f = activeFrets[i];
 
-            // Rule 1 & 2: No A -> A, and True Anti-Ping-Pong
             if (s === originNote.string && f === originNote.fret) continue;
             let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
             if (twoNotesBack && s === twoNotesBack.string && f === twoNotesBack.fret) continue;
@@ -183,22 +204,23 @@ function generateSmartNote(originNote) {
         let key = `${originNote.string}-${originNote.fret}_${cand.string}-${cand.fret}`;
         let stat = transitionStats[key];
 
+        // Since DB is pre-populated, unplayed notes have count === 0
         if (!stat || stat.count === 0) {
-            unexploredImmediate.push(cand); // Found an empty path right next to us!
+            unexploredImmediate.push(cand);
         } else {
             let avg = stat.avg;
-            if (newlyUnlockedFrets.includes(cand.fret)) avg += 500;
+            if (newlyUnlockedFrets.includes(cand.fret)) avg += 500; // Prioritize new frets
             if (avg > worstAvg) { worstAvg = avg; worstCandidate = cand; }
         }
     });
 
-    // 3. IMMEDIATE LOCK: If we are standing next to an empty path, take it immediately.
+    // 3. IMMEDIATE LOCK: Prioritize completely blank paths
     if (unexploredImmediate.length > 0) {
         let pick = unexploredImmediate[Math.floor(Math.random() * unexploredImmediate.length)];
         return formatNoteObj(pick.string, pick.fret);
     }
 
-    // 4. GLOBAL HUNTER: We are fully calibrated from this note. Is there anything missing globally?
+    // 4. GLOBAL HUNTER: Fully calibrated locally? Find global gaps.
     let missingOrigins = [];
     for(let s1 = 0; s1 < 6; s1++){
         for(let f1 of activeFrets) {
@@ -209,7 +231,6 @@ function generateSmartNote(originNote) {
                     let testKey = `${s1}-${f1}_${s2}-${f2}`;
                     let testStat = transitionStats[testKey];
 
-                    // Found a missing path somewhere else on the neck!
                     if(!testStat || testStat.count === 0) {
                         missingOrigins.push({string: s1, fret: f1});
                     }
@@ -218,18 +239,18 @@ function generateSmartNote(originNote) {
         }
     }
 
-    // If missing path globally exists, force engine to travel to its starting point.
+    // Hunt missing paths
     if (missingOrigins.length > 0) {
         let huntTarget = missingOrigins[Math.floor(Math.random() * missingOrigins.length)];
-
         let twoNotesBack = queue.length >= 2 ? queue[queue.length - 2] : activeTarget;
+
         if (twoNotesBack && huntTarget.string === twoNotesBack.string && huntTarget.fret === twoNotesBack.fret) {
-             return formatNoteObj(worstCandidate.string, worstCandidate.fret); // Fallback for one turn to break loop
+             return formatNoteObj(worstCandidate.string, worstCandidate.fret);
         }
         return formatNoteObj(huntTarget.string, huntTarget.fret);
     }
 
-    // 5. ZONE MASTERED: 100% Calibrated. Return to normal "Worst-First" Mastery mode.
+    // 5. ZONE MASTERED: Return to normal "Worst-First" Mastery mode.
     return formatNoteObj(worstCandidate.string, worstCandidate.fret);
 }
 
@@ -242,11 +263,9 @@ function createRandomNote() {
 function formatNoteObj(sIdx, fret) {
     let base = STRINGS[sIdx].freq;
     let targetFreq = base * Math.pow(2, fret/12);
-    // Safety check to ensure UI function is loaded
     let info = typeof getNoteInfo === "function" ? getNoteInfo(targetFreq) : {note: "--"};
     return { note: info.note, string: sIdx, fret: fret, freq: targetFreq };
 }
-
 
 // --- GAME FLOW LOGIC ---
 function runCalib(freq) {
@@ -267,11 +286,13 @@ function runCalib(freq) {
 
 function startTraining() {
     phase = 'GAME';
-    document.getElementById('calibration-overlay').style.display = 'none';
-    document.getElementById('game-area').style.display = 'flex';
+    let ov = document.getElementById('calibration-overlay');
+    let ga = document.getElementById('game-area');
+    let hud = document.getElementById('mastery-hud');
 
-    let masteryHud = document.getElementById('mastery-hud');
-    if (masteryHud) masteryHud.style.display = 'block';
+    if (ov) ov.style.display = 'none';
+    if (ga) ga.style.display = 'flex';
+    if (hud) hud.style.display = 'block';
 
     updateMasteryUI();
 
@@ -309,8 +330,8 @@ function runGame(freq, rms) {
     }
 }
 
+// --- 3. THE INSTANT MATH ENGINE ---
 function successTrigger() {
-    // Visual Feedback
     document.body.style.backgroundColor = '#1b5e20';
     setTimeout(() => document.body.style.backgroundColor = '#121212', 100);
 
@@ -320,30 +341,38 @@ function successTrigger() {
         let transitionKey = `${prevNote.string}-${prevNote.fret}_${activeTarget.string}-${activeTarget.fret}`;
         let timeTaken = now - lastTurnTime;
 
-        if(!transitionStats[transitionKey]) {
-            transitionStats[transitionKey] = { avg: timeTaken, best: timeTaken, count: 0, mastery: 0 };
-        }
-
+        // Pull the exact note pairing from JS RAM
         let stat = transitionStats[transitionKey];
 
-        // Update Running Average & Best Time
-        stat.avg = ((stat.avg * stat.count) + timeTaken) / (stat.count + 1);
-        if (timeTaken < stat.best) stat.best = timeTaken;
+        // Fallback in case the DB failed to load completely
+        if(!stat) stat = { avg: 99999, min: 99999, max: 0, count: 0, mastery: 0 };
+
+        // Do the math instantly in the browser
+        if (stat.count === 0) {
+            stat.avg = timeTaken;
+            stat.min = timeTaken;
+            stat.max = timeTaken;
+        } else {
+            stat.avg = ((stat.avg * stat.count) + timeTaken) / (stat.count + 1);
+            if (timeTaken < stat.min) stat.min = timeTaken;
+            if (timeTaken > stat.max) stat.max = timeTaken;
+        }
         stat.count++;
 
-        // Run Gatekeeper Math
+        // Gatekeeper Check
         stat.mastery = checkMastery(stat, timeTaken);
 
-        // --- NEW: Print exactly what the engine recorded ---
-        console.log(`✅ HIT RECORDED: ${transitionKey} | Time: ${Math.round(timeTaken)}ms | New Avg: ${Math.round(stat.avg)}ms | Mastered: ${stat.mastery === 1 ? 'YES' : 'NO'}`);
+        // Save back to RAM
+        transitionStats[transitionKey] = stat;
 
-        // Save to Django DB
-        saveToDatabase(transitionKey, timeTaken, stat.mastery);
+        console.log(`✅ ${transitionKey} | Speed: ${Math.round(timeTaken)}ms | Min: ${Math.round(stat.min)}ms | Avg: ${Math.round(stat.avg)}ms`);
+
+        // Instantly sync to Django in the background
+        saveToDatabase(transitionKey, stat);
 
         updateMasteryUI();
     } else {
-        // Print for the very first note of the session
-        console.log(`✅ FIRST NOTE HIT: Timer started.`);
+        console.log("✅ FIRST NOTE HIT: Timer started.");
     }
 
     nextTurn();
@@ -362,13 +391,18 @@ function nextTurn() {
     }
 
     // Update UI Elements
-    document.getElementById('big-note').innerText = activeTarget.note;
-    document.getElementById('string-info').innerText = `String ${6 - activeTarget.string} | Fret ${activeTarget.fret}`;
-    document.getElementById('q1-txt').innerText = queue[0].note;
-    document.getElementById('q2-txt').innerText = queue[1].note;
-    document.getElementById('q3-txt').innerText = queue[2].note;
+    let bn = document.getElementById('big-note');
+    let si = document.getElementById('string-info');
+    let q1 = document.getElementById('q1-txt');
+    let q2 = document.getElementById('q2-txt');
+    let q3 = document.getElementById('q3-txt');
 
-    // --- NEW: Print what the engine is currently waiting to hear ---
+    if (bn) bn.innerText = activeTarget.note;
+    if (si) si.innerText = `String ${6 - activeTarget.string} | Fret ${activeTarget.fret}`;
+    if (q1) q1.innerText = queue[0].note;
+    if (q2) q2.innerText = queue[1].note;
+    if (q3) q3.innerText = queue[2].note;
+
     console.log(`🎯 WAITING FOR: String ${6 - activeTarget.string}, Fret ${activeTarget.fret} (${activeTarget.note})`);
 
     if (typeof drawBoard === "function") {
