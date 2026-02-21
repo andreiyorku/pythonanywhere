@@ -1,32 +1,102 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FretMap Mastery - JS Engine</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fretmap v11 | Systematic Guitar Mastery</title>
+    {% load static %}
     <style>
+        /* CORE RESET */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            margin: 0; padding: 0; background: #121212; color: #eee;
+            background-color: #121212;
+            color: white;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden; width: 100vw; height: 100vh;
+            overflow: hidden; /* Prevents bounce on mobile */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
-        #app-root { width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+        /* CONTAINER */
+        #app-root {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+        }
+
+        /* FRETBOARD TEXTURES */
+        #fretboard-relative {
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            border: 2px solid #2a2a2a;
+        }
+
+        /* ANIMATIONS */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+        }
+
+        #start-btn {
+            animation: pulse-green 2s infinite;
+        }
     </style>
 </head>
 <body>
+
     <div id="app-root"></div>
 
-    <script src="{% static 'fretmap/js/audio.js' %}"></script>
+    <script>
+        const CSRF_TOKEN = '{{ csrf_token }}';
+
+        // Helper to get cookies if needed by other JS files
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+
     <script src="{% static 'fretmap/js/ui.js' %}"></script>
+
+    <script src="{% static 'fretmap/js/audio.js' %}"></script>
+
     <script src="{% static 'fretmap/js/game.js' %}"></script>
 
     <script>
-        // Start UI first, then load data
-        window.onload = () => {
-            if(typeof buildUI === 'function') buildUI();
-            if(typeof loadDatabaseHistory === 'function') loadDatabaseHistory();
-        };
+        /**
+         * BOOTSTRAPPER
+         * Ensures all files are ready before initializing.
+         */
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("%c[BOOT] Initializing Fretmap Engine...", "color: #4caf50; font-weight: bold;");
+
+            // Step 1: Build the UI structures
+            if (typeof buildUI === 'function') {
+                buildUI();
+            } else {
+                console.error("UI.js failed to load.");
+            }
+
+            // Step 2: Sync with Database to decide phase (Calibration vs Practice)
+            if (typeof loadDatabaseHistory === 'function') {
+                loadDatabaseHistory();
+            } else {
+                console.error("Game.js failed to load.");
+            }
+        });
     </script>
+
 </body>
 </html>

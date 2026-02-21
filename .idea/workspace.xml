@@ -5,10 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
+      <change afterPath="$PROJECT_DIR$/temp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/audio.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/templates/fretmap/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/fretmap/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/views.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/init_db.py" beforeDir="false" afterPath="$PROJECT_DIR$/init_db.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,6 +69,8 @@
     "Python.init_db.executor": "Run",
     "Python.make_sweet_child.executor": "Run",
     "Python.riffmaker.executor": "Run",
+    "Python.scan_fretmap.executor": "Run",
+    "Python.temp.executor": "Run",
     "Python.thing.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -83,7 +91,7 @@
       <recent name="C:\Users\andre\My Drive (andreip@my.yorku.ca)\Projects\pythonanywhere\staticsmith" />
     </key>
   </component>
-  <component name="RunManager" selected="Batch.start_server">
+  <component name="RunManager" selected="Python.init_db">
     <configuration name="start_server" type="BatchConfigurationType" factoryName="Batch" temporary="true">
       <module name="pythonanywhere" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -91,28 +99,6 @@
       <option name="PARENT_ENVS" value="true" />
       <option name="SCRIPT_NAME" value="start_server.bat" />
       <option name="PARAMETERS" value="" />
-      <method v="2" />
-    </configuration>
-    <configuration name="app" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="pythonanywhere" />
-      <option name="ENV_FILES" value="" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fretmap" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fretmap/app.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
     <configuration name="db_clear" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -159,7 +145,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="thing" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="scan_fretmap" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="pythonanywhere" />
       <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -168,11 +154,33 @@
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/fretmap" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/fretmap/thing.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scan_fretmap.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="temp" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="pythonanywhere" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/temp.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -183,11 +191,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Batch.start_server" />
         <item itemvalue="Python.init_db" />
+        <item itemvalue="Batch.start_server" />
+        <item itemvalue="Python.temp" />
+        <item itemvalue="Python.scan_fretmap" />
         <item itemvalue="Python.db_clear" />
-        <item itemvalue="Python.thing" />
-        <item itemvalue="Python.app" />
       </list>
     </recent_temporary>
   </component>
@@ -205,14 +213,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00073" summary="edit questions">
-      <option name="closed" value="true" />
-      <created>1767038413378</created>
-      <option name="number" value="00073" />
-      <option name="presentableId" value="LOCAL-00073" />
-      <option name="project" value="LOCAL" />
-      <updated>1767038413378</updated>
     </task>
     <task id="LOCAL-00074" summary="edit questions">
       <option name="closed" value="true" />
@@ -598,7 +598,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771551765175</updated>
     </task>
-    <option name="localTasksCounter" value="122" />
+    <task id="LOCAL-00122" summary="fretmap">
+      <option name="closed" value="true" />
+      <created>1771553389243</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1771553389243</updated>
+    </task>
+    <option name="localTasksCounter" value="123" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

@@ -1,95 +1,54 @@
-import sqlite3
-import json
-import os
+import sqlite3, json, os
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 
-# 100% BULLETPROOF PATH: Points directly to ~/mysite/myapp_db.sqlite3
-DB_PATH = os.path.join(settings.BASE_DIR, 'myapp_db.sqlite3')
+def get_db_conn():
+    db_path = os.path.join(settings.BASE_DIR, 'myapp_db.sqlite3')
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
+def init_db():
+    conn = get_db_conn(); cur = conn.cursor()
+    cur.execute("""CREATE TABLE IF NOT EXISTS fretmap_transition (
+        id TEXT PRIMARY KEY, avg REAL, min REAL, max REAL, 
+        count INTEGER, mastery INTEGER, isCalibrated INTEGER DEFAULT 0)""")
+    cur.execute("""CREATE TABLE IF NOT EXISTS fretmap_usersettings (
+        id INTEGER PRIMARY KEY, zone_index INTEGER DEFAULT 0, 
+        strictness INTEGER DEFAULT 50, attack INTEGER DEFAULT 50, stability INTEGER DEFAULT 50)""")
+    cur.execute("INSERT OR IGNORE INTO fretmap_usersettings (id) VALUES (1)")
+    conn.commit(); conn.close()
+    print("[SYSTEM] Database Ready.")
 
-def index(request):
-    """Renders the main FretMap HTML page."""
-    return render(request, 'fretmap/index.html')
+init_db()
 
+def index(request): return render(request, 'fretmap/index.html')
 
 def get_user_data(request):
-    """Loads ALL 19k combinations + settings into JS at startup."""
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-
-        # 1. Get Settings
-        c.execute("SELECT zone_index, strictness, attack FROM user_progress WHERE id=1")
-        user_row = c.fetchone()
-        user_settings = dict(user_row) if user_row else {'zone_index': 0, 'strictness': 70, 'attack': 80}
-
-        # 2. Get All Transitions
-        c.execute("SELECT id, avg_time, min_time, max_time, total_attempts, mastery_status FROM transitions")
-        transitions = {}
-        for row in c.fetchall():
-            transitions[row['id']] = {
-                'avg': row['avg_time'],
-                'min': row['min_time'],
-                'max': row['max_time'],
-                'count': row['total_attempts'],
-                'mastery': row['mastery_status']
-            }
-        conn.close()
-
-        return JsonResponse({'settings': user_settings, 'transitions': transitions})
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
-
+    conn = get_db_conn(); cur = conn.cursor()
+    cur.execute("SELECT * FROM fretmap_transition")
+    trans = {row['id']: dict(row) for row in cur.fetchall()}
+    cur.execute("SELECT * FROM fretmap_usersettings WHERE id = 1")
+    set_row = dict(cur.fetchone())
+    conn.close()
+    return JsonResponse({'transitions': trans, 'settings': set_row})
 
 @csrf_exempt
 def save_transition(request):
-    """Instantly updates min, max, avg for a single note strike."""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
-
-            # Check if it's a system update (Level Up)
-            if data.get('id') == "SYS_UPDATE":
-                if 'new_zone' in data:
-                    c.execute("UPDATE user_progress SET zone_index = ? WHERE id = 1", (data['new_zone'],))
-            else:
-                # Normal Note Update
-                c.execute('''UPDATE transitions 
-                             SET avg_time = ?, min_time = ?, max_time = ?, total_attempts = ?, mastery_status = ?
-                             WHERE id = ?''',
-                          (data['avg'], data['min'], data['max'], data['count'], data['mastery'], data['id']))
-
-            conn.commit()
-            conn.close()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'invalid request'}, status=400)
-
+    data = json.loads(request.body); conn = get_db_conn(); cur = conn.cursor()
+    sql = "INSERT OR REPLACE INTO fretmap_transition (id, avg, min, max, count, mastery, isCalibrated) VALUES (?,?,?,?,?,?,?)"
+    cur.execute(sql, (data['id'], data['avg'], data['min'], data.get('max', data['avg']), data['count'], data['mastery'], data['isCalibrated']))
+    conn.commit(); conn.close(); return JsonResponse({'status': 'ok'})
 
 @csrf_exempt
 def save_settings(request):
-    """Saves the Strictness and Attack sliders."""
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            conn = sqlite3.connect(DB_PATH)
-            c = conn.cursor()
+    data = json.loads(request.body); conn = get_db_conn(); cur = conn.cursor()
+    if 'zone_index' in data: cur.execute("UPDATE fretmap_usersettings SET zone_index = ? WHERE id = 1", (data['zone_index'],))
+    conn.commit(); conn.close(); return JsonResponse({'status': 'ok'})
 
-            if 'strictness' in data:
-                c.execute("UPDATE user_progress SET strictness = ? WHERE id = 1", (data['strictness'],))
-            if 'attack' in data:
-                c.execute("UPDATE user_progress SET attack = ? WHERE id = 1", (data['attack'],))
-
-            conn.commit()
-            conn.close()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
-    return JsonResponse({'status': 'invalid request'}, status=400)
+@csrf_exempt
+def clear_database(request):
+    conn = get_db_conn(); conn.execute("DELETE FROM fretmap_transition"); conn.commit(); conn.close()
+    return JsonResponse({'status': 'ok'})
