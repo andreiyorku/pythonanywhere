@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'fretmapOPP/css/style.css' %}">
+</head>
+<body>
+    <div id="app-root">
+        <div id="calibration-overlay" class="overlay">
+            <button id="start-btn">START MICROPHONE</button>
+        </div>
+        <div class="hud">
+            <div id="mastery-fill"></div>
+        </div>
+        <div id="game-area">
+            <div id="big-note">--</div>
+            <div id="string-info">READY</div>
+        </div>
+    </div>
+    <script type="module" src="{% static 'fretmapOPP/js/main.js' %}"></script>
+</body>
+</html>

@@ -20,20 +20,23 @@ def init_db():
         strictness INTEGER DEFAULT 50, attack INTEGER DEFAULT 50, stability INTEGER DEFAULT 50)""")
     cur.execute("INSERT OR IGNORE INTO fretmap_usersettings (id) VALUES (1)")
     conn.commit(); conn.close()
-    print("[SYSTEM] Database Ready.")
 
 init_db()
 
-def index(request): return render(request, 'fretmap/index.html')
+def index(request):
+    return render(request, 'fretmap/index.html')
 
 def get_user_data(request):
-    conn = get_db_conn(); cur = conn.cursor()
-    cur.execute("SELECT * FROM fretmap_transition")
-    trans = {row['id']: dict(row) for row in cur.fetchall()}
-    cur.execute("SELECT * FROM fretmap_usersettings WHERE id = 1")
-    set_row = dict(cur.fetchone())
-    conn.close()
-    return JsonResponse({'transitions': trans, 'settings': set_row})
+    try:
+        conn = get_db_conn(); cur = conn.cursor()
+        cur.execute("SELECT * FROM fretmap_transition")
+        trans = {row['id']: dict(row) for row in cur.fetchall()}
+        cur.execute("SELECT * FROM fretmap_usersettings WHERE id = 1")
+        set_row = dict(cur.fetchone())
+        conn.close()
+        return JsonResponse({'transitions': trans, 'settings': set_row})
+    except:
+        return JsonResponse({'transitions': {}, 'settings': {'zone_index': 0}})
 
 @csrf_exempt
 def save_transition(request):
@@ -44,9 +47,19 @@ def save_transition(request):
 
 @csrf_exempt
 def save_settings(request):
-    data = json.loads(request.body); conn = get_db_conn(); cur = conn.cursor()
-    if 'zone_index' in data: cur.execute("UPDATE fretmap_usersettings SET zone_index = ? WHERE id = 1", (data['zone_index'],))
-    conn.commit(); conn.close(); return JsonResponse({'status': 'ok'})
+    """Updates user preferences (Zone, Sensitivity, etc.) in the database."""
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            conn = get_db_conn(); cur = conn.cursor()
+            for key in ['zone_index', 'strictness', 'attack', 'stability']:
+                if key in data:
+                    cur.execute(f"UPDATE fretmap_usersettings SET {key} = ? WHERE id = 1", (data[key],))
+            conn.commit(); conn.close()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'invalid method'}, status=400)
 
 @csrf_exempt
 def clear_database(request):

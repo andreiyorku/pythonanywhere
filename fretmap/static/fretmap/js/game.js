@@ -1,5 +1,6 @@
 /**
- * FRETMAP GAME ENGINE - v18 (Unified)
+ * FRETMAP GAME ENGINE - v22
+ * Responsibility: Note generation, Success logic, and DB sync
  */
 var PENDULUM = [[9,10,11,12],[8],[13],[7],[14],[6],[15],[5],[16],[4],[17],[3],[18],[2],[19],[1],[20],[0],[21],[22]];
 var transitionStats = {}, activeFrets = [], currentZoneIndex = 0, phase = 'GAME';
@@ -26,7 +27,12 @@ function checkNeedsCalibration() {
 }
 
 function startInitialCalibration() {
-    phase = 'CALIB'; isExpansionCalib = true; let staticQueue = [];
+    phase = 'CALIB'; isExpansionCalib = true;
+    document.getElementById('calibration-overlay').style.display = 'none';
+    document.getElementById('game-area').style.display = 'flex';
+    document.getElementById('mastery-hud').style.display = 'block';
+
+    let staticQueue = [];
     [9,10,11,12].forEach((f, idx) => {
         let r = (idx % 2 === 0) ? [0,1,2,3,4,5] : [5,4,3,2,1,0];
         for(let i=0; i<r.length-1; i++) {
@@ -41,21 +47,29 @@ function startInitialCalibration() {
             if(!isJumpDone(n1.id, n2.id)) staticQueue.push({from: n1, to: n2});
         }
     });
-    calibrationQueue = staticQueue; runNextCalibTurn();
+    calibrationQueue = staticQueue; renderFretboard(); runNextCalibTurn();
 }
 
-function isJumpDone(id1, id2) { let key = `${id1}_${id2}`; return transitionStats[key] && transitionStats[key].isCalibrated; }
+function isJumpDone(id1, id2) { let k = `${id1}_${id2}`; return transitionStats[k] && transitionStats[k].isCalibrated; }
 
 function runNextCalibTurn() {
     if (calibrationQueue.length === 0) { startTraining(); return; }
     const jump = calibrationQueue.shift();
     prevNote = jump.from; activeTarget = jump.to; lastTurnTime = performance.now();
+
+    // UI SYNC
+    document.getElementById('big-note').innerText = activeTarget.note;
+    if (typeof updateQueueUI === 'function') {
+        const nextThree = calibrationQueue.slice(0, 3).map(j => j.to);
+        updateQueueUI(nextThree);
+    }
+
     updateMasteryUI(); drawBoard();
 }
 
-function processAudioResults(freq, rms) {
-    if (freq === -1 || !activeTarget) return;
-    if (Math.abs(freq - activeTarget.freq) < (activeTarget.freq * 0.025)) {
+function processAudioResults(p, rms) {
+    if (p === -1 || !activeTarget) return;
+    if (Math.abs(p - activeTarget.freq) < (activeTarget.freq * 0.025)) {
         if ((rms > lastRMS * ATTACK_THRESH) && (rms > VOL_FLOOR * 2)) successTrigger();
         else { hitStability++; if (hitStability >= HOLD_FRAMES) { hitStability = 0; successTrigger(); } }
     } else { hitStability = Math.max(0, hitStability - 1); }
@@ -76,16 +90,17 @@ function successTrigger() {
 }
 
 function recalculateAllMastery() {
-    let target = globalMax - (MASTERY_DIFFICULTY * (globalMax - globalMin));
-    for (let id in transitionStats) transitionStats[id].mastery = (transitionStats[id].isCalibrated && transitionStats[id].avg <= target) ? 1 : 0;
+    let t = globalMax - (MASTERY_DIFFICULTY * (globalMax - globalMin));
+    for (let id in transitionStats) transitionStats[id].mastery = (transitionStats[id].isCalibrated && transitionStats[id].avg <= t) ? 1 : 0;
     updateMasteryUI();
 }
 
 function updateMasteryUI() {
     let cal = 0, mast = 0; for (var id in transitionStats) { if(transitionStats[id].isCalibrated) cal++; if(transitionStats[id].mastery) mast++; }
     let total = (activeFrets.length * 6) * ((activeFrets.length * 6) - 1);
-    if(document.getElementById('calib-pct')) document.getElementById('calib-pct').innerText = isExpansionCalib ? `${calibrationQueue.length} LEFT` : `${cal}/${total} CALIBRATED`;
-    if(document.getElementById('mastery-fill')) document.getElementById('mastery-fill').style.width = isExpansionCalib ? "0%" : ((mast/total)*100) + "%";
+    const cp = document.getElementById('calib-pct'), mf = document.getElementById('mastery-fill');
+    if(cp) cp.innerText = isExpansionCalib ? `${calibrationQueue.length} LEFT` : `${cal}/${total} CALIBRATED`;
+    if(mf) mf.style.width = isExpansionCalib ? "0%" : ((mast/total)*100) + "%";
 }
 
 function startTraining() {
@@ -93,16 +108,19 @@ function startTraining() {
     document.getElementById('calibration-overlay').style.display = 'none';
     document.getElementById('game-area').style.display = 'flex';
     document.getElementById('mastery-hud').style.display = 'block';
-    document.getElementById('note-queue-sidebar').style.display = 'flex';
-    renderFretboard(); queue = [generateSmartNote(null), generateSmartNote(null), generateSmartNote(null)]; nextTurn();
+    renderFretboard();
+    queue = [generateSmartNote(null), generateSmartNote(null), generateSmartNote(null)];
+    nextTurn();
 }
 
 function nextTurn() {
     prevNote = activeTarget; lastTurnTime = performance.now();
     activeTarget = queue.shift(); queue.push(generateSmartNote(queue[queue.length-1]));
-    if (typeof updateQueueUI === 'function') updateQueueUI(queue);
+
+    // UI SYNC
     document.getElementById('big-note').innerText = activeTarget.note;
-    document.getElementById('string-info').innerText = `Str ${6 - activeTarget.string} | Fret ${activeTarget.fret}`;
+    if (typeof updateQueueUI === 'function') updateQueueUI(queue);
+
     drawBoard();
 }
 
