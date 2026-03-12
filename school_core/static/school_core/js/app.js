@@ -158,7 +158,11 @@ function renderMedia(content) {
     const { text, img } = parseContent(content);
     let html = "";
     if (text) html += `<div>${text}</div>`;
-    if (img) html += `<img src="${img}" style="max-width:300px; display:block; border:1px solid #ccc; margin-top:5px; border-radius: 4px;">`;
+
+    // CHANGED: Removed max-width: 400px. Just width: 100%.
+    // Added box-sizing: border-box so the border doesn't make it overflow.
+    if (img) html += `<img src="${img}" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box;">`;
+
     return html;
 }
 

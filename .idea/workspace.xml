@@ -4,26 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="fretmap">
-      <change afterPath="$PROJECT_DIR$/data_annotation.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/setup_db.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/css/style.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/api.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/audio-engine.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/audio.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/game-engine.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/game.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/main.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/ui-manager.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/static/fretmapOPP/js/ui.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/templates/fretmapOPP/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/urls.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/fretmapOPP/views.py" afterDir="false" />
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="db update">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/game.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/static/fretmap/js/ui.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/fretmap/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/fretmap/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -224,14 +208,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00076" summary="edit questions">
-      <option name="closed" value="true" />
-      <created>1767038978184</created>
-      <option name="number" value="00076" />
-      <option name="presentableId" value="LOCAL-00076" />
-      <option name="project" value="LOCAL" />
-      <updated>1767038978184</updated>
     </task>
     <task id="LOCAL-00077" summary="copy and paste images">
       <option name="closed" value="true" />
@@ -617,7 +593,15 @@
       <option name="project" value="LOCAL" />
       <updated>1771636364792</updated>
     </task>
-    <option name="localTasksCounter" value="125" />
+    <task id="LOCAL-00125" summary="db update">
+      <option name="closed" value="true" />
+      <created>1773085303212</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1773085303213</updated>
+    </task>
+    <option name="localTasksCounter" value="126" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -632,7 +616,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="gitignore changes" />
     <MESSAGE value="updated quiz to be random" />
     <MESSAGE value="updated quiz to be reshuffled each answer" />
     <MESSAGE value="updated quiz wint internal logic" />
@@ -657,6 +640,7 @@
     <MESSAGE value="copy and paste images" />
     <MESSAGE value="staticsmith" />
     <MESSAGE value="fretmap" />
-    <option name="LAST_COMMIT_MESSAGE" value="fretmap" />
+    <MESSAGE value="db update" />
+    <option name="LAST_COMMIT_MESSAGE" value="db update" />
   </component>
 </project>
