@@ -40,13 +40,12 @@ def api_handler(request):
     if action in ['login', 'register', 'logout', 'get_current_user']:
         response_data = logic.handle_auth(action, data, request)
 
-    elif action in ['get_courses', 'add_course', 'delete_course']:
+    elif action in ['get_courses', 'add_course', 'delete_course', 'edit_course']:
         response_data = logic.handle_hub(action, data, request)
 
-    elif action in ['get_chapters', 'add_chapter', 'delete_chapter']:
+    elif action in ['get_chapters', 'add_chapter', 'delete_chapter', 'edit_chapter']:
         response_data = logic.handle_course(action, data, request)
 
-    # --- UPDATED LINE BELOW: Added 'edit_note' ---
     elif action in ['get_notes', 'add_note', 'delete_note', 'reset_note', 'reset_chapter', 'edit_note']:
         response_data = logic.handle_note(action, data, request.FILES, request)
 

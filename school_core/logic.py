@@ -73,12 +73,20 @@ def handle_hub(action, data, request):
         db_query("INSERT INTO school_course (name, owner_id) VALUES (%s, %s)", [data['name'], user_id])
         return {'status': 'success'}
 
+    elif action == 'edit_course':
+        if not user_id: return {'error': 'Must be logged in'}
+        course = db_query("SELECT owner_id FROM school_course WHERE id = %s", [data['course_id']])
+        if not course: return {'error': 'Not found'}
+        if is_admin(user_id) or user_id == course[0][0]:
+            db_query("UPDATE school_course SET name = %s WHERE id = %s", [data['name'], data['course_id']])
+            return {'status': 'success'}
+        return {'error': 'Permission Denied'}
+
     elif action == 'delete_course':
         course = db_query("SELECT owner_id FROM school_course WHERE id = %s", [data['course_id']])
         if not course: return {'error': 'Not found'}
 
-        owner_id = course[0][0]
-        if is_admin(user_id) or user_id == owner_id:
+        if is_admin(user_id) or user_id == course[0][0]:
             db_query("DELETE FROM school_course WHERE id = %s", [data['course_id']])
             return {'status': 'success'}
         return {'error': 'Permission Denied: You do not own this course.'}
@@ -102,12 +110,21 @@ def handle_course(action, data, request):
                  [data['course_id'], data['name'], data['index'], user_id])
         return {'status': 'success'}
 
+    elif action == 'edit_chapter':
+        if not user_id: return {'error': 'Must be logged in'}
+        chapter = db_query("SELECT owner_id FROM school_chapter WHERE id = %s", [data['chapter_id']])
+        if not chapter: return {'error': 'Not found'}
+        if is_admin(user_id) or user_id == chapter[0][0]:
+            db_query("UPDATE school_chapter SET name = %s, chapter_index = %s WHERE id = %s",
+                     [data['name'], data['index'], data['chapter_id']])
+            return {'status': 'success'}
+        return {'error': 'Permission Denied'}
+
     elif action == 'delete_chapter':
         chapter = db_query("SELECT owner_id FROM school_chapter WHERE id = %s", [data['chapter_id']])
         if not chapter: return {'error': 'Not found'}
 
-        owner_id = chapter[0][0]
-        if is_admin(user_id) or user_id == owner_id:
+        if is_admin(user_id) or user_id == chapter[0][0]:
             db_query("DELETE FROM school_chapter WHERE id = %s", [data['chapter_id']])
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
@@ -115,7 +132,7 @@ def handle_course(action, data, request):
     return None
 
 
-# --- NOTE LOGIC (UPDATED) ---
+# --- NOTE LOGIC ---
 def handle_note(action, data, files, request):
     user_id = request.session.get('user_id')
 
@@ -137,7 +154,6 @@ def handle_note(action, data, files, request):
         header_text = data.get('header', '').strip()
         body_text = data.get('body', '').strip()
 
-        # Combine Text + Image using delimiter |||
         header_final = header_text
         if 'header_image' in files:
             image = files['header_image']
@@ -161,7 +177,6 @@ def handle_note(action, data, files, request):
         return {'status': 'success'}
 
     elif action == 'edit_note':
-        # NEW: Edit Functionality
         if not user_id: return {'error': 'Must be logged in'}
 
         note_id = data.get('note_id')
@@ -183,8 +198,7 @@ def handle_note(action, data, files, request):
         if 'header_image' in files:
             image = files['header_image']
             ext = image.name.split('.')[-1]
-            filename = f"{uuid.uuid4()}.{ext}"
-            saved_path = default_storage.save(filename, ContentFile(image.read()))
+            saved_path = default_storage.save(f"{uuid.uuid4()}.{ext}", ContentFile(image.read()))
             header_img_part = f"IMG:/media/{saved_path}"
         elif not remove_header_img and "IMG:" in cur_header:
             if "|||" in cur_header:
@@ -199,8 +213,7 @@ def handle_note(action, data, files, request):
         if 'body_image' in files:
             img = files['body_image']
             ext = img.name.split('.')[-1]
-            filename = f"{uuid.uuid4()}.{ext}"
-            saved_path = default_storage.save(filename, ContentFile(img.read()))
+            saved_path = default_storage.save(f"{uuid.uuid4()}.{ext}", ContentFile(img.read()))
             body_img_part = f"IMG:/media/{saved_path}"
         elif not remove_body_img and "IMG:" in cur_body:
             if "|||" in cur_body:
@@ -211,13 +224,29 @@ def handle_note(action, data, files, request):
         body_final = f"{new_body_text}|||{body_img_part}" if body_img_part else new_body_text
 
         db_query("UPDATE school_note SET header = %s, body = %s WHERE id = %s", [header_final, body_final, note_id])
+
+        # Process Manual Weight Editing
+        new_weight = data.get('weight')
+        if new_weight is not None:
+            try:
+                weight_val = float(new_weight)
+                existing = db_query("SELECT id FROM school_progress WHERE user_id=%s AND note_id=%s",
+                                    [user_id, note_id])
+                if existing:
+                    db_query("UPDATE school_progress SET weight=%s WHERE user_id=%s AND note_id=%s",
+                             [weight_val, user_id, note_id])
+                else:
+                    db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
+                             [user_id, note_id, weight_val])
+            except ValueError:
+                pass
+
         return {'status': 'success'}
 
     elif action == 'delete_note':
         note = db_query("SELECT owner_id FROM school_note WHERE id = %s", [data['note_id']])
         if not note: return {'error': 'Not found'}
-        owner_id = note[0][0]
-        if is_admin(user_id) or user_id == owner_id:
+        if is_admin(user_id) or user_id == note[0][0]:
             db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
@@ -240,6 +269,8 @@ def handle_note(action, data, files, request):
     return None
 
 
+# [KEEP AUTH, HUB, COURSE AND NOTE LOGIC AS IS...]
+
 # --- QUIZ LOGIC ---
 def handle_quiz(action, data, request):
     user_id = request.session.get('user_id')
@@ -250,14 +281,61 @@ def handle_quiz(action, data, request):
         if not chapter_ids: return {'deck': []}
         placeholders = ','.join(['%s'] * len(chapter_ids))
         params = [user_id] + chapter_ids
+
+        # Pull chapter_id and course_id to apply focus percentages
         query = f"""
-            SELECT n.id, COALESCE(p.weight, n.weight)
+            SELECT n.id, COALESCE(p.weight, n.weight), n.chapter_id, c.course_id
             FROM school_note n
+            JOIN school_chapter c ON n.chapter_id = c.id
             LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
             WHERE n.chapter_id IN ({placeholders})
         """
         rows = db_query(query, params)
-        return {'deck': [{'id': r[0], 'w': float(r[1])} for r in rows]}
+
+        # Get percentages from frontend
+        course_percentages = data.get('course_percentages')
+        if isinstance(course_percentages, str):
+            try:
+                course_percentages = json.loads(course_percentages)
+            except:
+                course_percentages = {}
+        elif not isinstance(course_percentages, dict):
+            course_percentages = {}
+
+        # If no percentages provided (e.g., started from Course view), return raw
+        if not course_percentages:
+            return {'deck': [{'id': r[0], 'w': float(r[1]), 'chapter_id': r[2]} for r in rows]}
+
+        # 1. Calculate raw weight totals per course
+        course_totals = {}
+        deck = []
+        for r in rows:
+            nid = r[0]
+            w = float(r[1])
+            cid = str(r[3])  # Ensure string to match JSON keys
+
+            if cid not in course_totals: course_totals[cid] = 0.0
+            course_totals[cid] += w
+
+            deck.append({'id': nid, 'raw_w': w, 'chapter_id': r[2], 'course_id': cid})
+
+        # 2. Apply backend math to force course probabilities
+        final_deck = []
+        for note in deck:
+            cid = note['course_id']
+            raw_w = note['raw_w']
+            target_pct = float(course_percentages.get(cid, 0))
+
+            c_total = course_totals[cid]
+            # Formula: Scale the weight so the entire course adds up to target_pct
+            multiplier = (target_pct / c_total) if c_total > 0 else 0
+            final_w = raw_w * multiplier
+
+            # Skip notes that fall to 0 weight (because course was set to 0%)
+            if final_w > 0:
+                final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': note['chapter_id']})
+
+        return {'deck': final_deck}
 
     elif action == 'get_content':
         note_id = data.get('note_id')

@@ -123,9 +123,7 @@ async function router(viewName) {
     if (viewName === 'quiz') { document.getElementById('quiz-quit-btn').setAttribute('onclick', `router('${quizReturnView}')`); nextQuestion(); }
 }
 
-
 // --- CONTENT HANDLING ---
-
 function handleFile(file, section) {
     if (!file || !file.type.startsWith('image/')) return;
     const preview = document.getElementById(`preview-text-${section}`);
@@ -158,16 +156,31 @@ function renderMedia(content) {
     const { text, img } = parseContent(content);
     let html = "";
     if (text) html += `<div>${text}</div>`;
-
-    // CHANGED: Removed max-width: 400px. Just width: 100%.
-    // Added box-sizing: border-box so the border doesn't make it overflow.
     if (img) html += `<img src="${img}" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box;">`;
-
     return html;
 }
 
+// Replace your existing updateTotalFocus function in app.js
+function updateTotalFocus() {
+    let total = 0;
+    document.querySelectorAll('.course-percentage').forEach(inp => {
+        const val = parseFloat(inp.value) || 0;
+        total += val;
 
-// --- VIEW LOGIC: HUB ---
+        // Save the value to localStorage specific to this user and course
+        const cid = inp.id.replace('course-pct-', '');
+        localStorage.setItem(`focus_pct_${currentUserId}_${cid}`, val);
+    });
+
+    const display = document.getElementById('focus-total-display');
+    if(display) {
+        display.innerText = `Total Focus: ${total}%`;
+        display.style.color = total === 100 ? 'green' : 'red';
+    }
+}
+
+// Inside your loadCourses() function in app.js, update the percentage input block:
+
 async function loadCourses() {
     const data = await api({ action: 'get_courses' });
     const list = document.getElementById('course-list');
@@ -180,18 +193,47 @@ async function loadCourses() {
         const clone = template.content.cloneNode(true);
         clone.querySelector('.course-name').innerText = c.name;
         clone.querySelector('.course-check').onchange = () => toggleCourseSelection(clone.querySelector('.course-check'), c.id);
+
+        // Get the input field
+        const pctInput = clone.querySelector('.course-percentage');
+        pctInput.id = `course-pct-${c.id}`;
+
+        // NEW: Check for saved percentage in localStorage
+        const savedPct = localStorage.getItem(`focus_pct_${currentUserId}_${c.id}`);
+        if (savedPct !== null) {
+            pctInput.value = savedPct;
+        }
+
         clone.querySelector('.btn-expand').onclick = () => toggleHubChapters(c.id);
         clone.querySelector('.btn-open').onclick = () => openCourse(c.id, c.name);
+
+        const btnRename = clone.querySelector('.btn-rename');
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin || c.owner_id === currentUserId) btnDelete.onclick = () => deleteCourse(c.id);
-        else btnDelete.style.display = 'none';
+
+        if (currentUserIsAdmin || c.owner_id === currentUserId) {
+            btnRename.onclick = () => renameCourse(c.id, c.name);
+            btnDelete.onclick = () => deleteCourse(c.id);
+        } else {
+            btnRename.style.display = 'none';
+            btnDelete.style.display = 'none';
+        }
+
         clone.querySelector('.hub-chapters-container').id = `hub-chapters-${c.id}`;
         list.appendChild(clone);
     });
+
+    setTimeout(updateTotalFocus, 100);
 }
 
 async function addCourse() { const n = document.getElementById('new-course-name').value; if(n) { await api({ action: 'add_course', name: n }); loadCourses(); } }
-async function deleteCourse(id) { if(confirm("Delete?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); } }
+async function deleteCourse(id) { if(confirm("Delete Course?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); } }
+async function renameCourse(id, oldName) {
+    const newName = prompt("Rename Course:", oldName);
+    if(newName && newName !== oldName) {
+        await api({ action: 'edit_course', course_id: id, name: newName });
+        loadCourses();
+    }
+}
 
 async function toggleHubChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
@@ -234,18 +276,55 @@ async function loadChapters() {
 
     data.chapters.forEach(c => {
         const clone = template.content.cloneNode(true);
+
+        const viewMode = clone.querySelector('.chap-view-mode');
+        const editMode = clone.querySelector('.chap-edit-mode');
+
         clone.querySelector('.chap-label').innerText = `Index ${c.index}: ${c.name}`;
         clone.querySelector('.chap-select').value = c.id;
         clone.querySelector('.btn-notes').onclick = () => openChapter(c.id, c.name);
+
         const btnDelete = clone.querySelector('.btn-delete');
-        if (currentUserIsAdmin || c.owner_id === currentUserId) btnDelete.onclick = () => deleteChapter(c.id);
-        else btnDelete.style.display = 'none';
+        const btnEditChap = clone.querySelector('.btn-edit-chap');
+
+        if (currentUserIsAdmin || c.owner_id === currentUserId) {
+            btnDelete.onclick = () => deleteChapter(c.id);
+
+            // Activate Inline Edit Mode
+            btnEditChap.onclick = () => {
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                editMode.querySelector('.edit-chap-name').value = c.name;
+                editMode.querySelector('.edit-chap-index').value = c.index;
+            };
+
+            // Cancel Edit
+            editMode.querySelector('.btn-cancel-chap').onclick = () => {
+                viewMode.style.display = 'flex';
+                editMode.style.display = 'none';
+            };
+
+            // Save Edit (Name & Index)
+            editMode.querySelector('.btn-save-chap').onclick = async () => {
+                const newName = editMode.querySelector('.edit-chap-name').value;
+                const newIndex = editMode.querySelector('.edit-chap-index').value;
+                if (!newName || !newIndex) return alert("Please fill out both Name and Index.");
+
+                await api({ action: 'edit_chapter', chapter_id: c.id, name: newName, index: newIndex });
+                loadChapters();
+            };
+
+        } else {
+            btnDelete.style.display = 'none';
+            btnEditChap.style.display = 'none';
+        }
+
         list.appendChild(clone);
     });
 }
 
 async function addChapter() { const n = document.getElementById('new-chap-name').value; const i = document.getElementById('new-chap-index').value; await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i }); loadChapters(); }
-async function deleteChapter(id) { if(confirm("Delete?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); } }
+async function deleteChapter(id) { if(confirm("Delete Chapter?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); } }
 
 
 // --- VIEW LOGIC: CHAPTER ---
@@ -282,7 +361,7 @@ async function loadNotes() {
 
         if (canEdit) {
             btnDelete.onclick = () => deleteNote(n.id);
-            btnEdit.onclick = () => enableEditMode(card, n); // <--- THIS WAS MISSING
+            btnEdit.onclick = () => enableEditMode(card, n);
         } else {
             btnDelete.style.display = 'none';
             btnEdit.style.display = 'none';
@@ -308,6 +387,9 @@ function enableEditMode(card, note) {
 
     const bInput = edit.querySelector('.edit-body-text');
     bInput.value = bData.text;
+
+    const wInput = edit.querySelector('.edit-weight-val');
+    wInput.value = note.weight;
 
     const hControls = edit.querySelector('.edit-header-img-controls');
     hControls.innerHTML = '';
@@ -338,6 +420,7 @@ function enableEditMode(card, note) {
         formData.append('note_id', note.id);
         formData.append('header', hInput.value);
         formData.append('body', bInput.value);
+        formData.append('weight', wInput.value);
 
         const remH = edit.querySelector('.remove-header-img');
         if (remH && remH.checked) formData.append('remove_header_img', 'true');
@@ -384,16 +467,43 @@ async function addNote() {
     }
 }
 
-async function deleteNote(id) { if(confirm("Delete?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); } }
+async function deleteNote(id) { if(confirm("Delete Note?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); } }
+
 
 // --- QUIZ ENGINE ---
 async function startQuiz(returnTo = 'hub') {
     quizReturnView = returnTo;
     const boxes = document.querySelectorAll('.chap-select:checked');
     const ids = Array.from(boxes).map(b => b.value);
-    if(ids.length === 0) return alert("Select chapters");
-    const data = await api({ action: 'init_quiz', chapter_ids: ids });
-    if (!data.deck || data.deck.length === 0) return alert("No notes.");
+    if(ids.length === 0) return alert("Select chapters to review.");
+
+    let coursePercentages = {};
+
+    if (returnTo === 'hub') {
+        const selectedCourses = new Set();
+        boxes.forEach(b => {
+            const cls = Array.from(b.classList).find(c => c.startsWith('course-chap-'));
+            if (cls) selectedCourses.add(cls.replace('course-chap-', ''));
+        });
+
+        let totalPct = 0;
+        selectedCourses.forEach(cid => {
+            const pInput = document.getElementById(`course-pct-${cid}`);
+            if (pInput) {
+                const val = parseFloat(pInput.value) || 0;
+                coursePercentages[cid] = val;
+                totalPct += val;
+            }
+        });
+
+        if (Math.abs(totalPct - 100) > 0.01) {
+            return alert(`Total focus must equal exactly 100%. You are currently at ${totalPct}%.`);
+        }
+    }
+
+    const data = await api({ action: 'init_quiz', chapter_ids: ids, course_percentages: coursePercentages });
+    if (!data.deck || data.deck.length === 0) return alert("No active notes in selection.");
+
     quizDeck = data.deck;
     router('quiz');
 }
@@ -403,10 +513,26 @@ async function nextQuestion() {
     if (quizDeck.length === 0) { container.innerHTML = "<h3>Deck empty.</h3>"; return; }
     container.innerHTML = "<h3>Calculating...</h3>";
 
-    let winner = null; let maxScore = -1;
+    let winner = null;
     const candidates = (quizDeck.length > 1 && lastQuizItemId) ? quizDeck.filter(n => n.id !== lastQuizItemId) : quizDeck;
-    candidates.forEach(note => { let score = note.w * Math.random(); if (score > maxScore) { maxScore = score; winner = note; } });
-    lastQuizItemId = winner.id; currentQuizItem = winner;
+
+    // Proportional Roulette Wheel selection based on updated backend math
+    let totalWeight = candidates.reduce((sum, n) => sum + n.w, 0);
+    let randomVal = Math.random() * totalWeight;
+    let runningSum = 0;
+
+    for (let note of candidates) {
+        runningSum += note.w;
+        if (randomVal <= runningSum) {
+            winner = note;
+            break;
+        }
+    }
+
+    if (!winner) winner = candidates[candidates.length - 1];
+
+    lastQuizItemId = winner.id;
+    currentQuizItem = winner;
 
     const content = await api({ action: 'get_content', note_id: winner.id });
     container.innerHTML = '';
@@ -433,7 +559,7 @@ async function handleLocalAnswer(isCorrect) {
 
 // --- GLOBAL PASTE HANDLER ---
 window.addEventListener('paste', e => {
-    // 1. Get the image from the clipboar
+    // 1. Get the image from the clipboard
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     let file = null;
     for (let item of items) {
@@ -450,10 +576,9 @@ window.addEventListener('paste', e => {
     if (!active) return;
 
     // --- CASE A: ADDING NEW NOTE ---
-    // If typing in the main "Question" or "Answer" inputs
     if (active.id === 'note-header') {
         handleFile(file, 'header');
-        return; // Stop further processing
+        return;
     }
     if (active.id === 'note-body') {
         handleFile(file, 'body');
@@ -461,18 +586,14 @@ window.addEventListener('paste', e => {
     }
 
     // --- CASE B: EDITING EXISTING NOTE ---
-    // If typing inside an Edit Form (Dynamic Inputs)
     if (active.classList.contains('edit-header-text')) {
         const container = active.closest('.note-edit');
         if (container) {
             const fileInput = container.querySelector('.edit-header-file');
-            // Programmatically set the file input
             const dt = new DataTransfer();
             dt.items.add(file);
             fileInput.files = dt.files;
-
-            // Visual feedback (optional, but nice)
-            active.style.backgroundColor = "#e8f0fe"; // Flash blue briefly
+            active.style.backgroundColor = "#e8f0fe";
             setTimeout(() => active.style.backgroundColor = "", 200);
         }
     }
@@ -483,7 +604,6 @@ window.addEventListener('paste', e => {
             const dt = new DataTransfer();
             dt.items.add(file);
             fileInput.files = dt.files;
-
             active.style.backgroundColor = "#e8f0fe";
             setTimeout(() => active.style.backgroundColor = "", 200);
         }
