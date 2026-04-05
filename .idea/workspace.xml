@@ -4,28 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="db update">
+    <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="...">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/check_weights.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data_annotation.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/debug_notes.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/make_sweet_child.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/migrate_ownership.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/migrate_weights.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/myapp_db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/myapp_db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/riffmaker.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/scan_fretmap.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/logic.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/logic.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/static/school_core/js/app.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/hub.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/hub.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/school_core/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/show_admin_weights.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/sweet_child_authentic.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/temp.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ultimate_cyclic_gym.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/ultimate_guitar_gym.xml" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -226,14 +210,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00079" summary="staticsmith">
-      <option name="closed" value="true" />
-      <created>1767325982924</created>
-      <option name="number" value="00079" />
-      <option name="presentableId" value="LOCAL-00079" />
-      <option name="project" value="LOCAL" />
-      <updated>1767325982925</updated>
     </task>
     <task id="LOCAL-00080" summary="staticsmith">
       <option name="closed" value="true" />
@@ -619,7 +595,15 @@
       <option name="project" value="LOCAL" />
       <updated>1773287894949</updated>
     </task>
-    <option name="localTasksCounter" value="128" />
+    <task id="LOCAL-00128" summary="...">
+      <option name="closed" value="true" />
+      <created>1775265940968</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1775265940968</updated>
+    </task>
+    <option name="localTasksCounter" value="129" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -634,7 +618,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="updated quiz to be random" />
     <MESSAGE value="updated quiz to be reshuffled each answer" />
     <MESSAGE value="updated quiz wint internal logic" />
     <MESSAGE value="removed my app" />
@@ -659,6 +642,7 @@
     <MESSAGE value="staticsmith" />
     <MESSAGE value="fretmap" />
     <MESSAGE value="db update" />
-    <option name="LAST_COMMIT_MESSAGE" value="db update" />
+    <MESSAGE value="..." />
+    <option name="LAST_COMMIT_MESSAGE" value="..." />
   </component>
 </project>

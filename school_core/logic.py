@@ -132,6 +132,8 @@ def handle_course(action, data, request):
     return None
 
 
+# [KEEP AUTH, HUB, AND COURSE LOGIC AS IS...]
+
 # --- NOTE LOGIC ---
 def handle_note(action, data, files, request):
     user_id = request.session.get('user_id')
@@ -154,6 +156,7 @@ def handle_note(action, data, files, request):
         header_text = data.get('header', '').strip()
         body_text = data.get('body', '').strip()
 
+        # Process Single Header Image
         header_final = header_text
         if 'header_image' in files:
             image = files['header_image']
@@ -162,13 +165,14 @@ def handle_note(action, data, files, request):
             saved_path = default_storage.save(filename, ContentFile(image.read()))
             header_final = f"{header_text}|||IMG:/media/{saved_path}"
 
+        # Process MULTIPLE Body Images
         body_final = body_text
-        if 'body_image' in files:
-            img = files['body_image']
+        body_files = files.getlist('body_image')
+        for img in body_files:
             ext = img.name.split('.')[-1]
             filename = f"{uuid.uuid4()}.{ext}"
             saved_path = default_storage.save(filename, ContentFile(img.read()))
-            body_final = f"{body_text}|||IMG:/media/{saved_path}"
+            body_final += f"|||IMG:/media/{saved_path}"
 
         if not header_final: return {'error': 'Question cannot be empty'}
 
@@ -183,9 +187,6 @@ def handle_note(action, data, files, request):
         new_header_text = data.get('header', '').strip()
         new_body_text = data.get('body', '').strip()
 
-        remove_header_img = data.get('remove_header_img') == 'true'
-        remove_body_img = data.get('remove_body_img') == 'true'
-
         current = db_query("SELECT header, body, owner_id FROM school_note WHERE id = %s", [note_id])
         if not current: return {'error': 'Note not found'}
         cur_header, cur_body, owner_id = current[0]
@@ -193,7 +194,8 @@ def handle_note(action, data, files, request):
         if not (is_admin(user_id) or user_id == owner_id):
             return {'error': 'Permission Denied'}
 
-        # Process Header
+        # Process Header (Single)
+        remove_header_img = data.get('remove_header_img') == 'true'
         header_img_part = ""
         if 'header_image' in files:
             image = files['header_image']
@@ -208,20 +210,22 @@ def handle_note(action, data, files, request):
 
         header_final = f"{new_header_text}|||{header_img_part}" if header_img_part else new_header_text
 
-        # Process Body
-        body_img_part = ""
-        if 'body_image' in files:
-            img = files['body_image']
+        # Process Body (Multiple) - Reconstruct from Kept Images + New Images
+        kept_body_images_str = data.get('kept_body_images', '[]')
+        try:
+            kept_body_images = json.loads(kept_body_images_str)
+        except:
+            kept_body_images = []
+
+        body_final = new_body_text
+        for img_path in kept_body_images:
+            body_final += f"|||IMG:{img_path}"
+
+        body_files = files.getlist('body_image')
+        for img in body_files:
             ext = img.name.split('.')[-1]
             saved_path = default_storage.save(f"{uuid.uuid4()}.{ext}", ContentFile(img.read()))
-            body_img_part = f"IMG:/media/{saved_path}"
-        elif not remove_body_img and "IMG:" in cur_body:
-            if "|||" in cur_body:
-                body_img_part = cur_body.split("|||")[1]
-            elif cur_body.startswith("IMG:"):
-                body_img_part = cur_body
-
-        body_final = f"{new_body_text}|||{body_img_part}" if body_img_part else new_body_text
+            body_final += f"|||IMG:/media/{saved_path}"
 
         db_query("UPDATE school_note SET header = %s, body = %s WHERE id = %s", [header_final, body_final, note_id])
 
@@ -269,6 +273,7 @@ def handle_note(action, data, files, request):
     return None
 
 
+# [KEEP QUIZ LOGIC AS IS...]
 # [KEEP AUTH, HUB, COURSE AND NOTE LOGIC AS IS...]
 
 # --- QUIZ LOGIC ---

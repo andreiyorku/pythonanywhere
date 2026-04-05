@@ -13,7 +13,7 @@ let currentUserIsAdmin = false;
 let currentUserId = null;
 
 let pendingHeaderFile = null;
-let pendingBodyFile = null;
+let pendingBodyFiles = [];
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -123,53 +123,74 @@ async function router(viewName) {
     if (viewName === 'quiz') { document.getElementById('quiz-quit-btn').setAttribute('onclick', `router('${quizReturnView}')`); nextQuestion(); }
 }
 
+
 // --- CONTENT HANDLING ---
-function handleFile(file, section) {
-    if (!file || !file.type.startsWith('image/')) return;
-    const preview = document.getElementById(`preview-text-${section}`);
-    if(preview) {
-        preview.innerText = "Selected: " + file.name;
-        preview.style.display = 'block';
+function handleFiles(files, section) {
+    if (!files || files.length === 0) return;
+
+    if (section === 'header') {
+        const file = files[0];
+        if (!file.type.startsWith('image/')) return;
+        pendingHeaderFile = file;
+        const preview = document.getElementById(`preview-text-header`);
+        if(preview) { preview.innerText = "Selected: " + file.name; preview.style.display = 'block'; }
+    } else if (section === 'body') {
+        for (let i = 0; i < files.length; i++) {
+            if (files[i].type.startsWith('image/')) {
+                pendingBodyFiles.push(files[i]);
+            }
+        }
+        const preview = document.getElementById(`preview-text-body`);
+        if(preview) { preview.innerText = pendingBodyFiles.length + " images selected"; preview.style.display = 'block'; }
     }
-    if (section === 'header') pendingHeaderFile = file;
-    if (section === 'body') pendingBodyFile = file;
 }
 
 function parseContent(content) {
-    if (!content) return { text: "", img: null };
-    let text = content;
-    let img = null;
-    if (content.includes("|||")) {
-        const parts = content.split("|||");
-        text = parts[0];
-        img = parts[1];
-    } else if (content.startsWith("IMG:")) {
-        text = "";
-        img = content;
-    }
-    if (img && img.startsWith("IMG:")) img = img.substring(4);
-    else img = null;
-    return { text, img };
+    if (!content) return { text: "", images: [] };
+    const parts = content.split("|||");
+    let text = parts[0].startsWith("IMG:") ? "" : parts[0];
+
+    let images = [];
+    parts.forEach(p => {
+        if (p.startsWith("IMG:")) images.push(p.substring(4));
+    });
+
+    return { text, images };
 }
 
 function renderMedia(content) {
-    const { text, img } = parseContent(content);
+    const { text, images } = parseContent(content);
     let html = "";
     if (text) html += `<div>${text}</div>`;
-    if (img) html += `<img src="${img}" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box;">`;
+    images.forEach(img => {
+        html += `<img src="${img}" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box;">`;
+    });
     return html;
 }
 
-// Replace your existing updateTotalFocus function in app.js
+
+// --- VIEW LOGIC: HUB ---
 function updateTotalFocus() {
     let total = 0;
     document.querySelectorAll('.course-percentage').forEach(inp => {
+
+        // Fix string-appending bug by immediately removing any leading zeros
+        if (inp.value.length > 1 && inp.value.startsWith('0') && !inp.value.includes('.')) {
+            inp.value = parseInt(inp.value, 10);
+        }
+
+        // Prevent an individual course from going above 100% or below 0
+        if (parseFloat(inp.value) > 100) inp.value = 100;
+        if (parseFloat(inp.value) < 0) inp.value = 0;
+
         const val = parseFloat(inp.value) || 0;
         total += val;
 
-        // Save the value to localStorage specific to this user and course
-        const cid = inp.id.replace('course-pct-', '');
-        localStorage.setItem(`focus_pct_${currentUserId}_${cid}`, val);
+        // Save to localStorage so it remembers the settings
+        if (inp.id) {
+            const cid = inp.id.replace('course-pct-', '');
+            localStorage.setItem(`focus_pct_${currentUserId}_${cid}`, val);
+        }
     });
 
     const display = document.getElementById('focus-total-display');
@@ -178,8 +199,6 @@ function updateTotalFocus() {
         display.style.color = total === 100 ? 'green' : 'red';
     }
 }
-
-// Inside your loadCourses() function in app.js, update the percentage input block:
 
 async function loadCourses() {
     const data = await api({ action: 'get_courses' });
@@ -194,14 +213,15 @@ async function loadCourses() {
         clone.querySelector('.course-name').innerText = c.name;
         clone.querySelector('.course-check').onchange = () => toggleCourseSelection(clone.querySelector('.course-check'), c.id);
 
-        // Get the input field
         const pctInput = clone.querySelector('.course-percentage');
         pctInput.id = `course-pct-${c.id}`;
 
-        // NEW: Check for saved percentage in localStorage
+        // Check for saved percentage in localStorage
         const savedPct = localStorage.getItem(`focus_pct_${currentUserId}_${c.id}`);
         if (savedPct !== null) {
             pctInput.value = savedPct;
+        } else {
+            pctInput.value = ""; // Start blank
         }
 
         clone.querySelector('.btn-expand').onclick = () => toggleHubChapters(c.id);
@@ -341,7 +361,7 @@ async function loadNotes() {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.note-card');
 
-        // 1. RENDER VIEW
+        // RENDER VIEW
         const viewMode = clone.querySelector('.note-view');
         viewMode.querySelector('.note-header').innerHTML = renderMedia(n.header);
         viewMode.querySelector('.note-body').innerHTML = renderMedia(n.body);
@@ -350,7 +370,7 @@ async function loadNotes() {
         wSpan.innerText = n.weight;
         if (n.weight !== 10) wSpan.style.fontWeight = 'bold';
 
-        // 2. BUTTONS
+        // BUTTONS
         const btnReset = clone.querySelector('.btn-reset');
         if (n.weight !== 10) btnReset.onclick = () => resetNoteWeight(n.id);
         else btnReset.style.display = 'none';
@@ -391,23 +411,40 @@ function enableEditMode(card, note) {
     const wInput = edit.querySelector('.edit-weight-val');
     wInput.value = note.weight;
 
+    // Header Controls (Single)
     const hControls = edit.querySelector('.edit-header-img-controls');
     hControls.innerHTML = '';
-    if (hData.img) {
+    if (hData.images.length > 0) {
         hControls.innerHTML = `
-            <div style="font-size:0.8em; color: blue;">Current Image: <a href="${hData.img}" target="_blank">View</a></div>
+            <div style="font-size:0.8em; color: blue;">Current Image: <a href="${hData.images[0]}" target="_blank">View</a></div>
             <label style="font-size:0.8em; color: red; cursor:pointer;"><input type="checkbox" class="remove-header-img"> Remove Image</label>
         `;
     }
 
+    // Body Controls (Multiple)
     const bControls = edit.querySelector('.edit-body-img-controls');
-    bControls.innerHTML = '';
-    if (bData.img) {
-        bControls.innerHTML = `
-            <div style="font-size:0.8em; color: blue;">Current Image: <a href="${bData.img}" target="_blank">View</a></div>
-            <label style="font-size:0.8em; color: red; cursor:pointer;"><input type="checkbox" class="remove-body-img"> Remove Image</label>
-        `;
-    }
+    let keptBodyImages = [...bData.images];
+
+    const renderKeptBodyImages = () => {
+        bControls.innerHTML = '';
+        keptBodyImages.forEach((img, idx) => {
+            const div = document.createElement('div');
+            div.style.cssText = "font-size:0.8em; margin-top:3px; display:flex; justify-content:space-between; align-items:center; background:#eee; padding:2px 5px; border-radius:3px;";
+
+            const link = document.createElement('a');
+            link.href = img; link.target = "_blank"; link.innerText = `View Existing Answer Image ${idx + 1}`;
+
+            const removeBtn = document.createElement('span');
+            removeBtn.style.cssText = "color:red; cursor:pointer; font-weight:bold;";
+            removeBtn.innerText = "[X] Delete";
+            removeBtn.onclick = () => { keptBodyImages.splice(idx, 1); renderKeptBodyImages(); };
+
+            div.appendChild(link);
+            div.appendChild(removeBtn);
+            bControls.appendChild(div);
+        });
+    };
+    renderKeptBodyImages();
 
     edit.querySelector('.btn-cancel-edit').onclick = () => {
         view.style.display = 'block';
@@ -422,17 +459,18 @@ function enableEditMode(card, note) {
         formData.append('body', bInput.value);
         formData.append('weight', wInput.value);
 
+        // Header
         const remH = edit.querySelector('.remove-header-img');
         if (remH && remH.checked) formData.append('remove_header_img', 'true');
-
-        const remB = edit.querySelector('.remove-body-img');
-        if (remB && remB.checked) formData.append('remove_body_img', 'true');
-
         const fileH = edit.querySelector('.edit-header-file').files[0];
         if (fileH) formData.append('header_image', fileH);
 
-        const fileB = edit.querySelector('.edit-body-file').files[0];
-        if (fileB) formData.append('body_image', fileB);
+        // Body
+        formData.append('kept_body_images', JSON.stringify(keptBodyImages));
+        const fileBInput = edit.querySelector('.edit-body-file');
+        for (let i = 0; i < fileBInput.files.length; i++) {
+            formData.append('body_image', fileBInput.files[i]);
+        }
 
         const res = await api(formData, true);
         if (res && res.error) alert(res.error);
@@ -451,7 +489,9 @@ async function addNote() {
     formData.append('body', bodyInput);
 
     if (pendingHeaderFile) formData.append('header_image', pendingHeaderFile);
-    if (pendingBodyFile) formData.append('body_image', pendingBodyFile);
+
+    // Append all selected/pasted body files
+    pendingBodyFiles.forEach(f => formData.append('body_image', f));
 
     const res = await api(formData, true);
     if (res && res.error) {
@@ -462,7 +502,7 @@ async function addNote() {
         const ph = document.getElementById('preview-text-header'); if(ph) ph.style.display='none';
         const pb = document.getElementById('preview-text-body'); if(pb) pb.style.display='none';
         pendingHeaderFile = null;
-        pendingBodyFile = null;
+        pendingBodyFiles = [];
         loadNotes();
     }
 }
@@ -496,6 +536,7 @@ async function startQuiz(returnTo = 'hub') {
             }
         });
 
+        // This alerts and stops the quiz if the total overflows
         if (Math.abs(totalPct - 100) > 0.01) {
             return alert(`Total focus must equal exactly 100%. You are currently at ${totalPct}%.`);
         }
@@ -516,7 +557,6 @@ async function nextQuestion() {
     let winner = null;
     const candidates = (quizDeck.length > 1 && lastQuizItemId) ? quizDeck.filter(n => n.id !== lastQuizItemId) : quizDeck;
 
-    // Proportional Roulette Wheel selection based on updated backend math
     let totalWeight = candidates.reduce((sum, n) => sum + n.w, 0);
     let randomVal = Math.random() * totalWeight;
     let runningSum = 0;
@@ -559,7 +599,6 @@ async function handleLocalAnswer(isCorrect) {
 
 // --- GLOBAL PASTE HANDLER ---
 window.addEventListener('paste', e => {
-    // 1. Get the image from the clipboard
     const items = (e.clipboardData || e.originalEvent.clipboardData).items;
     let file = null;
     for (let item of items) {
@@ -568,24 +607,23 @@ window.addEventListener('paste', e => {
             break;
         }
     }
-    // If clipboard contains no image, stop here (let text paste happen normally)
     if (!file) return;
 
-    // 2. Figure out where the user is typing
     const active = document.activeElement;
     if (!active) return;
 
-    // --- CASE A: ADDING NEW NOTE ---
     if (active.id === 'note-header') {
-        handleFile(file, 'header');
-        return;
-    }
-    if (active.id === 'note-body') {
-        handleFile(file, 'body');
+        handleFiles([file], 'header');
         return;
     }
 
-    // --- CASE B: EDITING EXISTING NOTE ---
+    if (active.id === 'note-body') {
+        pendingBodyFiles.push(file);
+        const preview = document.getElementById(`preview-text-body`);
+        if(preview) { preview.innerText = pendingBodyFiles.length + " images selected"; preview.style.display = 'block'; }
+        return;
+    }
+
     if (active.classList.contains('edit-header-text')) {
         const container = active.closest('.note-edit');
         if (container) {
@@ -602,6 +640,7 @@ window.addEventListener('paste', e => {
         if (container) {
             const fileInput = container.querySelector('.edit-body-file');
             const dt = new DataTransfer();
+            for(let i=0; i<fileInput.files.length; i++) dt.items.add(fileInput.files[i]);
             dt.items.add(file);
             fileInput.files = dt.files;
             active.style.backgroundColor = "#e8f0fe";

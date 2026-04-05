@@ -21,7 +21,7 @@
                  style="border: 2px dashed #999; padding: 5px 10px; text-align: center; background: white; cursor:pointer; font-size: 0.9em; width: 150px;">
                 + Add Image
             </div>
-            <input type="file" id="file-input-header" style="display:none;" onchange="handleFile(this.files[0], 'header')">
+            <input type="file" id="file-input-header" style="display:none;" onchange="handleFiles([this.files[0]], 'header')">
         </div>
         <div id="preview-text-header" style="font-size: 0.8em; color: green; display: none;">Image selected</div>
     </div>
@@ -33,11 +33,11 @@
             <div id="drop-area-body"
                  onclick="document.getElementById('file-input-body').click()"
                  style="border: 2px dashed #999; padding: 5px 10px; text-align: center; background: white; cursor:pointer; font-size: 0.9em; width: 150px;">
-                + Add Image
+                + Add Image(s)
             </div>
-            <input type="file" id="file-input-body" style="display:none;" onchange="handleFile(this.files[0], 'body')">
+            <input type="file" id="file-input-body" multiple style="display:none;" onchange="handleFiles(this.files, 'body')">
         </div>
-        <div id="preview-text-body" style="font-size: 0.8em; color: green; display: none;">Image selected</div>
+        <div id="preview-text-body" style="font-size: 0.8em; color: green; display: none;">Images selected</div>
     </div>
 
     <button onclick="addNote()" style="width: 100%; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; font-weight: bold;">Save Note</button>
@@ -73,7 +73,7 @@
 
             <label><b>A:</b> <textarea class="edit-body-text" style="width: 90%"></textarea></label><br>
             <div class="edit-body-img-controls"></div>
-            <input type="file" class="edit-body-file" style="margin-top:5px;">
+            <input type="file" class="edit-body-file" multiple style="margin-top:5px;">
             <hr style="border-top: 1px dotted #ccc;">
 
             <label style="font-size: 0.9em;"><b>Current Weight:</b>
