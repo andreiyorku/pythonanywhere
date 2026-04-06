@@ -1,9 +1,49 @@
 import uuid
 import json
+import subprocess
+import threading
+import os
 from django.db import connection
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.contrib.auth.hashers import make_password, check_password
+
+
+# ==========================================
+# --- GIT AUTO-SYNC ENGINE ---
+# ==========================================
+def _run_git_sync(commit_message):
+    """Background thread to add, commit, and push to GitHub."""
+    try:
+        # Resolves to the root of your git repository
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+        subprocess.run(["git", "add", "."], cwd=repo_root, check=True)
+        subprocess.run(["git", "commit", "-m", f"Auto-Sync: {commit_message}"], cwd=repo_root)
+        subprocess.run(["git", "push"], cwd=repo_root, check=True)
+        print(f"Successfully synced to Git: {commit_message}")
+    except Exception as e:
+        print(f"Git auto-sync failed: {e}")
+
+
+def trigger_git_sync(commit_message):
+    """Spawns a background thread so the user's UI doesn't freeze while Git pushes."""
+    thread = threading.Thread(target=_run_git_sync, args=(commit_message,))
+    thread.start()
+
+
+def _run_git_pull():
+    """Synchronous pull to grab latest changes from GitHub."""
+    try:
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        subprocess.run(["git", "pull"], cwd=repo_root, check=True)
+        return True
+    except Exception as e:
+        print(f"Git pull failed: {e}")
+        return False
+
+
+# ==========================================
 
 
 def db_query(query, params=[]):
@@ -32,7 +72,6 @@ def handle_auth(action, data, request):
             request.session['user_id'] = user_id
             return {'status': 'success', 'username': username}
         return {'error': 'Invalid password'}
-
     elif action == 'register':
         username = data.get('username')
         password = data.get('password')
@@ -43,11 +82,9 @@ def handle_auth(action, data, request):
         new_user = db_query("SELECT id FROM school_user WHERE username = %s", [username])
         request.session['user_id'] = new_user[0][0]
         return {'status': 'success', 'username': username}
-
     elif action == 'logout':
         request.session.flush()
         return {'status': 'logged_out'}
-
     elif action == 'get_current_user':
         user_id = request.session.get('user_id')
         if user_id:
@@ -56,21 +93,26 @@ def handle_auth(action, data, request):
                 username = rows[0][0]
                 return {'id': user_id, 'username': username, 'is_admin': (username == 'admin')}
         return {'id': None, 'username': None, 'is_admin': False}
-
     return None
 
 
-# --- HUB (Courses) ---
+# --- HUB (Courses & Sync) ---
 def handle_hub(action, data, request):
     user_id = request.session.get('user_id')
 
-    if action == 'get_courses':
+    # NEW: Manual Pull Action
+    if action == 'sync_pull':
+        _run_git_pull()
+        return {'status': 'success'}
+
+    elif action == 'get_courses':
         rows = db_query("SELECT id, name, owner_id FROM school_course")
         return {'courses': [{'id': r[0], 'name': r[1], 'owner_id': r[2]} for r in rows]}
 
     elif action == 'add_course':
         if not user_id: return {'error': 'Must be logged in'}
         db_query("INSERT INTO school_course (name, owner_id) VALUES (%s, %s)", [data['name'], user_id])
+        trigger_git_sync(f"Added course: {data['name']}")
         return {'status': 'success'}
 
     elif action == 'edit_course':
@@ -79,15 +121,16 @@ def handle_hub(action, data, request):
         if not course: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == course[0][0]:
             db_query("UPDATE school_course SET name = %s WHERE id = %s", [data['name'], data['course_id']])
+            trigger_git_sync(f"Renamed course ID {data['course_id']} to {data['name']}")
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
 
     elif action == 'delete_course':
         course = db_query("SELECT owner_id FROM school_course WHERE id = %s", [data['course_id']])
         if not course: return {'error': 'Not found'}
-
         if is_admin(user_id) or user_id == course[0][0]:
             db_query("DELETE FROM school_course WHERE id = %s", [data['course_id']])
+            trigger_git_sync(f"Deleted course ID {data['course_id']}")
             return {'status': 'success'}
         return {'error': 'Permission Denied: You do not own this course.'}
 
@@ -108,6 +151,7 @@ def handle_course(action, data, request):
         if not user_id: return {'error': 'Must be logged in'}
         db_query("INSERT INTO school_chapter (course_id, name, chapter_index, owner_id) VALUES (%s, %s, %s, %s)",
                  [data['course_id'], data['name'], data['index'], user_id])
+        trigger_git_sync(f"Added chapter '{data['name']}' to course ID {data['course_id']}")
         return {'status': 'success'}
 
     elif action == 'edit_chapter':
@@ -117,22 +161,21 @@ def handle_course(action, data, request):
         if is_admin(user_id) or user_id == chapter[0][0]:
             db_query("UPDATE school_chapter SET name = %s, chapter_index = %s WHERE id = %s",
                      [data['name'], data['index'], data['chapter_id']])
+            trigger_git_sync(f"Edited chapter ID {data['chapter_id']}")
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
 
     elif action == 'delete_chapter':
         chapter = db_query("SELECT owner_id FROM school_chapter WHERE id = %s", [data['chapter_id']])
         if not chapter: return {'error': 'Not found'}
-
         if is_admin(user_id) or user_id == chapter[0][0]:
             db_query("DELETE FROM school_chapter WHERE id = %s", [data['chapter_id']])
+            trigger_git_sync(f"Deleted chapter ID {data['chapter_id']}")
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
 
     return None
 
-
-# [KEEP AUTH, HUB, AND COURSE LOGIC AS IS...]
 
 # --- NOTE LOGIC ---
 def handle_note(action, data, files, request):
@@ -152,11 +195,9 @@ def handle_note(action, data, files, request):
 
     elif action == 'add_note':
         if not user_id: return {'error': 'Must be logged in'}
-
         header_text = data.get('header', '').strip()
         body_text = data.get('body', '').strip()
 
-        # Process Single Header Image
         header_final = header_text
         if 'header_image' in files:
             image = files['header_image']
@@ -165,7 +206,6 @@ def handle_note(action, data, files, request):
             saved_path = default_storage.save(filename, ContentFile(image.read()))
             header_final = f"{header_text}|||IMG:/media/{saved_path}"
 
-        # Process MULTIPLE Body Images
         body_final = body_text
         body_files = files.getlist('body_image')
         for img in body_files:
@@ -178,11 +218,12 @@ def handle_note(action, data, files, request):
 
         db_query("INSERT INTO school_note (chapter_id, header, body, weight, owner_id) VALUES (%s, %s, %s, 10, %s)",
                  [data['chapter_id'], header_final, body_final, user_id])
+
+        trigger_git_sync(f"Added note to chapter ID {data['chapter_id']}")
         return {'status': 'success'}
 
     elif action == 'edit_note':
         if not user_id: return {'error': 'Must be logged in'}
-
         note_id = data.get('note_id')
         new_header_text = data.get('header', '').strip()
         new_body_text = data.get('body', '').strip()
@@ -194,7 +235,6 @@ def handle_note(action, data, files, request):
         if not (is_admin(user_id) or user_id == owner_id):
             return {'error': 'Permission Denied'}
 
-        # Process Header (Single)
         remove_header_img = data.get('remove_header_img') == 'true'
         header_img_part = ""
         if 'header_image' in files:
@@ -210,7 +250,6 @@ def handle_note(action, data, files, request):
 
         header_final = f"{new_header_text}|||{header_img_part}" if header_img_part else new_header_text
 
-        # Process Body (Multiple) - Reconstruct from Kept Images + New Images
         kept_body_images_str = data.get('kept_body_images', '[]')
         try:
             kept_body_images = json.loads(kept_body_images_str)
@@ -229,7 +268,6 @@ def handle_note(action, data, files, request):
 
         db_query("UPDATE school_note SET header = %s, body = %s WHERE id = %s", [header_final, body_final, note_id])
 
-        # Process Manual Weight Editing
         new_weight = data.get('weight')
         if new_weight is not None:
             try:
@@ -245,6 +283,7 @@ def handle_note(action, data, files, request):
             except ValueError:
                 pass
 
+        trigger_git_sync(f"Edited note ID {note_id}")
         return {'status': 'success'}
 
     elif action == 'delete_note':
@@ -252,12 +291,14 @@ def handle_note(action, data, files, request):
         if not note: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == note[0][0]:
             db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
+            trigger_git_sync(f"Deleted note ID {data['note_id']}")
             return {'status': 'success'}
         return {'error': 'Permission Denied'}
 
     elif action == 'reset_note':
         if not user_id: return {'error': 'Must be logged in'}
         db_query("DELETE FROM school_progress WHERE user_id = %s AND note_id = %s", [user_id, data['note_id']])
+        trigger_git_sync(f"Reset progress for note ID {data['note_id']}")
         return {'status': 'success'}
 
     elif action == 'reset_chapter':
@@ -268,13 +309,11 @@ def handle_note(action, data, files, request):
             AND note_id IN (SELECT id FROM school_note WHERE chapter_id = %s)
         """
         db_query(query, [user_id, data['chapter_id']])
+        trigger_git_sync(f"Reset progress for chapter ID {data['chapter_id']}")
         return {'status': 'success'}
 
     return None
 
-
-# [KEEP QUIZ LOGIC AS IS...]
-# [KEEP AUTH, HUB, COURSE AND NOTE LOGIC AS IS...]
 
 # --- QUIZ LOGIC ---
 def handle_quiz(action, data, request):
@@ -287,7 +326,6 @@ def handle_quiz(action, data, request):
         placeholders = ','.join(['%s'] * len(chapter_ids))
         params = [user_id] + chapter_ids
 
-        # Pull chapter_id and course_id to apply focus percentages
         query = f"""
             SELECT n.id, COALESCE(p.weight, n.weight), n.chapter_id, c.course_id
             FROM school_note n
@@ -297,7 +335,6 @@ def handle_quiz(action, data, request):
         """
         rows = db_query(query, params)
 
-        # Get percentages from frontend
         course_percentages = data.get('course_percentages')
         if isinstance(course_percentages, str):
             try:
@@ -307,24 +344,21 @@ def handle_quiz(action, data, request):
         elif not isinstance(course_percentages, dict):
             course_percentages = {}
 
-        # If no percentages provided (e.g., started from Course view), return raw
         if not course_percentages:
             return {'deck': [{'id': r[0], 'w': float(r[1]), 'chapter_id': r[2]} for r in rows]}
 
-        # 1. Calculate raw weight totals per course
         course_totals = {}
         deck = []
         for r in rows:
             nid = r[0]
             w = float(r[1])
-            cid = str(r[3])  # Ensure string to match JSON keys
+            cid = str(r[3])
 
             if cid not in course_totals: course_totals[cid] = 0.0
             course_totals[cid] += w
 
             deck.append({'id': nid, 'raw_w': w, 'chapter_id': r[2], 'course_id': cid})
 
-        # 2. Apply backend math to force course probabilities
         final_deck = []
         for note in deck:
             cid = note['course_id']
@@ -332,11 +366,9 @@ def handle_quiz(action, data, request):
             target_pct = float(course_percentages.get(cid, 0))
 
             c_total = course_totals[cid]
-            # Formula: Scale the weight so the entire course adds up to target_pct
             multiplier = (target_pct / c_total) if c_total > 0 else 0
             final_w = raw_w * multiplier
 
-            # Skip notes that fall to 0 weight (because course was set to 0%)
             if final_w > 0:
                 final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': note['chapter_id']})
 
@@ -369,6 +401,9 @@ def handle_quiz(action, data, request):
         else:
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
+
+        # NOTE: We do NOT trigger git sync on every single quiz answer to avoid massive spam.
+        # It will sync naturally the next time a note/course is edited.
         return {'status': 'saved'}
 
     return None

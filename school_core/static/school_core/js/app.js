@@ -44,6 +44,13 @@ async function checkLogin() {
         currentUserId = data.id;
         currentUserIsAdmin = data.is_admin;
         updateUserDisplay(data.username);
+
+        // --- Sync with cloud on initial load ---
+        const container = document.getElementById('content-slot');
+        container.innerHTML = '<div style="padding: 20px; font-size: 1.2em; font-weight: bold; color: #004085;">🔄 Syncing latest database and images from cloud... Please wait.</div>';
+        await api({ action: 'sync_pull' });
+        // --------------------------------------------
+
         router('hub');
     } else {
         router('auth');
@@ -174,7 +181,7 @@ function updateTotalFocus() {
     let total = 0;
     document.querySelectorAll('.course-percentage').forEach(inp => {
 
-        // Fix string-appending bug by immediately removing any leading zeros
+        // Remove leading zeros
         if (inp.value.length > 1 && inp.value.startsWith('0') && !inp.value.includes('.')) {
             inp.value = parseInt(inp.value, 10);
         }
