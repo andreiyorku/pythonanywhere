@@ -13,6 +13,7 @@ from django.contrib.auth.hashers import make_password, check_password
 # --- GIT SYNCHRONOUS ENGINE ---
 # ==========================================
 def log_to_server(message):
+    """Forces print statements directly into the PythonAnywhere Error Log instantly."""
     print(message, file=sys.stderr, flush=True)
 
 
@@ -38,15 +39,32 @@ def _run_git_sync(commit_message):
 
 
 def _run_git_pull():
-    """Synchronous pull to grab latest changes from GitHub."""
+    """Synchronous pull to grab latest changes from GitHub, skipping editor prompts."""
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        pull_res = subprocess.run(["git", "pull"], cwd=repo_root, capture_output=True, text=True, check=True)
+
+        # Tell Git not to complain about divergent branches
+        subprocess.run(["git", "config", "pull.rebase", "false"], cwd=repo_root)
+
+        # Run pull and explicitly tell it NOT to open a text editor (--no-edit)
+        pull_res = subprocess.run(["git", "pull", "--no-edit"], cwd=repo_root, capture_output=True, text=True,
+                                  check=True)
+
+        log_to_server("\n========================================")
+        log_to_server("✅ GIT PULL SUCCESS")
+        log_to_server(f"OUTPUT:\n{pull_res.stdout}")
+        log_to_server("========================================\n")
+
         return {'success': True, 'message': pull_res.stdout}
+
     except subprocess.CalledProcessError as e:
-        log_to_server(f"❌ GIT PULL FAILED: {e.stderr}")
+        log_to_server("\n========================================")
+        log_to_server("❌ GIT PULL FAILED")
+        log_to_server(f"ERROR OUTPUT:\n{e.stderr}")
+        log_to_server("========================================\n")
         return {'success': False, 'message': e.stderr}
     except Exception as e:
+        log_to_server(f"\n❌ GIT PULL SYSTEM ERROR: {str(e)}\n")
         return {'success': False, 'message': str(e)}
 
 
@@ -410,6 +428,8 @@ def handle_quiz(action, data, request):
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
 
-        return {'status': 'saved'}
+        # Trigger Git Sync when answering quiz questions
+        git_res = _run_git_sync(f"Quiz answered, updated weight for note ID {note_id}")
+        return {'status': 'saved', 'git': git_res}
 
     return None

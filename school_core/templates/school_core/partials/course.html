@@ -16,14 +16,15 @@
 <template id="chapter-row-template">
     <div style="padding: 5px; border-bottom: 1px solid #eee;">
 
-        <div class="chap-view-mode" style="display: flex; align-items: center;">
-            <label>
+        <div class="chap-view-mode" style="display: flex; align-items: center; flex-wrap: wrap; gap: 5px;">
+            <label style="margin-right: 10px;">
                 <input type="checkbox" class="chap-select">
                 <span class="chap-label"></span>
             </label>
-            <button class="btn-notes" style="margin-left: 10px;">Notes</button>
-            <button class="btn-edit-chap" style="margin-left: 5px; background: #cce5ff; color: #004085; border: 1px solid #b8daff; padding: 2px 6px; cursor: pointer;">Edit</button>
-            <button class="btn-delete" style="background: #ffcccc; color: #cc0000; margin-left: 5px; border: 1px solid #f5c6cb; padding: 2px 6px; cursor: pointer;">Delete</button>
+            <button class="btn-notes">Notes</button>
+            <button class="btn-edit-chap" style="background: #cce5ff; color: #004085; border: 1px solid #b8daff; padding: 2px 6px; cursor: pointer;">Edit</button>
+            <button class="btn-reset-chap" style="background: #ffc107; color: black; border: 1px solid #d39e00; padding: 2px 6px; cursor: pointer;">Reset Progress</button>
+            <button class="btn-delete" style="background: #ffcccc; color: #cc0000; border: 1px solid #f5c6cb; padding: 2px 6px; cursor: pointer;">Delete</button>
         </div>
 
         <div class="chap-edit-mode" style="display: none; padding: 10px; background: #fff8e1; border: 1px solid #ffeeba; margin-top: 5px;">
