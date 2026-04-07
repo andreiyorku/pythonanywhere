@@ -36,11 +36,13 @@ def _run_git_pull():
     """Synchronous pull to grab latest changes from GitHub."""
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        subprocess.run(["git", "pull"], cwd=repo_root, check=True)
-        return True
+        subprocess.run(["git", "pull"], cwd=repo_root, check=True, capture_output=True, text=True)
+        return {'success': True}
+    except subprocess.CalledProcessError as e:
+        print(f"Git pull failed: {e.stderr}")
+        return {'success': False, 'error': e.stderr}
     except Exception as e:
-        print(f"Git pull failed: {e}")
-        return False
+        return {'success': False, 'error': str(e)}
 
 
 # ==========================================
@@ -100,10 +102,11 @@ def handle_auth(action, data, request):
 def handle_hub(action, data, request):
     user_id = request.session.get('user_id')
 
-    # NEW: Manual Pull Action
     if action == 'sync_pull':
-        _run_git_pull()
-        return {'status': 'success'}
+        result = _run_git_pull()
+        if result['success']:
+            return {'status': 'success'}
+        return {'error': result['error']}
 
     elif action == 'get_courses':
         rows = db_query("SELECT id, name, owner_id FROM school_course")
@@ -402,8 +405,6 @@ def handle_quiz(action, data, request):
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
 
-        # NOTE: We do NOT trigger git sync on every single quiz answer to avoid massive spam.
-        # It will sync naturally the next time a note/course is edited.
         return {'status': 'saved'}
 
     return None

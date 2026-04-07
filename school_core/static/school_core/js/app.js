@@ -15,6 +15,31 @@ let currentUserId = null;
 let pendingHeaderFile = null;
 let pendingBodyFiles = [];
 
+// --- NOTIFICATION SYSTEM ---
+function showToast(message, type = "info") {
+    const toast = document.createElement('div');
+    toast.innerText = message;
+    toast.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+        padding: 15px 25px; border-radius: 5px; color: white; font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s;
+    `;
+
+    if (type === "success") toast.style.background = "#28a745";
+    else if (type === "error") toast.style.background = "#dc3545";
+    else toast.style.background = "#17a2b8";
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => toast.style.opacity = "1", 10);
+
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => document.body.removeChild(toast), 300);
+    }, 4000);
+}
+
+
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
     let options = { method: 'POST' };
@@ -48,7 +73,14 @@ async function checkLogin() {
         // --- Sync with cloud on initial load ---
         const container = document.getElementById('content-slot');
         container.innerHTML = '<div style="padding: 20px; font-size: 1.2em; font-weight: bold; color: #004085;">🔄 Syncing latest database and images from cloud... Please wait.</div>';
-        await api({ action: 'sync_pull' });
+
+        const pullRes = await api({ action: 'sync_pull' });
+        if (pullRes && pullRes.error) {
+            showToast("⚠️ Cloud Pull Failed. Check server logs.", "error");
+            console.error(pullRes.error);
+        } else {
+            showToast("✅ Cloud Sync Complete!", "success");
+        }
         // --------------------------------------------
 
         router('hub');
@@ -181,19 +213,16 @@ function updateTotalFocus() {
     let total = 0;
     document.querySelectorAll('.course-percentage').forEach(inp => {
 
-        // Remove leading zeros
         if (inp.value.length > 1 && inp.value.startsWith('0') && !inp.value.includes('.')) {
             inp.value = parseInt(inp.value, 10);
         }
 
-        // Prevent an individual course from going above 100% or below 0
         if (parseFloat(inp.value) > 100) inp.value = 100;
         if (parseFloat(inp.value) < 0) inp.value = 0;
 
         const val = parseFloat(inp.value) || 0;
         total += val;
 
-        // Save to localStorage so it remembers the settings
         if (inp.id) {
             const cid = inp.id.replace('course-pct-', '');
             localStorage.setItem(`focus_pct_${currentUserId}_${cid}`, val);
@@ -223,12 +252,11 @@ async function loadCourses() {
         const pctInput = clone.querySelector('.course-percentage');
         pctInput.id = `course-pct-${c.id}`;
 
-        // Check for saved percentage in localStorage
         const savedPct = localStorage.getItem(`focus_pct_${currentUserId}_${c.id}`);
         if (savedPct !== null) {
             pctInput.value = savedPct;
         } else {
-            pctInput.value = ""; // Start blank
+            pctInput.value = "";
         }
 
         clone.querySelector('.btn-expand').onclick = () => toggleHubChapters(c.id);
@@ -252,13 +280,14 @@ async function loadCourses() {
     setTimeout(updateTotalFocus, 100);
 }
 
-async function addCourse() { const n = document.getElementById('new-course-name').value; if(n) { await api({ action: 'add_course', name: n }); loadCourses(); } }
-async function deleteCourse(id) { if(confirm("Delete Course?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); } }
+async function addCourse() { const n = document.getElementById('new-course-name').value; if(n) { await api({ action: 'add_course', name: n }); loadCourses(); showToast("☁️ Course added! Pushing to GitHub...", "info"); } }
+async function deleteCourse(id) { if(confirm("Delete Course?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); showToast("☁️ Course deleted! Pushing to GitHub...", "info");} }
 async function renameCourse(id, oldName) {
     const newName = prompt("Rename Course:", oldName);
     if(newName && newName !== oldName) {
         await api({ action: 'edit_course', course_id: id, name: newName });
         loadCourses();
+        showToast("☁️ Course renamed! Pushing to GitHub...", "info");
     }
 }
 
@@ -317,7 +346,6 @@ async function loadChapters() {
         if (currentUserIsAdmin || c.owner_id === currentUserId) {
             btnDelete.onclick = () => deleteChapter(c.id);
 
-            // Activate Inline Edit Mode
             btnEditChap.onclick = () => {
                 viewMode.style.display = 'none';
                 editMode.style.display = 'block';
@@ -325,13 +353,11 @@ async function loadChapters() {
                 editMode.querySelector('.edit-chap-index').value = c.index;
             };
 
-            // Cancel Edit
             editMode.querySelector('.btn-cancel-chap').onclick = () => {
                 viewMode.style.display = 'flex';
                 editMode.style.display = 'none';
             };
 
-            // Save Edit (Name & Index)
             editMode.querySelector('.btn-save-chap').onclick = async () => {
                 const newName = editMode.querySelector('.edit-chap-name').value;
                 const newIndex = editMode.querySelector('.edit-chap-index').value;
@@ -339,6 +365,7 @@ async function loadChapters() {
 
                 await api({ action: 'edit_chapter', chapter_id: c.id, name: newName, index: newIndex });
                 loadChapters();
+                showToast("☁️ Chapter updated! Pushing to GitHub...", "info");
             };
 
         } else {
@@ -350,8 +377,8 @@ async function loadChapters() {
     });
 }
 
-async function addChapter() { const n = document.getElementById('new-chap-name').value; const i = document.getElementById('new-chap-index').value; await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i }); loadChapters(); }
-async function deleteChapter(id) { if(confirm("Delete Chapter?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); } }
+async function addChapter() { const n = document.getElementById('new-chap-name').value; const i = document.getElementById('new-chap-index').value; await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i }); loadChapters(); showToast("☁️ Chapter added! Pushing to GitHub...", "info"); }
+async function deleteChapter(id) { if(confirm("Delete Chapter?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); showToast("☁️ Chapter deleted! Pushing to GitHub...", "info"); } }
 
 
 // --- VIEW LOGIC: CHAPTER ---
@@ -368,7 +395,6 @@ async function loadNotes() {
         const clone = template.content.cloneNode(true);
         const card = clone.querySelector('.note-card');
 
-        // RENDER VIEW
         const viewMode = clone.querySelector('.note-view');
         viewMode.querySelector('.note-header').innerHTML = renderMedia(n.header);
         viewMode.querySelector('.note-body').innerHTML = renderMedia(n.body);
@@ -377,7 +403,6 @@ async function loadNotes() {
         wSpan.innerText = n.weight;
         if (n.weight !== 10) wSpan.style.fontWeight = 'bold';
 
-        // BUTTONS
         const btnReset = clone.querySelector('.btn-reset');
         if (n.weight !== 10) btnReset.onclick = () => resetNoteWeight(n.id);
         else btnReset.style.display = 'none';
@@ -398,7 +423,6 @@ async function loadNotes() {
     });
 }
 
-// --- EDIT MODE LOGIC ---
 function enableEditMode(card, note) {
     const view = card.querySelector('.note-view');
     const edit = card.querySelector('.note-edit');
@@ -418,7 +442,6 @@ function enableEditMode(card, note) {
     const wInput = edit.querySelector('.edit-weight-val');
     wInput.value = note.weight;
 
-    // Header Controls (Single)
     const hControls = edit.querySelector('.edit-header-img-controls');
     hControls.innerHTML = '';
     if (hData.images.length > 0) {
@@ -428,7 +451,6 @@ function enableEditMode(card, note) {
         `;
     }
 
-    // Body Controls (Multiple)
     const bControls = edit.querySelector('.edit-body-img-controls');
     let keptBodyImages = [...bData.images];
 
@@ -466,13 +488,11 @@ function enableEditMode(card, note) {
         formData.append('body', bInput.value);
         formData.append('weight', wInput.value);
 
-        // Header
         const remH = edit.querySelector('.remove-header-img');
         if (remH && remH.checked) formData.append('remove_header_img', 'true');
         const fileH = edit.querySelector('.edit-header-file').files[0];
         if (fileH) formData.append('header_image', fileH);
 
-        // Body
         formData.append('kept_body_images', JSON.stringify(keptBodyImages));
         const fileBInput = edit.querySelector('.edit-body-file');
         for (let i = 0; i < fileBInput.files.length; i++) {
@@ -481,7 +501,10 @@ function enableEditMode(card, note) {
 
         const res = await api(formData, true);
         if (res && res.error) alert(res.error);
-        else loadNotes();
+        else {
+            loadNotes();
+            showToast("☁️ Note updated! Pushing to GitHub...", "info");
+        }
     };
 }
 
@@ -496,8 +519,6 @@ async function addNote() {
     formData.append('body', bodyInput);
 
     if (pendingHeaderFile) formData.append('header_image', pendingHeaderFile);
-
-    // Append all selected/pasted body files
     pendingBodyFiles.forEach(f => formData.append('body_image', f));
 
     const res = await api(formData, true);
@@ -511,10 +532,11 @@ async function addNote() {
         pendingHeaderFile = null;
         pendingBodyFiles = [];
         loadNotes();
+        showToast("☁️ Note saved! Pushing to GitHub in background...", "info");
     }
 }
 
-async function deleteNote(id) { if(confirm("Delete Note?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); } }
+async function deleteNote(id) { if(confirm("Delete Note?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); showToast("☁️ Note deleted! Pushing to GitHub...", "info"); } }
 
 
 // --- QUIZ ENGINE ---
@@ -543,7 +565,6 @@ async function startQuiz(returnTo = 'hub') {
             }
         });
 
-        // This alerts and stops the quiz if the total overflows
         if (Math.abs(totalPct - 100) > 0.01) {
             return alert(`Total focus must equal exactly 100%. You are currently at ${totalPct}%.`);
         }
@@ -656,7 +677,7 @@ window.addEventListener('paste', e => {
     }
 });
 
-async function resetNoteWeight(noteId) { await api({ action: 'reset_note', note_id: noteId }); loadNotes(); }
-async function resetChapterWeights() { if (confirm("Reset ALL progress for this chapter?")) { await api({ action: 'reset_chapter', chapter_id: currentChapterId }); loadNotes(); } }
+async function resetNoteWeight(noteId) { await api({ action: 'reset_note', note_id: noteId }); loadNotes(); showToast("☁️ Progress reset! Pushing to GitHub...", "info"); }
+async function resetChapterWeights() { if (confirm("Reset ALL progress for this chapter?")) { await api({ action: 'reset_chapter', chapter_id: currentChapterId }); loadNotes(); showToast("☁️ Progress reset! Pushing to GitHub...", "info"); } }
 
 window.onload = function() { checkLogin(); };
