@@ -1,5 +1,10 @@
-<button onclick="router('hub')"><< Back</button>
-<h2 id="course-title">Course Name</h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <div>
+        <button onclick="router('hub')"><< Back</button>
+        <h2 id="course-title" style="display: inline-block; margin-left: 10px; margin-bottom: 0;">Course Name</h2>
+    </div>
+    <button id="btn-top-reset-course" onclick="resetCourseWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00; padding: 5px 10px; cursor: pointer; border-radius: 4px; display: none; font-weight: bold;">⚠ Reset Entire Course</button>
+</div>
 
 <div style="border: 1px solid black; padding: 10px;">
     <h3>Add Chapter</h3>

@@ -32,14 +32,13 @@ def api_handler(request):
     if action in ['login', 'register', 'logout', 'get_current_user']:
         response_data = logic.handle_auth(action, data, request)
 
-    # Note: 'sync_pull' is included here to allow the initial auto-pull
     elif action in ['get_courses', 'add_course', 'delete_course', 'edit_course', 'sync_pull']:
         response_data = logic.handle_hub(action, data, request)
 
     elif action in ['get_chapters', 'add_chapter', 'delete_chapter', 'edit_chapter']:
         response_data = logic.handle_course(action, data, request)
 
-    elif action in ['get_notes', 'add_note', 'delete_note', 'reset_note', 'reset_chapter', 'edit_note']:
+    elif action in ['get_notes', 'add_note', 'delete_note', 'reset_note', 'reset_chapter', 'reset_course', 'edit_note']:
         response_data = logic.handle_note(action, data, request.FILES, request)
 
     elif action in ['init_quiz', 'get_content', 'submit_answer']:

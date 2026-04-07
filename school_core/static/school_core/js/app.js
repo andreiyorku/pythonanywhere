@@ -1,6 +1,7 @@
 // --- STATE MANAGEMENT ---
 let currentCourseId = null;
 let currentCourseName = "";
+let currentCourseOwner = null;
 let currentChapterId = null;
 let currentChapterName = "";
 let quizQueue = [];
@@ -164,7 +165,19 @@ async function router(viewName) {
 
     if (viewName === 'auth') return;
     if (viewName === 'hub') loadCourses();
-    if (viewName === 'course') { if(currentCourseId) { document.getElementById('course-title').innerText = currentCourseName; loadChapters(); } }
+
+    if (viewName === 'course') {
+        if(currentCourseId) {
+            document.getElementById('course-title').innerText = currentCourseName;
+            const resetBtn = document.getElementById('btn-top-reset-course');
+            if (resetBtn) {
+                if (currentUserIsAdmin || currentCourseOwner === currentUserId) resetBtn.style.display = 'block';
+                else resetBtn.style.display = 'none';
+            }
+            loadChapters();
+        }
+    }
+
     if (viewName === 'chapter') { if(currentChapterId) { document.getElementById('chapter-title').innerText = currentChapterName; loadNotes(); } }
     if (viewName === 'quiz') { document.getElementById('quiz-quit-btn').setAttribute('onclick', `router('${quizReturnView}')`); nextQuestion(); }
 }
@@ -222,11 +235,9 @@ function saveCourseSelection(courseId, isChecked) {
     localStorage.setItem(`course_selected_${currentUserId}_${courseId}`, isChecked);
 }
 
-// Global helper for inline chapters to maintain two-way course/chapter sync
 window.handleChapterCheck = function(courseId, chapCheckbox) {
     saveChapterSelection(chapCheckbox.value, chapCheckbox.checked);
 
-    // If any chapter is checked, check the parent Course automatically
     const courseCb = document.getElementById(`course-check-${courseId}`);
     const allChaps = document.querySelectorAll(`.course-chap-${courseId}`);
     const anyChecked = Array.from(allChaps).some(c => c.checked);
@@ -236,7 +247,6 @@ window.handleChapterCheck = function(courseId, chapCheckbox) {
         saveCourseSelection(courseId, anyChecked);
     }
 }
-
 
 // --- VIEW LOGIC: HUB ---
 function updateTotalFocus() {
@@ -263,7 +273,6 @@ function updateTotalFocus() {
     }
 }
 
-// Background populator so all chapters are always in memory for startQuiz()
 async function populateChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
     if (container.innerHTML === '') {
@@ -273,7 +282,6 @@ async function populateChapters(courseId) {
             data.chapters.forEach(c => {
                 const el = document.createElement('div');
 
-                // Smart Default: If no saved chapter state, inherit the Course's state
                 let savedState = localStorage.getItem(`chapter_selected_${currentUserId}_${c.id}`);
                 const courseCb = document.getElementById(`course-check-${courseId}`);
                 let isChecked = false;
@@ -303,7 +311,6 @@ async function loadCourses() {
         const clone = template.content.cloneNode(true);
         clone.querySelector('.course-name').innerText = c.name;
 
-        // Restore Course Checkbox State
         const courseCb = clone.querySelector('.course-check');
         courseCb.id = `course-check-${c.id}`;
         courseCb.checked = localStorage.getItem(`course_selected_${currentUserId}_${c.id}`) === 'true';
@@ -319,17 +326,20 @@ async function loadCourses() {
         else pctInput.value = "";
 
         clone.querySelector('.btn-expand').onclick = () => toggleHubChapters(c.id);
-        clone.querySelector('.btn-open').onclick = () => openCourse(c.id, c.name);
+        clone.querySelector('.btn-open').onclick = () => openCourse(c.id, c.name, c.owner_id);
 
         const btnRename = clone.querySelector('.btn-rename');
         const btnDelete = clone.querySelector('.btn-delete');
+        const btnResetCourse = clone.querySelector('.btn-reset-course');
 
         if (currentUserIsAdmin || c.owner_id === currentUserId) {
             btnRename.onclick = () => renameCourse(c.id, c.name);
             btnDelete.onclick = () => deleteCourse(c.id);
+            btnResetCourse.onclick = () => resetCourseWeights(c.id);
         } else {
             btnRename.style.display = 'none';
             btnDelete.style.display = 'none';
+            btnResetCourse.style.display = 'none';
         }
 
         const chapContainer = clone.querySelector('.hub-chapters-container');
@@ -340,8 +350,6 @@ async function loadCourses() {
         }
 
         list.appendChild(clone);
-
-        // Silently fetch all chapters for this course in the background
         populateChapters(c.id);
     });
 
@@ -375,11 +383,21 @@ async function renameCourse(id, oldName) {
     }
 }
 
-async function toggleHubChapters(courseId) {
+async function resetCourseWeights(passedCourseId = null) {
+    const cid = passedCourseId || currentCourseId;
+    if (!cid) return;
+    if (confirm("Reset ALL progress for EVERY chapter in this course? This cannot be undone.")) {
+        showToast("☁️ Resetting course and pushing to GitHub...", "info");
+        const res = await api({ action: 'reset_course', course_id: cid });
+        handleGitResponse(res);
+    }
+}
+
+async function toggleHubChapters(courseId, forceOpen = false) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
     if (container.innerHTML === '') await populateChapters(courseId);
 
-    if (container.style.display === 'none') {
+    if (container.style.display === 'none' || forceOpen) {
         container.style.display = 'block';
     } else {
         container.style.display = 'none';
@@ -402,7 +420,12 @@ async function toggleCourseSelection(masterCheckbox, courseId) {
 
 
 // --- VIEW LOGIC: COURSE ---
-async function openCourse(id, name) { currentCourseId = id; currentCourseName = name; router('course'); }
+async function openCourse(id, name, ownerId) {
+    currentCourseId = id;
+    currentCourseName = name;
+    currentCourseOwner = ownerId;
+    router('course');
+}
 
 async function loadChapters() {
     const data = await api({ action: 'get_chapters', course_id: currentCourseId });
@@ -419,7 +442,6 @@ async function loadChapters() {
 
         clone.querySelector('.chap-label').innerText = `Index ${c.index}: ${c.name}`;
 
-        // Restore Chapter state in Course View
         const chapSelectCb = clone.querySelector('.chap-select');
         chapSelectCb.value = c.id;
 
@@ -674,8 +696,6 @@ async function resetChapterWeights(passedChapterId = null) {
         showToast("☁️ Resetting chapter and pushing to GitHub...", "info");
         const res = await api({ action: 'reset_chapter', chapter_id: cid });
         handleGitResponse(res);
-
-        // Refresh DOM depending on view
         if (document.getElementById('notes-list')) loadNotes();
     }
 }

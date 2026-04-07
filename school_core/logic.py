@@ -338,6 +338,26 @@ def handle_note(action, data, files, request):
         git_res = _run_git_sync(f"Reset progress for chapter ID {data['chapter_id']}")
         return {'status': 'success', 'git': git_res}
 
+    elif action == 'reset_course':
+        if not user_id: return {'error': 'Must be logged in'}
+        course = db_query("SELECT owner_id FROM school_course WHERE id = %s", [data['course_id']])
+        if not course: return {'error': 'Course not found'}
+
+        if is_admin(user_id) or user_id == course[0][0]:
+            query = """
+                DELETE FROM school_progress 
+                WHERE user_id = %s 
+                AND note_id IN (
+                    SELECT n.id FROM school_note n 
+                    JOIN school_chapter c ON n.chapter_id = c.id 
+                    WHERE c.course_id = %s
+                )
+            """
+            db_query(query, [user_id, data['course_id']])
+            git_res = _run_git_sync(f"Reset progress for ENTIRE course ID {data['course_id']}")
+            return {'status': 'success', 'git': git_res}
+        return {'error': 'Permission Denied'}
+
     return None
 
 
@@ -428,7 +448,6 @@ def handle_quiz(action, data, request):
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
 
-        # Trigger Git Sync when answering quiz questions
         git_res = _run_git_sync(f"Quiz answered, updated weight for note ID {note_id}")
         return {'status': 'saved', 'git': git_res}
 
