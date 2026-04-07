@@ -30,13 +30,22 @@ function showToast(message, type = "info") {
     else toast.style.background = "#17a2b8";
 
     document.body.appendChild(toast);
-
     setTimeout(() => toast.style.opacity = "1", 10);
-
     setTimeout(() => {
         toast.style.opacity = "0";
         setTimeout(() => document.body.removeChild(toast), 300);
     }, 4000);
+}
+
+function handleGitResponse(res) {
+    if (res && res.git) {
+        if (res.git.success) {
+            showToast("✅ Successfully synced to GitHub!", "success");
+        } else {
+            console.error("Git Sync Error:", res.git.message);
+            showToast("❌ Saved locally, but Git Sync failed.", "error");
+        }
+    }
 }
 
 
@@ -70,7 +79,6 @@ async function checkLogin() {
         currentUserIsAdmin = data.is_admin;
         updateUserDisplay(data.username);
 
-        // --- Sync with cloud on initial load ---
         const container = document.getElementById('content-slot');
         container.innerHTML = '<div style="padding: 20px; font-size: 1.2em; font-weight: bold; color: #004085;">🔄 Syncing latest database and images from cloud... Please wait.</div>';
 
@@ -81,7 +89,6 @@ async function checkLogin() {
         } else {
             showToast("✅ Cloud Sync Complete!", "success");
         }
-        // --------------------------------------------
 
         router('hub');
     } else {
@@ -280,14 +287,30 @@ async function loadCourses() {
     setTimeout(updateTotalFocus, 100);
 }
 
-async function addCourse() { const n = document.getElementById('new-course-name').value; if(n) { await api({ action: 'add_course', name: n }); loadCourses(); showToast("☁️ Course added! Pushing to GitHub...", "info"); } }
-async function deleteCourse(id) { if(confirm("Delete Course?")) { await api({ action: 'delete_course', course_id: id }); loadCourses(); showToast("☁️ Course deleted! Pushing to GitHub...", "info");} }
+async function addCourse() {
+    const n = document.getElementById('new-course-name').value;
+    if(n) {
+        showToast("☁️ Saving and pushing to GitHub...", "info");
+        const res = await api({ action: 'add_course', name: n });
+        handleGitResponse(res);
+        loadCourses();
+    }
+}
+async function deleteCourse(id) {
+    if(confirm("Delete Course?")) {
+        showToast("☁️ Deleting and pushing to GitHub...", "info");
+        const res = await api({ action: 'delete_course', course_id: id });
+        handleGitResponse(res);
+        loadCourses();
+    }
+}
 async function renameCourse(id, oldName) {
     const newName = prompt("Rename Course:", oldName);
     if(newName && newName !== oldName) {
-        await api({ action: 'edit_course', course_id: id, name: newName });
+        showToast("☁️ Renaming and pushing to GitHub...", "info");
+        const res = await api({ action: 'edit_course', course_id: id, name: newName });
+        handleGitResponse(res);
         loadCourses();
-        showToast("☁️ Course renamed! Pushing to GitHub...", "info");
     }
 }
 
@@ -363,9 +386,10 @@ async function loadChapters() {
                 const newIndex = editMode.querySelector('.edit-chap-index').value;
                 if (!newName || !newIndex) return alert("Please fill out both Name and Index.");
 
-                await api({ action: 'edit_chapter', chapter_id: c.id, name: newName, index: newIndex });
+                showToast("☁️ Updating chapter and pushing to GitHub...", "info");
+                const res = await api({ action: 'edit_chapter', chapter_id: c.id, name: newName, index: newIndex });
+                handleGitResponse(res);
                 loadChapters();
-                showToast("☁️ Chapter updated! Pushing to GitHub...", "info");
             };
 
         } else {
@@ -377,8 +401,23 @@ async function loadChapters() {
     });
 }
 
-async function addChapter() { const n = document.getElementById('new-chap-name').value; const i = document.getElementById('new-chap-index').value; await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i }); loadChapters(); showToast("☁️ Chapter added! Pushing to GitHub...", "info"); }
-async function deleteChapter(id) { if(confirm("Delete Chapter?")) { await api({ action: 'delete_chapter', chapter_id: id }); loadChapters(); showToast("☁️ Chapter deleted! Pushing to GitHub...", "info"); } }
+async function addChapter() {
+    const n = document.getElementById('new-chap-name').value;
+    const i = document.getElementById('new-chap-index').value;
+    showToast("☁️ Saving chapter and pushing to GitHub...", "info");
+    const res = await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i });
+    handleGitResponse(res);
+    loadChapters();
+}
+
+async function deleteChapter(id) {
+    if(confirm("Delete Chapter?")) {
+        showToast("☁️ Deleting chapter and pushing to GitHub...", "info");
+        const res = await api({ action: 'delete_chapter', chapter_id: id });
+        handleGitResponse(res);
+        loadChapters();
+    }
+}
 
 
 // --- VIEW LOGIC: CHAPTER ---
@@ -499,11 +538,12 @@ function enableEditMode(card, note) {
             formData.append('body_image', fileBInput.files[i]);
         }
 
+        showToast("☁️ Saving edits and pushing to GitHub...", "info");
         const res = await api(formData, true);
         if (res && res.error) alert(res.error);
         else {
+            handleGitResponse(res);
             loadNotes();
-            showToast("☁️ Note updated! Pushing to GitHub...", "info");
         }
     };
 }
@@ -521,7 +561,9 @@ async function addNote() {
     if (pendingHeaderFile) formData.append('header_image', pendingHeaderFile);
     pendingBodyFiles.forEach(f => formData.append('body_image', f));
 
+    showToast("☁️ Saving note and pushing to GitHub...", "info");
     const res = await api(formData, true);
+
     if (res && res.error) {
         alert(res.error);
     } else {
@@ -531,12 +573,35 @@ async function addNote() {
         const pb = document.getElementById('preview-text-body'); if(pb) pb.style.display='none';
         pendingHeaderFile = null;
         pendingBodyFiles = [];
+        handleGitResponse(res);
         loadNotes();
-        showToast("☁️ Note saved! Pushing to GitHub in background...", "info");
     }
 }
 
-async function deleteNote(id) { if(confirm("Delete Note?")) { await api({ action: 'delete_note', note_id: id }); loadNotes(); showToast("☁️ Note deleted! Pushing to GitHub...", "info"); } }
+async function deleteNote(id) {
+    if(confirm("Delete Note?")) {
+        showToast("☁️ Deleting note and pushing to GitHub...", "info");
+        const res = await api({ action: 'delete_note', note_id: id });
+        handleGitResponse(res);
+        loadNotes();
+    }
+}
+
+async function resetNoteWeight(noteId) {
+    showToast("☁️ Resetting note and pushing to GitHub...", "info");
+    const res = await api({ action: 'reset_note', note_id: noteId });
+    handleGitResponse(res);
+    loadNotes();
+}
+
+async function resetChapterWeights() {
+    if (confirm("Reset ALL progress for this chapter?")) {
+        showToast("☁️ Resetting chapter and pushing to GitHub...", "info");
+        const res = await api({ action: 'reset_chapter', chapter_id: currentChapterId });
+        handleGitResponse(res);
+        loadNotes();
+    }
+}
 
 
 // --- QUIZ ENGINE ---
@@ -676,8 +741,5 @@ window.addEventListener('paste', e => {
         }
     }
 });
-
-async function resetNoteWeight(noteId) { await api({ action: 'reset_note', note_id: noteId }); loadNotes(); showToast("☁️ Progress reset! Pushing to GitHub...", "info"); }
-async function resetChapterWeights() { if (confirm("Reset ALL progress for this chapter?")) { await api({ action: 'reset_chapter', chapter_id: currentChapterId }); loadNotes(); showToast("☁️ Progress reset! Pushing to GitHub...", "info"); } }
 
 window.onload = function() { checkLogin(); };

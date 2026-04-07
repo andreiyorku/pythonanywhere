@@ -1,7 +1,6 @@
 import uuid
 import json
 import subprocess
-import threading
 import os
 import sys
 from django.db import connection
@@ -11,72 +10,44 @@ from django.contrib.auth.hashers import make_password, check_password
 
 
 # ==========================================
-# --- GIT AUTO-SYNC ENGINE ---
+# --- GIT SYNCHRONOUS ENGINE ---
 # ==========================================
-
 def log_to_server(message):
-    """Forces print statements directly into the PythonAnywhere Error Log instantly."""
     print(message, file=sys.stderr, flush=True)
 
 
 def _run_git_sync(commit_message):
-    """Background thread to add, commit, and push to GitHub."""
+    """Runs Git synchronously so PythonAnywhere doesn't kill the thread."""
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-        # 1. Git Add
-        add_res = subprocess.run(["git", "add", "."], cwd=repo_root, capture_output=True, text=True)
-
-        # 2. Git Commit
-        commit_res = subprocess.run(["git", "commit", "-m", f"Auto-Sync: {commit_message}"], cwd=repo_root,
-                                    capture_output=True, text=True)
-
-        # 3. Git Push
+        subprocess.run(["git", "add", "."], cwd=repo_root, capture_output=True, text=True)
+        subprocess.run(["git", "commit", "-m", f"Auto-Sync: {commit_message}"], cwd=repo_root, capture_output=True,
+                       text=True)
         push_res = subprocess.run(["git", "push"], cwd=repo_root, capture_output=True, text=True, check=True)
 
-        log_to_server("\n========================================")
         log_to_server(f"✅ GIT PUSH SUCCESS: {commit_message}")
-        log_to_server(f"OUTPUT:\n{push_res.stdout}{push_res.stderr}")
-        log_to_server("========================================\n")
+        return {'success': True, 'message': 'Successfully synced'}
 
     except subprocess.CalledProcessError as e:
-        log_to_server("\n========================================")
-        log_to_server(f"❌ GIT PUSH FAILED: {commit_message}")
-        log_to_server(f"ERROR OUTPUT:\n{e.stderr}")
-        log_to_server("========================================\n")
+        log_to_server(f"❌ GIT PUSH FAILED: {e.stderr}")
+        return {'success': False, 'message': e.stderr}
     except Exception as e:
-        log_to_server(f"\n❌ GIT PUSH SYSTEM ERROR: {str(e)}\n")
-
-
-def trigger_git_sync(commit_message):
-    """Spawns a background thread so the user's UI doesn't freeze while Git pushes."""
-    thread = threading.Thread(target=_run_git_sync, args=(commit_message,))
-    thread.start()
+        log_to_server(f"❌ GIT PUSH SYSTEM ERROR: {str(e)}")
+        return {'success': False, 'message': str(e)}
 
 
 def _run_git_pull():
     """Synchronous pull to grab latest changes from GitHub."""
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-
         pull_res = subprocess.run(["git", "pull"], cwd=repo_root, capture_output=True, text=True, check=True)
-
-        log_to_server("\n========================================")
-        log_to_server("✅ GIT PULL SUCCESS")
-        log_to_server(f"OUTPUT:\n{pull_res.stdout}")
-        log_to_server("========================================\n")
-
-        return {'success': True}
-
+        return {'success': True, 'message': pull_res.stdout}
     except subprocess.CalledProcessError as e:
-        log_to_server("\n========================================")
-        log_to_server("❌ GIT PULL FAILED")
-        log_to_server(f"ERROR OUTPUT:\n{e.stderr}")
-        log_to_server("========================================\n")
-        return {'success': False, 'error': e.stderr}
+        log_to_server(f"❌ GIT PULL FAILED: {e.stderr}")
+        return {'success': False, 'message': e.stderr}
     except Exception as e:
-        log_to_server(f"\n❌ GIT PULL SYSTEM ERROR: {str(e)}\n")
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'message': str(e)}
 
 
 # ==========================================
@@ -140,7 +111,7 @@ def handle_hub(action, data, request):
         result = _run_git_pull()
         if result['success']:
             return {'status': 'success'}
-        return {'error': result['error']}
+        return {'error': result['message']}
 
     elif action == 'get_courses':
         rows = db_query("SELECT id, name, owner_id FROM school_course")
@@ -149,8 +120,8 @@ def handle_hub(action, data, request):
     elif action == 'add_course':
         if not user_id: return {'error': 'Must be logged in'}
         db_query("INSERT INTO school_course (name, owner_id) VALUES (%s, %s)", [data['name'], user_id])
-        trigger_git_sync(f"Added course: {data['name']}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Added course: {data['name']}")
+        return {'status': 'success', 'git': git_res}
 
     elif action == 'edit_course':
         if not user_id: return {'error': 'Must be logged in'}
@@ -158,8 +129,8 @@ def handle_hub(action, data, request):
         if not course: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == course[0][0]:
             db_query("UPDATE school_course SET name = %s WHERE id = %s", [data['name'], data['course_id']])
-            trigger_git_sync(f"Renamed course ID {data['course_id']} to {data['name']}")
-            return {'status': 'success'}
+            git_res = _run_git_sync(f"Renamed course ID {data['course_id']} to {data['name']}")
+            return {'status': 'success', 'git': git_res}
         return {'error': 'Permission Denied'}
 
     elif action == 'delete_course':
@@ -167,8 +138,8 @@ def handle_hub(action, data, request):
         if not course: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == course[0][0]:
             db_query("DELETE FROM school_course WHERE id = %s", [data['course_id']])
-            trigger_git_sync(f"Deleted course ID {data['course_id']}")
-            return {'status': 'success'}
+            git_res = _run_git_sync(f"Deleted course ID {data['course_id']}")
+            return {'status': 'success', 'git': git_res}
         return {'error': 'Permission Denied: You do not own this course.'}
 
     return None
@@ -188,8 +159,8 @@ def handle_course(action, data, request):
         if not user_id: return {'error': 'Must be logged in'}
         db_query("INSERT INTO school_chapter (course_id, name, chapter_index, owner_id) VALUES (%s, %s, %s, %s)",
                  [data['course_id'], data['name'], data['index'], user_id])
-        trigger_git_sync(f"Added chapter '{data['name']}' to course ID {data['course_id']}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Added chapter '{data['name']}' to course ID {data['course_id']}")
+        return {'status': 'success', 'git': git_res}
 
     elif action == 'edit_chapter':
         if not user_id: return {'error': 'Must be logged in'}
@@ -198,8 +169,8 @@ def handle_course(action, data, request):
         if is_admin(user_id) or user_id == chapter[0][0]:
             db_query("UPDATE school_chapter SET name = %s, chapter_index = %s WHERE id = %s",
                      [data['name'], data['index'], data['chapter_id']])
-            trigger_git_sync(f"Edited chapter ID {data['chapter_id']}")
-            return {'status': 'success'}
+            git_res = _run_git_sync(f"Edited chapter ID {data['chapter_id']}")
+            return {'status': 'success', 'git': git_res}
         return {'error': 'Permission Denied'}
 
     elif action == 'delete_chapter':
@@ -207,8 +178,8 @@ def handle_course(action, data, request):
         if not chapter: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == chapter[0][0]:
             db_query("DELETE FROM school_chapter WHERE id = %s", [data['chapter_id']])
-            trigger_git_sync(f"Deleted chapter ID {data['chapter_id']}")
-            return {'status': 'success'}
+            git_res = _run_git_sync(f"Deleted chapter ID {data['chapter_id']}")
+            return {'status': 'success', 'git': git_res}
         return {'error': 'Permission Denied'}
 
     return None
@@ -256,8 +227,8 @@ def handle_note(action, data, files, request):
         db_query("INSERT INTO school_note (chapter_id, header, body, weight, owner_id) VALUES (%s, %s, %s, 10, %s)",
                  [data['chapter_id'], header_final, body_final, user_id])
 
-        trigger_git_sync(f"Added note to chapter ID {data['chapter_id']}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Added note to chapter ID {data['chapter_id']}")
+        return {'status': 'success', 'git': git_res}
 
     elif action == 'edit_note':
         if not user_id: return {'error': 'Must be logged in'}
@@ -320,23 +291,23 @@ def handle_note(action, data, files, request):
             except ValueError:
                 pass
 
-        trigger_git_sync(f"Edited note ID {note_id}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Edited note ID {note_id}")
+        return {'status': 'success', 'git': git_res}
 
     elif action == 'delete_note':
         note = db_query("SELECT owner_id FROM school_note WHERE id = %s", [data['note_id']])
         if not note: return {'error': 'Not found'}
         if is_admin(user_id) or user_id == note[0][0]:
             db_query("DELETE FROM school_note WHERE id = %s", [data['note_id']])
-            trigger_git_sync(f"Deleted note ID {data['note_id']}")
-            return {'status': 'success'}
+            git_res = _run_git_sync(f"Deleted note ID {data['note_id']}")
+            return {'status': 'success', 'git': git_res}
         return {'error': 'Permission Denied'}
 
     elif action == 'reset_note':
         if not user_id: return {'error': 'Must be logged in'}
         db_query("DELETE FROM school_progress WHERE user_id = %s AND note_id = %s", [user_id, data['note_id']])
-        trigger_git_sync(f"Reset progress for note ID {data['note_id']}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Reset progress for note ID {data['note_id']}")
+        return {'status': 'success', 'git': git_res}
 
     elif action == 'reset_chapter':
         if not user_id: return {'error': 'Must be logged in'}
@@ -346,8 +317,8 @@ def handle_note(action, data, files, request):
             AND note_id IN (SELECT id FROM school_note WHERE chapter_id = %s)
         """
         db_query(query, [user_id, data['chapter_id']])
-        trigger_git_sync(f"Reset progress for chapter ID {data['chapter_id']}")
-        return {'status': 'success'}
+        git_res = _run_git_sync(f"Reset progress for chapter ID {data['chapter_id']}")
+        return {'status': 'success', 'git': git_res}
 
     return None
 
