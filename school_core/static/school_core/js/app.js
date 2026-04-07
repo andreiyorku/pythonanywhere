@@ -782,11 +782,20 @@ async function nextQuestion() {
 }
 
 async function handleLocalAnswer(isCorrect) {
-    if (isCorrect) currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
+    if (isCorrect) {
+        currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
+        showToast("☁️ Correct! Saving and syncing to GitHub...", "info");
+    } else {
+        // Just show a quick local save message without syncing
+        showToast("📝 Wrong answer. Weight unchanged.", "info");
+    }
 
-    showToast("☁️ Saving answer and syncing to GitHub...", "info");
     const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
-    handleGitResponse(res);
+
+    // Only process the Git response if we actually expected one
+    if (isCorrect) {
+        handleGitResponse(res);
+    }
 
     nextQuestion();
 }
