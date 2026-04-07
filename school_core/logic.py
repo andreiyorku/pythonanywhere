@@ -3,6 +3,7 @@ import json
 import subprocess
 import threading
 import os
+import sys
 from django.db import connection
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
@@ -12,18 +13,39 @@ from django.contrib.auth.hashers import make_password, check_password
 # ==========================================
 # --- GIT AUTO-SYNC ENGINE ---
 # ==========================================
+
+def log_to_server(message):
+    """Forces print statements directly into the PythonAnywhere Error Log instantly."""
+    print(message, file=sys.stderr, flush=True)
+
+
 def _run_git_sync(commit_message):
     """Background thread to add, commit, and push to GitHub."""
     try:
-        # Resolves to the root of your git repository
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-        subprocess.run(["git", "add", "."], cwd=repo_root, check=True)
-        subprocess.run(["git", "commit", "-m", f"Auto-Sync: {commit_message}"], cwd=repo_root)
-        subprocess.run(["git", "push"], cwd=repo_root, check=True)
-        print(f"Successfully synced to Git: {commit_message}")
+        # 1. Git Add
+        add_res = subprocess.run(["git", "add", "."], cwd=repo_root, capture_output=True, text=True)
+
+        # 2. Git Commit
+        commit_res = subprocess.run(["git", "commit", "-m", f"Auto-Sync: {commit_message}"], cwd=repo_root,
+                                    capture_output=True, text=True)
+
+        # 3. Git Push
+        push_res = subprocess.run(["git", "push"], cwd=repo_root, capture_output=True, text=True, check=True)
+
+        log_to_server("\n========================================")
+        log_to_server(f"✅ GIT PUSH SUCCESS: {commit_message}")
+        log_to_server(f"OUTPUT:\n{push_res.stdout}{push_res.stderr}")
+        log_to_server("========================================\n")
+
+    except subprocess.CalledProcessError as e:
+        log_to_server("\n========================================")
+        log_to_server(f"❌ GIT PUSH FAILED: {commit_message}")
+        log_to_server(f"ERROR OUTPUT:\n{e.stderr}")
+        log_to_server("========================================\n")
     except Exception as e:
-        print(f"Git auto-sync failed: {e}")
+        log_to_server(f"\n❌ GIT PUSH SYSTEM ERROR: {str(e)}\n")
 
 
 def trigger_git_sync(commit_message):
@@ -36,12 +58,24 @@ def _run_git_pull():
     """Synchronous pull to grab latest changes from GitHub."""
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        subprocess.run(["git", "pull"], cwd=repo_root, check=True, capture_output=True, text=True)
+
+        pull_res = subprocess.run(["git", "pull"], cwd=repo_root, capture_output=True, text=True, check=True)
+
+        log_to_server("\n========================================")
+        log_to_server("✅ GIT PULL SUCCESS")
+        log_to_server(f"OUTPUT:\n{pull_res.stdout}")
+        log_to_server("========================================\n")
+
         return {'success': True}
+
     except subprocess.CalledProcessError as e:
-        print(f"Git pull failed: {e.stderr}")
+        log_to_server("\n========================================")
+        log_to_server("❌ GIT PULL FAILED")
+        log_to_server(f"ERROR OUTPUT:\n{e.stderr}")
+        log_to_server("========================================\n")
         return {'success': False, 'error': e.stderr}
     except Exception as e:
+        log_to_server(f"\n❌ GIT PULL SYSTEM ERROR: {str(e)}\n")
         return {'success': False, 'error': str(e)}
 
 
