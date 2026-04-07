@@ -764,15 +764,29 @@ async function nextQuestion() {
     lastQuizItemId = winner.id;
     currentQuizItem = winner;
 
+    // Fetch the detailed content including Course and Chapter names
     const content = await api({ action: 'get_content', note_id: winner.id });
+
     container.innerHTML = '';
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
 
+    // Populate the new Course/Chapter Banner
+    const cName = clone.querySelector('.q-course-name');
+    if(cName) cName.innerText = content.course_name;
+
+    const chName = clone.querySelector('.q-chapter-name');
+    if(chName) chName.innerText = content.chapter_name;
+
+    const chIdx = clone.querySelector('.q-chapter-index');
+    if(chIdx) chIdx.innerText = content.chapter_index;
+
+    // Populate Question, Answer, and Weight
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
 
+    // Setup Answer Actions
     const ansArea = clone.querySelector('.q-answer-area');
     clone.querySelector('.btn-show-answer').onclick = () => { ansArea.style.display = 'block'; };
     clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);

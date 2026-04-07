@@ -422,57 +422,50 @@ def handle_quiz(action, data, request):
 
     elif action == 'get_content':
         note_id = data.get('note_id')
-        rows = db_query("SELECT header, body FROM school_note WHERE id = %s", [note_id])
-        if rows: return {'header': rows[0][0], 'body': rows[0][1]}
+        query = """
+            SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name
+            FROM school_note n
+            JOIN school_chapter c ON n.chapter_id = c.id
+            JOIN school_course co ON c.course_id = co.id
+            WHERE n.id = %s
+        """
+        rows = db_query(query, [note_id])
+        if rows:
+            return {
+                'header': rows[0][0],
+                'body': rows[0][1],
+                'chapter_name': rows[0][2],
+                'chapter_index': rows[0][3],
+                'course_name': rows[0][4]
+            }
         return {'error': 'Note not found'}
 
-
     elif action == 'submit_answer':
-
         if not user_id: return {'error': 'Must be logged in'}
-
         note_id = data['note_id']
-
         is_correct = data['is_correct']
-
         if isinstance(is_correct, str): is_correct = (is_correct.lower() == 'true')
 
         existing = db_query("SELECT weight FROM school_progress WHERE user_id = %s AND note_id = %s",
-
                             [user_id, note_id])
-
         current_weight = existing[0][0] if existing else 10.0
-
         if not existing:
-
             global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
-
             if global_row: current_weight = global_row[0][0]
 
         new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1)
 
         if existing:
-
             db_query("UPDATE school_progress SET weight=%s WHERE user_id=%s AND note_id=%s",
-
                      [new_weight, user_id, note_id])
-
         else:
-
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
-
                      [user_id, note_id, new_weight])
 
-        # NEW: Only trigger Git sync if the answer was correct and the weight actually changed
-
         if is_correct:
-
             git_res = _run_git_sync(f"Quiz correct, reduced weight for note ID {note_id}")
-
             return {'status': 'saved', 'git': git_res}
-
         else:
-
-            return {'status': 'saved'}  # Skip Git sync for wrong answers
+            return {'status': 'saved'}
 
     return None

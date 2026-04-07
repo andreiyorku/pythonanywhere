@@ -1,27 +1,42 @@
-<button id="quiz-quit-btn" onclick="router('hub')"><< Quit</button>
-<div id="quiz-container"></div>
+<div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+    <h2>Quiz Mode</h2>
+    <button id="quiz-quit-btn" style="background: #dc3545; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Quit Quiz</button>
+</div>
 
-<button id="quiz-quit-btn" onclick="router('hub')"><< Quit</button>
 <div id="quiz-container"></div>
 
 <template id="quiz-card-template">
-    <div>
-        <h3 class="q-header"></h3>
+    <div style="border: 1px solid #ccc; border-radius: 8px; padding: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 
-        <button class="btn-show-answer">Show Answer</button>
+        <div style="font-size: 0.9em; color: #555; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; display: flex; gap: 10px; flex-wrap: wrap;">
+            <span style="background: #e3f2fd; color: #0056b3; padding: 3px 8px; border-radius: 4px;">
+                <strong>Course:</strong> <span class="q-course-name"></span>
+            </span>
+            <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px;">
+                <strong>Ch. <span class="q-chapter-index"></span>:</strong> <span class="q-chapter-name"></span>
+            </span>
+        </div>
 
-        <div class="q-answer-area" style="display:none; margin-top:20px;">
-            <div class="q-body"></div>
-            <br>
+        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 20px;">
+            <div class="q-header"></div>
+        </div>
 
-            <div style="margin-top:20px;">
-                <button class="btn-correct" style="background:#d4edda; color:#155724;">I got it</button>
-                <button class="btn-wrong" style="background:#f8d7da; color:#721c24;">I missed it</button>
+        <button class="btn-show-answer" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Show Answer</button>
+
+        <div class="q-answer-area" style="display: none; margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 20px;">
+
+            <div style="font-size: 1.1em; margin-bottom: 20px;">
+                <div class="q-body"></div>
             </div>
 
-            <div style="margin-top:10px; font-size:0.8em; color:#666;">
-                Current Weight: <span class="q-weight"></span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <small style="color: #999;">Algorithm Weight: <span class="q-weight"></span></small>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-wrong" style="background: #dc3545; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Wrong</button>
+                    <button class="btn-correct" style="background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Correct</button>
+                </div>
             </div>
+
         </div>
     </div>
 </template>
