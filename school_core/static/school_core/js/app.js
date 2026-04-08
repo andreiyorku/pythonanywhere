@@ -67,7 +67,7 @@ async function api(payload, isFile = false) {
         return await res.json();
     } catch (err) {
         console.error("API Error:", err);
-        return null;
+        return null; // Gracefully return null on 502 Bad Gateway
     }
 }
 
@@ -87,7 +87,7 @@ async function checkLogin() {
         if (pullRes && pullRes.error) {
             showToast("⚠️ Cloud Pull Failed. Check server logs.", "error");
             console.error(pullRes.error);
-        } else {
+        } else if (pullRes) {
             showToast("✅ Cloud Sync Complete!", "success");
         }
 
@@ -107,9 +107,9 @@ async function performAuth() {
     const action = isRegisterMode ? 'register' : 'login';
     const data = await api({ action: action, username: user, password: pass });
 
-    if (data.status === 'success') {
+    if (data && data.status === 'success') {
         checkLogin();
-    } else {
+    } else if (data) {
         errorBox.innerText = data.error || "Authentication failed";
         errorBox.style.display = 'block';
     }
@@ -277,6 +277,8 @@ async function populateChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
     if (container.innerHTML === '') {
         const data = await api({ action: 'get_chapters', course_id: courseId });
+        if (!data) return; // Fail safe
+
         container.innerHTML = '';
         if(data.chapters) {
             data.chapters.forEach(c => {
@@ -307,7 +309,6 @@ async function loadCourses() {
     list.innerHTML = '';
     if(!data || !data.courses) return;
 
-    // Restore dropdown memory
     const modeDropdown = document.getElementById('quiz-chapter-mode');
     if (modeDropdown) {
         const savedMode = localStorage.getItem(`quiz_mode_${currentUserId}`);
@@ -369,16 +370,14 @@ async function addCourse() {
     if(n) {
         showToast("☁️ Saving and pushing to GitHub...", "info");
         const res = await api({ action: 'add_course', name: n });
-        handleGitResponse(res);
-        loadCourses();
+        if (res) { handleGitResponse(res); loadCourses(); }
     }
 }
 async function deleteCourse(id) {
     if(confirm("Delete Course?")) {
         showToast("☁️ Deleting and pushing to GitHub...", "info");
         const res = await api({ action: 'delete_course', course_id: id });
-        handleGitResponse(res);
-        loadCourses();
+        if (res) { handleGitResponse(res); loadCourses(); }
     }
 }
 async function renameCourse(id, oldName) {
@@ -386,8 +385,7 @@ async function renameCourse(id, oldName) {
     if(newName && newName !== oldName) {
         showToast("☁️ Renaming and pushing to GitHub...", "info");
         const res = await api({ action: 'edit_course', course_id: id, name: newName });
-        handleGitResponse(res);
-        loadCourses();
+        if (res) { handleGitResponse(res); loadCourses(); }
     }
 }
 
@@ -397,7 +395,7 @@ async function resetCourseWeights(passedCourseId = null) {
     if (confirm("Reset ALL progress for EVERY chapter in this course? This cannot be undone.")) {
         showToast("☁️ Resetting course and pushing to GitHub...", "info");
         const res = await api({ action: 'reset_course', course_id: cid });
-        handleGitResponse(res);
+        if (res) handleGitResponse(res);
     }
 }
 
@@ -491,8 +489,7 @@ async function loadChapters() {
 
                 showToast("☁️ Updating chapter and pushing to GitHub...", "info");
                 const res = await api({ action: 'edit_chapter', chapter_id: c.id, name: newName, index: newIndex });
-                handleGitResponse(res);
-                loadChapters();
+                if (res) { handleGitResponse(res); loadChapters(); }
             };
 
         } else {
@@ -510,16 +507,14 @@ async function addChapter() {
     const i = document.getElementById('new-chap-index').value;
     showToast("☁️ Saving chapter and pushing to GitHub...", "info");
     const res = await api({ action: 'add_chapter', course_id: currentCourseId, name: n, index: i });
-    handleGitResponse(res);
-    loadChapters();
+    if (res) { handleGitResponse(res); loadChapters(); }
 }
 
 async function deleteChapter(id) {
     if(confirm("Delete Chapter?")) {
         showToast("☁️ Deleting chapter and pushing to GitHub...", "info");
         const res = await api({ action: 'delete_chapter', chapter_id: id });
-        handleGitResponse(res);
-        loadChapters();
+        if (res) { handleGitResponse(res); loadChapters(); }
     }
 }
 
@@ -644,8 +639,9 @@ function enableEditMode(card, note) {
 
         showToast("☁️ Saving edits and pushing to GitHub...", "info");
         const res = await api(formData, true);
-        if (res && res.error) alert(res.error);
-        else {
+        if (res && res.error) {
+            alert(res.error);
+        } else if (res) {
             handleGitResponse(res);
             loadNotes();
         }
@@ -670,7 +666,7 @@ async function addNote() {
 
     if (res && res.error) {
         alert(res.error);
-    } else {
+    } else if (res) {
         document.getElementById('note-header').value = '';
         document.getElementById('note-body').value = '';
         const ph = document.getElementById('preview-text-header'); if(ph) ph.style.display='none';
@@ -686,16 +682,14 @@ async function deleteNote(id) {
     if(confirm("Delete Note?")) {
         showToast("☁️ Deleting note and pushing to GitHub...", "info");
         const res = await api({ action: 'delete_note', note_id: id });
-        handleGitResponse(res);
-        loadNotes();
+        if (res) { handleGitResponse(res); loadNotes(); }
     }
 }
 
 async function resetNoteWeight(noteId) {
     showToast("☁️ Resetting note and pushing to GitHub...", "info");
     const res = await api({ action: 'reset_note', note_id: noteId });
-    handleGitResponse(res);
-    loadNotes();
+    if (res) { handleGitResponse(res); loadNotes(); }
 }
 
 async function resetChapterWeights(passedChapterId = null) {
@@ -703,7 +697,7 @@ async function resetChapterWeights(passedChapterId = null) {
     if (confirm("Reset ALL progress for this chapter?")) {
         showToast("☁️ Resetting chapter and pushing to GitHub...", "info");
         const res = await api({ action: 'reset_chapter', chapter_id: cid });
-        handleGitResponse(res);
+        if (res) handleGitResponse(res);
         if (document.getElementById('notes-list')) loadNotes();
     }
 }
@@ -751,7 +745,7 @@ async function startQuiz(returnTo = 'hub') {
         chapter_mode: selectedMode
     });
 
-    if (!data.deck || data.deck.length === 0) return alert("No active notes in selection.");
+    if (!data || !data.deck || data.deck.length === 0) return alert("No active notes in selection.");
 
     quizDeck = data.deck;
     router('quiz');
@@ -783,6 +777,22 @@ async function nextQuestion() {
     currentQuizItem = winner;
 
     const content = await api({ action: 'get_content', note_id: winner.id });
+
+    // --- FAIL-SAFE: Handle 502 Bad Gateway ---
+    if (!content || content.error) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 40px; border: 2px dashed red; border-radius: 8px;">
+                <h3 style="color: red;">⚠️ Server Timeout</h3>
+                <p>PythonAnywhere is struggling to reach GitHub. Please try fetching the question again.</p>
+                <button onclick="nextQuestion()" style="margin-top: 15px; padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em;">
+                    Retry Question
+                </button>
+            </div>
+        `;
+        return;
+    }
+    // -----------------------------------------
+
     container.innerHTML = '';
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
@@ -824,7 +834,10 @@ async function handleLocalAnswer(isCorrect) {
 
     const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    if (isCorrect) {
+    // --- FAIL-SAFE: Handle 502 Timeout on Save ---
+    if (!res) {
+        showToast("⚠️ Server Timeout. Your answer was saved locally, but Git sync may have failed.", "error");
+    } else if (isCorrect) {
         handleGitResponse(res);
     }
 
