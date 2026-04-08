@@ -4,11 +4,19 @@
     <strong>Multi-Course Quiz Builder</strong><br>
     <small>Select courses or chapters below. Distribute Focus % to determine how often notes from each course appear. Must total exactly 100%.</small><br><br>
 
-    <div style="display: flex; align-items: center; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
         <button onclick="startQuiz('hub')" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
             Start Multi-Course Quiz
         </button>
-        <strong id="focus-total-display" style="color: red; font-size: 1.1em;">Total Focus: 0%</strong>
+
+        <select id="quiz-chapter-mode" style="padding: 9px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="standard">Mode: Standard (Size Based)</option>
+            <option value="equal">Mode: Equalize Chapters</option>
+            <option value="forward">Mode: Focus New (Higher Ch. = Heavier)</option>
+            <option value="reverse">Mode: Review Old (Lower Ch. = Heavier)</option>
+        </select>
+
+        <strong id="focus-total-display" style="color: red; font-size: 1.1em; margin-left: auto;">Total Focus: 0%</strong>
     </div>
 </div>
 

@@ -362,6 +362,7 @@ def handle_note(action, data, files, request):
 
 
 # --- QUIZ LOGIC ---
+# --- QUIZ LOGIC ---
 def handle_quiz(action, data, request):
     user_id = request.session.get('user_id')
 
@@ -369,11 +370,15 @@ def handle_quiz(action, data, request):
         chapter_ids = data.get('chapter_ids')
         if isinstance(chapter_ids, str): chapter_ids = json.loads(chapter_ids)
         if not chapter_ids: return {'deck': []}
+
+        mode = data.get('chapter_mode', 'standard')
+
         placeholders = ','.join(['%s'] * len(chapter_ids))
         params = [user_id] + chapter_ids
 
+        # Added c.chapter_index to the query
         query = f"""
-            SELECT n.id, COALESCE(p.weight, n.weight), n.chapter_id, c.course_id
+            SELECT n.id, COALESCE(p.weight, n.weight), n.chapter_id, c.course_id, c.chapter_index
             FROM school_note n
             JOIN school_chapter c ON n.chapter_id = c.id
             LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
@@ -393,30 +398,55 @@ def handle_quiz(action, data, request):
         if not course_percentages:
             return {'deck': [{'id': r[0], 'w': float(r[1]), 'chapter_id': r[2]} for r in rows]}
 
-        course_totals = {}
-        deck = []
+        # Group data: course_id -> chapter_id -> { index, notes[], total_raw_w }
+        courses_data = {}
         for r in rows:
-            nid = r[0]
-            w = float(r[1])
-            cid = str(r[3])
+            nid, w, ch_id, c_id, ch_idx = r[0], float(r[1]), r[2], str(r[3]), r[4]
+            if c_id not in courses_data:
+                courses_data[c_id] = {}
+            if ch_id not in courses_data[c_id]:
+                courses_data[c_id][ch_id] = {'index': ch_idx, 'notes': [], 'total_raw_w': 0.0}
 
-            if cid not in course_totals: course_totals[cid] = 0.0
-            course_totals[cid] += w
-
-            deck.append({'id': nid, 'raw_w': w, 'chapter_id': r[2], 'course_id': cid})
+            courses_data[c_id][ch_id]['notes'].append({'id': nid, 'w': w})
+            courses_data[c_id][ch_id]['total_raw_w'] += w
 
         final_deck = []
-        for note in deck:
-            cid = note['course_id']
-            raw_w = note['raw_w']
-            target_pct = float(course_percentages.get(cid, 0))
 
-            c_total = course_totals[cid]
-            multiplier = (target_pct / c_total) if c_total > 0 else 0
-            final_w = raw_w * multiplier
+        # Calculate dynamic targets
+        for c_id, chapters in courses_data.items():
+            course_target_pct = float(course_percentages.get(c_id, 0))
+            if course_target_pct <= 0: continue
 
-            if final_w > 0:
-                final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': note['chapter_id']})
+            # Sort chapters by index to rank them
+            sorted_chaps = sorted(chapters.items(), key=lambda x: x[1]['index'])
+            N = len(sorted_chaps)
+
+            for i, (ch_id, ch_data) in enumerate(sorted_chaps):
+                rank = i + 1
+
+                # Determine how much of the course's pie this chapter gets
+                if mode == 'equal':
+                    chap_pct = course_target_pct / N
+                elif mode == 'forward':
+                    weight_sum = (N * (N + 1)) / 2
+                    chap_pct = course_target_pct * (rank / weight_sum)
+                elif mode == 'reverse':
+                    weight_sum = (N * (N + 1)) / 2
+                    rev_rank = N - rank + 1
+                    chap_pct = course_target_pct * (rev_rank / weight_sum)
+                else:  # standard
+                    course_raw_sum = sum(c['total_raw_w'] for c in chapters.values())
+                    chap_pct = course_target_pct * (
+                                ch_data['total_raw_w'] / course_raw_sum) if course_raw_sum > 0 else 0
+
+                # Distribute the chapter's pie slice among its specific notes
+                chap_raw_sum = ch_data['total_raw_w']
+                if chap_raw_sum > 0:
+                    multiplier = chap_pct / chap_raw_sum
+                    for note in ch_data['notes']:
+                        final_w = note['w'] * multiplier
+                        if final_w > 0:
+                            final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': ch_id})
 
         return {'deck': final_deck}
 

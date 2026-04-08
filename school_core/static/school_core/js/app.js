@@ -307,6 +307,14 @@ async function loadCourses() {
     list.innerHTML = '';
     if(!data || !data.courses) return;
 
+    // Restore dropdown memory
+    const modeDropdown = document.getElementById('quiz-chapter-mode');
+    if (modeDropdown) {
+        const savedMode = localStorage.getItem(`quiz_mode_${currentUserId}`);
+        if (savedMode) modeDropdown.value = savedMode;
+        modeDropdown.onchange = (e) => localStorage.setItem(`quiz_mode_${currentUserId}`, e.target.value);
+    }
+
     data.courses.forEach(c => {
         const clone = template.content.cloneNode(true);
         clone.querySelector('.course-name').innerText = c.name;
@@ -709,8 +717,12 @@ async function startQuiz(returnTo = 'hub') {
     if(ids.length === 0) return alert("Select chapters to review.");
 
     let coursePercentages = {};
+    let selectedMode = 'standard';
 
     if (returnTo === 'hub') {
+        const modeDropdown = document.getElementById('quiz-chapter-mode');
+        if (modeDropdown) selectedMode = modeDropdown.value;
+
         const selectedCourses = new Set();
         boxes.forEach(b => {
             const cls = Array.from(b.classList).find(c => c.startsWith('course-chap-'));
@@ -732,7 +744,13 @@ async function startQuiz(returnTo = 'hub') {
         }
     }
 
-    const data = await api({ action: 'init_quiz', chapter_ids: ids, course_percentages: coursePercentages });
+    const data = await api({
+        action: 'init_quiz',
+        chapter_ids: ids,
+        course_percentages: coursePercentages,
+        chapter_mode: selectedMode
+    });
+
     if (!data.deck || data.deck.length === 0) return alert("No active notes in selection.");
 
     quizDeck = data.deck;
@@ -764,14 +782,11 @@ async function nextQuestion() {
     lastQuizItemId = winner.id;
     currentQuizItem = winner;
 
-    // Fetch the detailed content including Course and Chapter names
     const content = await api({ action: 'get_content', note_id: winner.id });
-
     container.innerHTML = '';
     const template = document.getElementById('quiz-card-template');
     const clone = template.content.cloneNode(true);
 
-    // Populate the new Course/Chapter Banner
     const cName = clone.querySelector('.q-course-name');
     if(cName) cName.innerText = content.course_name;
 
@@ -781,12 +796,10 @@ async function nextQuestion() {
     const chIdx = clone.querySelector('.q-chapter-index');
     if(chIdx) chIdx.innerText = content.chapter_index;
 
-    // Populate Question, Answer, and Weight
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
 
-    // Setup Answer Actions
     const ansArea = clone.querySelector('.q-answer-area');
     clone.querySelector('.btn-show-answer').onclick = () => { ansArea.style.display = 'block'; };
     clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);
@@ -796,14 +809,12 @@ async function nextQuestion() {
 }
 
 async function handleLocalAnswer(isCorrect) {
-    // 1. Instantly clear the screen to prevent double-clicks from breaking the server
     const container = document.getElementById('quiz-container');
     container.innerHTML = `<div style="text-align: center; padding: 40px;">
                                <h3 style="color: #0056b3;">Recording answer...</h3>
                                <small>Talking to server</small>
                            </div>`;
 
-    // 2. Adjust local algorithm weight
     if (isCorrect) {
         currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
         showToast("☁️ Correct! Saving and syncing to GitHub...", "info");
@@ -811,15 +822,12 @@ async function handleLocalAnswer(isCorrect) {
         showToast("📝 Wrong answer. Loading next...", "info");
     }
 
-    // 3. Send the result to the backend
     const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    // 4. Fire the Git notification
     if (isCorrect) {
         handleGitResponse(res);
     }
 
-    // 5. Safely pull the next card in the infinite loop
     nextQuestion();
 }
 
