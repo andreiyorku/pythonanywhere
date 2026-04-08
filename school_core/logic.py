@@ -43,10 +43,7 @@ def _run_git_pull():
     try:
         repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
-        # Tell Git not to complain about divergent branches
         subprocess.run(["git", "config", "pull.rebase", "false"], cwd=repo_root)
-
-        # Run pull and explicitly tell it NOT to open a text editor (--no-edit)
         pull_res = subprocess.run(["git", "pull", "--no-edit"], cwd=repo_root, capture_output=True, text=True,
                                   check=True)
 
@@ -362,7 +359,6 @@ def handle_note(action, data, files, request):
 
 
 # --- QUIZ LOGIC ---
-# --- QUIZ LOGIC ---
 def handle_quiz(action, data, request):
     user_id = request.session.get('user_id')
 
@@ -376,7 +372,6 @@ def handle_quiz(action, data, request):
         placeholders = ','.join(['%s'] * len(chapter_ids))
         params = [user_id] + chapter_ids
 
-        # Added c.chapter_index to the query
         query = f"""
             SELECT n.id, COALESCE(p.weight, n.weight), n.chapter_id, c.course_id, c.chapter_index
             FROM school_note n
@@ -398,7 +393,7 @@ def handle_quiz(action, data, request):
         if not course_percentages:
             return {'deck': [{'id': r[0], 'w': float(r[1]), 'chapter_id': r[2]} for r in rows]}
 
-        # Group data: course_id -> chapter_id -> { index, notes[], total_raw_w }
+        # Group data into a dictionary tree for processing
         courses_data = {}
         for r in rows:
             nid, w, ch_id, c_id, ch_idx = r[0], float(r[1]), r[2], str(r[3]), r[4]
@@ -412,41 +407,35 @@ def handle_quiz(action, data, request):
 
         final_deck = []
 
-        # Calculate dynamic targets
+        # Calculate Pure Multipliers
         for c_id, chapters in courses_data.items():
-            course_target_pct = float(course_percentages.get(c_id, 0))
-            if course_target_pct <= 0: continue
+            course_mult = float(course_percentages.get(c_id, 0))
+            if course_mult <= 0: continue
 
-            # Sort chapters by index to rank them
+            # Rank chapters by their assigned index
             sorted_chaps = sorted(chapters.items(), key=lambda x: x[1]['index'])
             N = len(sorted_chaps)
 
             for i, (ch_id, ch_data) in enumerate(sorted_chaps):
                 rank = i + 1
 
-                # Determine how much of the course's pie this chapter gets
-                if mode == 'equal':
-                    chap_pct = course_target_pct / N
-                elif mode == 'forward':
-                    weight_sum = (N * (N + 1)) / 2
-                    chap_pct = course_target_pct * (rank / weight_sum)
+                if mode == 'forward':
+                    chap_mult = rank
                 elif mode == 'reverse':
-                    weight_sum = (N * (N + 1)) / 2
-                    rev_rank = N - rank + 1
-                    chap_pct = course_target_pct * (rev_rank / weight_sum)
-                else:  # standard
-                    course_raw_sum = sum(c['total_raw_w'] for c in chapters.values())
-                    chap_pct = course_target_pct * (
-                                ch_data['total_raw_w'] / course_raw_sum) if course_raw_sum > 0 else 0
+                    chap_mult = (N - rank + 1)
+                elif mode == 'equal':
+                    # Boost smaller chapters so they match the pool impact of massive chapters
+                    chap_raw_sum = ch_data['total_raw_w']
+                    chap_mult = (100.0 / chap_raw_sum) if chap_raw_sum > 0 else 1.0
+                else:
+                    # Standard mode: Chapters compete naturally based on size/weight
+                    chap_mult = 1.0
 
-                # Distribute the chapter's pie slice among its specific notes
-                chap_raw_sum = ch_data['total_raw_w']
-                if chap_raw_sum > 0:
-                    multiplier = chap_pct / chap_raw_sum
-                    for note in ch_data['notes']:
-                        final_w = note['w'] * multiplier
-                        if final_w > 0:
-                            final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': ch_id})
+                # Apply multipliers to the final question pool
+                for note in ch_data['notes']:
+                    final_w = note['w'] * course_mult * chap_mult
+                    if final_w > 0:
+                        final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': ch_id})
 
         return {'deck': final_deck}
 
@@ -492,10 +481,7 @@ def handle_quiz(action, data, request):
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
 
-        if is_correct:
-            git_res = _run_git_sync(f"Quiz correct, reduced weight for note ID {note_id}")
-            return {'status': 'saved', 'git': git_res}
-        else:
-            return {'status': 'saved'}
+        # Git Sync is skipped on Quiz answers to prevent 502 Timeout crashes.
+        return {'status': 'saved'}
 
     return None
