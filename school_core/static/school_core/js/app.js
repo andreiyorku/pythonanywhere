@@ -796,21 +796,30 @@ async function nextQuestion() {
 }
 
 async function handleLocalAnswer(isCorrect) {
+    // 1. Instantly clear the screen to prevent double-clicks from breaking the server
+    const container = document.getElementById('quiz-container');
+    container.innerHTML = `<div style="text-align: center; padding: 40px;">
+                               <h3 style="color: #0056b3;">Recording answer...</h3>
+                               <small>Talking to server</small>
+                           </div>`;
+
+    // 2. Adjust local algorithm weight
     if (isCorrect) {
         currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
         showToast("☁️ Correct! Saving and syncing to GitHub...", "info");
     } else {
-        // Just show a quick local save message without syncing
-        showToast("📝 Wrong answer. Weight unchanged.", "info");
+        showToast("📝 Wrong answer. Loading next...", "info");
     }
 
+    // 3. Send the result to the backend
     const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    // Only process the Git response if we actually expected one
+    // 4. Fire the Git notification
     if (isCorrect) {
         handleGitResponse(res);
     }
 
+    // 5. Safely pull the next card in the infinite loop
     nextQuestion();
 }
 
