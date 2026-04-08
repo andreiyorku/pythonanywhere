@@ -49,6 +49,77 @@ function handleGitResponse(res) {
     }
 }
 
+// --- IMAGE LIGHTBOX (POP-OUT) SYSTEM ---
+function openImageModal(src) {
+    let modal = document.getElementById('global-image-modal');
+    if (!modal) {
+        // Create the modal container dynamically the first time it is needed
+        modal = document.createElement('div');
+        modal.id = 'global-image-modal';
+        modal.style.cssText = `
+            display: flex; position: fixed; z-index: 100000; left: 0; top: 0;
+            width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.85);
+            justify-content: center; align-items: center; overflow: auto;
+        `;
+
+        // Create Exit Button
+        const closeBtn = document.createElement('span');
+        closeBtn.innerHTML = "&times;";
+        closeBtn.style.cssText = `
+            position: fixed; top: 15px; right: 25px; color: #f1f1f1;
+            font-size: 50px; font-weight: bold; cursor: pointer; z-index: 100001;
+            text-shadow: 0px 0px 10px black;
+        `;
+        closeBtn.onclick = closeImageModal;
+
+        // Create the Image Element
+        const imgContent = document.createElement('img');
+        imgContent.id = 'global-modal-img';
+        imgContent.style.cssText = `
+            margin: auto; display: block; max-width: 95%; max-height: 95%;
+            object-fit: contain; cursor: zoom-in; transition: transform 0.2s ease;
+        `;
+
+        // Add click-to-zoom toggle functionality
+        let zoomed = false;
+        imgContent.onclick = function(e) {
+            e.stopPropagation(); // Prevent the click from closing the background
+            zoomed = !zoomed;
+            if (zoomed) {
+                this.style.transform = "scale(1.5)";
+                this.style.cursor = "zoom-out";
+            } else {
+                this.style.transform = "scale(1)";
+                this.style.cursor = "zoom-in";
+            }
+        };
+
+        // Clicking the dark background closes the modal
+        modal.onclick = closeImageModal;
+
+        modal.appendChild(closeBtn);
+        modal.appendChild(imgContent);
+        document.body.appendChild(modal);
+    }
+
+    // Reset state and show
+    const img = document.getElementById('global-modal-img');
+    img.src = src;
+    img.style.transform = "scale(1)";
+    img.style.cursor = "zoom-in";
+    modal.style.display = "flex";
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('global-image-modal');
+    if (modal) modal.style.display = "none";
+}
+
+// Allow hitting the ESC key to close the image
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeImageModal();
+});
+
 
 // --- API ENGINE ---
 async function api(payload, isFile = false) {
@@ -67,7 +138,7 @@ async function api(payload, isFile = false) {
         return await res.json();
     } catch (err) {
         console.error("API Error:", err);
-        return null; // Gracefully return null on 502 Bad Gateway
+        return null;
     }
 }
 
@@ -217,12 +288,13 @@ function parseContent(content) {
     return { text, images };
 }
 
+// UPDATED: Added onclick="openImageModal(this.src)" to all rendered images
 function renderMedia(content) {
     const { text, images } = parseContent(content);
     let html = "";
     if (text) html += `<div>${text}</div>`;
     images.forEach(img => {
-        html += `<img src="${img}" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box;">`;
+        html += `<img src="${img}" onclick="openImageModal(this.src)" title="Click to enlarge" style="width: 100%; height: auto; display: block; border: 1px solid #ccc; margin-top: 5px; border-radius: 4px; box-sizing: border-box; cursor: pointer;">`;
     });
     return html;
 }
@@ -277,7 +349,7 @@ async function populateChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
     if (container.innerHTML === '') {
         const data = await api({ action: 'get_chapters', course_id: courseId });
-        if (!data) return; // Fail safe
+        if (!data) return;
 
         container.innerHTML = '';
         if(data.chapters) {
@@ -778,7 +850,6 @@ async function nextQuestion() {
 
     const content = await api({ action: 'get_content', note_id: winner.id });
 
-    // --- FAIL-SAFE: Handle 502 Bad Gateway ---
     if (!content || content.error) {
         container.innerHTML = `
             <div style="text-align: center; padding: 40px; border: 2px dashed red; border-radius: 8px;">
@@ -791,7 +862,6 @@ async function nextQuestion() {
         `;
         return;
     }
-    // -----------------------------------------
 
     container.innerHTML = '';
     const template = document.getElementById('quiz-card-template');
@@ -834,7 +904,6 @@ async function handleLocalAnswer(isCorrect) {
 
     const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    // --- FAIL-SAFE: Handle 502 Timeout on Save ---
     if (!res) {
         showToast("⚠️ Server Timeout. Your answer was saved locally, but Git sync may have failed.", "error");
     } else if (isCorrect) {
