@@ -208,14 +208,6 @@
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
     </task>
-    <task id="LOCAL-00105" summary="fretmap">
-      <option name="closed" value="true" />
-      <created>1771528052102</created>
-      <option name="number" value="00105" />
-      <option name="presentableId" value="LOCAL-00105" />
-      <option name="project" value="LOCAL" />
-      <updated>1771528052102</updated>
-    </task>
     <task id="LOCAL-00106" summary="fretmap">
       <option name="closed" value="true" />
       <created>1771530745462</created>
@@ -600,7 +592,15 @@
       <option name="project" value="LOCAL" />
       <updated>1775768712827</updated>
     </task>
-    <option name="localTasksCounter" value="154" />
+    <task id="LOCAL-00154" summary="...">
+      <option name="closed" value="true" />
+      <created>1775769237487</created>
+      <option name="number" value="00154" />
+      <option name="presentableId" value="LOCAL-00154" />
+      <option name="project" value="LOCAL" />
+      <updated>1775769237487</updated>
+    </task>
+    <option name="localTasksCounter" value="155" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
