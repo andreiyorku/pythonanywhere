@@ -221,14 +221,13 @@ function updateUserDisplay(username) {
 // --- ROUTER ---
 async function router(viewName) {
 
-    // Safety check: If we leave the quiz, stop the sync loop and push any final changes
     if (viewName !== 'quiz') {
         if (gitSyncInterval) {
             clearInterval(gitSyncInterval);
             gitSyncInterval = null;
         }
         if (pendingGitSync) {
-            api({ action: 'trigger_git_sync' }); // Fire and forget
+            api({ action: 'trigger_git_sync' });
             pendingGitSync = false;
         }
     }
@@ -659,7 +658,7 @@ function enableEditMode(card, note) {
     bInput.value = bData.text;
 
     const wInput = edit.querySelector('.edit-weight-val');
-    wInput.value = note.weight;
+    if (wInput) wInput.value = note.weight;
 
     const hControls = edit.querySelector('.edit-header-img-controls');
     hControls.innerHTML = '';
@@ -705,7 +704,8 @@ function enableEditMode(card, note) {
         formData.append('note_id', note.id);
         formData.append('header', hInput.value);
         formData.append('body', bInput.value);
-        formData.append('weight', wInput.value);
+
+        if (wInput) formData.append('weight', wInput.value);
 
         const remH = edit.querySelector('.remove-header-img');
         if (remH && remH.checked) formData.append('remove_header_img', 'true');
@@ -830,7 +830,6 @@ async function startQuiz(returnTo = 'hub') {
 
     quizDeck = data.deck;
 
-    // --- START BATCH SYNC TIMER ---
     if (gitSyncInterval) clearInterval(gitSyncInterval);
     gitSyncInterval = setInterval(async () => {
         if (pendingGitSync) {
@@ -839,7 +838,7 @@ async function startQuiz(returnTo = 'hub') {
             const res = await api({ action: 'trigger_git_sync' });
             if (res) handleGitResponse(res);
         }
-    }, 12000); // Runs every 12 seconds
+    }, 12000);
 
     router('quiz');
 }
@@ -897,6 +896,7 @@ async function nextQuestion() {
     const chIdx = clone.querySelector('.q-chapter-index');
     if(chIdx) chIdx.innerText = content.chapter_index;
 
+    // View Mode Rendering
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
@@ -905,6 +905,112 @@ async function nextQuestion() {
     clone.querySelector('.btn-show-answer').onclick = () => { ansArea.style.display = 'block'; };
     clone.querySelector('.btn-correct').onclick = () => handleLocalAnswer(true);
     clone.querySelector('.btn-wrong').onclick = () => handleLocalAnswer(false);
+
+    // --- QUIZ EDIT MODE LOGIC ---
+    const btnEdit = clone.querySelector('.btn-edit-quiz');
+    const viewMode = clone.querySelector('.q-view-mode');
+    const editMode = clone.querySelector('.q-edit-mode');
+
+    btnEdit.style.display = 'block';
+
+    let keptBodyImages = [];
+
+    btnEdit.onclick = () => {
+        viewMode.style.display = 'none';
+        editMode.style.display = 'block';
+        btnEdit.style.display = 'none';
+
+        const hData = parseContent(content.header);
+        const bData = parseContent(content.body);
+
+        editMode.querySelector('.edit-header-text').value = hData.text;
+        editMode.querySelector('.edit-body-text').value = bData.text;
+
+        const hControls = editMode.querySelector('.edit-header-img-controls');
+        hControls.innerHTML = '';
+        if (hData.images.length > 0) {
+            hControls.innerHTML = `
+                <div style="font-size:0.8em; color: blue;">Current Image: <a href="${hData.images[0]}" target="_blank">View</a></div>
+                <label style="font-size:0.8em; color: red; cursor:pointer;"><input type="checkbox" class="remove-header-img"> Remove Image</label>
+            `;
+        }
+
+        const bControls = editMode.querySelector('.edit-body-img-controls');
+        keptBodyImages = [...bData.images];
+
+        const renderKeptBodyImages = () => {
+            bControls.innerHTML = '';
+            keptBodyImages.forEach((img, idx) => {
+                const div = document.createElement('div');
+                div.style.cssText = "font-size:0.8em; margin-top:3px; display:flex; justify-content:space-between; align-items:center; background:#eee; padding:2px 5px; border-radius:3px;";
+
+                const link = document.createElement('a');
+                link.href = img; link.target = "_blank"; link.innerText = `View Existing Answer Image ${idx + 1}`;
+
+                const removeBtn = document.createElement('span');
+                removeBtn.style.cssText = "color:red; cursor:pointer; font-weight:bold;";
+                removeBtn.innerText = "[X] Delete";
+                removeBtn.onclick = () => { keptBodyImages.splice(idx, 1); renderKeptBodyImages(); };
+
+                div.appendChild(link);
+                div.appendChild(removeBtn);
+                bControls.appendChild(div);
+            });
+        };
+        renderKeptBodyImages();
+    };
+
+    clone.querySelector('.btn-cancel-edit').onclick = () => {
+        viewMode.style.display = 'block';
+        editMode.style.display = 'none';
+        btnEdit.style.display = 'block';
+    };
+
+    clone.querySelector('.btn-save-edit').onclick = async () => {
+        const formData = new FormData();
+        formData.append('action', 'edit_note');
+        formData.append('note_id', winner.id);
+        formData.append('header', editMode.querySelector('.edit-header-text').value);
+        formData.append('body', editMode.querySelector('.edit-body-text').value);
+
+        const remH = editMode.querySelector('.remove-header-img');
+        if (remH && remH.checked) formData.append('remove_header_img', 'true');
+        const fileH = editMode.querySelector('.edit-header-file').files[0];
+        if (fileH) formData.append('header_image', fileH);
+
+        formData.append('kept_body_images', JSON.stringify(keptBodyImages));
+        const fileBInput = editMode.querySelector('.edit-body-file');
+        for (let i = 0; i < fileBInput.files.length; i++) {
+            formData.append('body_image', fileBInput.files[i]);
+        }
+
+        editMode.querySelector('.btn-save-edit').innerText = "Saving...";
+
+        const res = await api(formData, true);
+        if (res && res.error) {
+            alert(res.error);
+            editMode.querySelector('.btn-save-edit').innerText = "Save Edits";
+        } else if (res) {
+            showToast("✅ Edits saved successfully!", "success");
+            pendingGitSync = true;
+
+            // Refresh the view with new data
+            const updatedContent = await api({ action: 'get_content', note_id: winner.id });
+            content.header = updatedContent.header;
+            content.body = updatedContent.body;
+
+            viewMode.querySelector('.q-header').innerHTML = renderMedia(content.header);
+            viewMode.querySelector('.q-body').innerHTML = renderMedia(content.body);
+
+            viewMode.style.display = 'block';
+            editMode.style.display = 'none';
+            btnEdit.style.display = 'block';
+            editMode.querySelector('.btn-save-edit').innerText = "Save Edits";
+
+            editMode.querySelector('.edit-header-file').value = "";
+            editMode.querySelector('.edit-body-file').value = "";
+        }
+    };
 
     container.appendChild(clone);
 }
@@ -919,16 +1025,13 @@ async function handleLocalAnswer(isCorrect) {
     if (isCorrect) {
         currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
         showToast("✅ Correct! Progress saved locally.", "success");
-        // NEW: Queue the Git Sync instead of firing immediately
         pendingGitSync = true;
     } else {
         showToast("📝 Wrong answer. Loading next...", "info");
     }
 
-    // Save to SQLite
     await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    // Instantly load next question
     nextQuestion();
 }
 
@@ -959,8 +1062,9 @@ window.addEventListener('paste', e => {
         return;
     }
 
+    // UPDATED: Allow pasting inside the new Quiz Edit Mode
     if (active.classList.contains('edit-header-text')) {
-        const container = active.closest('.note-edit');
+        const container = active.closest('.note-edit') || active.closest('.q-edit-mode');
         if (container) {
             const fileInput = container.querySelector('.edit-header-file');
             const dt = new DataTransfer();
@@ -971,7 +1075,7 @@ window.addEventListener('paste', e => {
         }
     }
     else if (active.classList.contains('edit-body-text')) {
-        const container = active.closest('.note-edit');
+        const container = active.closest('.note-edit') || active.closest('.q-edit-mode');
         if (container) {
             const fileInput = container.querySelector('.edit-body-file');
             const dt = new DataTransfer();

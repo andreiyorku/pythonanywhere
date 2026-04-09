@@ -8,35 +8,59 @@
 <template id="quiz-card-template">
     <div style="border: 1px solid #ccc; border-radius: 8px; padding: 20px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
 
-        <div style="font-size: 0.9em; color: #555; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; display: flex; gap: 10px; flex-wrap: wrap;">
-            <span style="background: #e3f2fd; color: #0056b3; padding: 3px 8px; border-radius: 4px;">
-                <strong>Course:</strong> <span class="q-course-name"></span>
-            </span>
-            <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px;">
-                <strong>Ch. <span class="q-chapter-index"></span>:</strong> <span class="q-chapter-name"></span>
-            </span>
+        <div style="font-size: 0.9em; color: #555; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 10px;">
+                <span style="background: #e3f2fd; color: #0056b3; padding: 3px 8px; border-radius: 4px;">
+                    <strong>Course:</strong> <span class="q-course-name"></span>
+                </span>
+                <span style="background: #fff3cd; color: #856404; padding: 3px 8px; border-radius: 4px;">
+                    <strong>Ch. <span class="q-chapter-index"></span>:</strong> <span class="q-chapter-name"></span>
+                </span>
+            </div>
+            <button class="btn-edit-quiz" style="background: #ffc107; color: black; border: 1px solid #d39e00; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">✏️ Edit Card</button>
         </div>
 
-        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 20px;">
-            <div class="q-header"></div>
-        </div>
-
-        <button class="btn-show-answer" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Show Answer</button>
-
-        <div class="q-answer-area" style="display: none; margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 20px;">
-
-            <div style="font-size: 1.1em; margin-bottom: 20px;">
-                <div class="q-body"></div>
+        <div class="q-view-mode">
+            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 20px;">
+                <div class="q-header"></div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <small style="color: #999;">Algorithm Weight: <span class="q-weight"></span></small>
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-wrong" style="background: #dc3545; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Wrong</button>
-                    <button class="btn-correct" style="background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Correct</button>
+            <button class="btn-show-answer" style="width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Show Answer</button>
+
+            <div class="q-answer-area" style="display: none; margin-top: 20px; border-top: 2px dashed #ccc; padding-top: 20px;">
+                <div style="font-size: 1.1em; margin-bottom: 20px;">
+                    <div class="q-body"></div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <small style="color: #999;">Algorithm Weight: <span class="q-weight"></span></small>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-wrong" style="background: #dc3545; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Wrong</button>
+                        <button class="btn-correct" style="background: #28a745; color: white; border: none; padding: 10px 25px; border-radius: 4px; cursor: pointer; font-size: 1.1em; font-weight: bold;">Correct</button>
+                    </div>
                 </div>
             </div>
-
         </div>
+
+        <div class="q-edit-mode" style="display: none; background: #fff8e1; padding: 15px; border: 1px solid #ffeeba; border-radius: 4px;">
+            <h3 style="margin-top: 0; color: #856404;">Edit Quiz Card</h3>
+
+            <label><b>Question:</b>
+                <input type="text" class="edit-header-text" style="width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;">
+            </label>
+            <div class="edit-header-img-controls" style="margin-top: 5px;"></div>
+            <input type="file" class="edit-header-file" style="margin-top: 5px; margin-bottom: 15px;">
+
+            <label><b>Answer:</b>
+                <textarea class="edit-body-text" style="width: 100%; height: 120px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; margin-top: 5px; font-family: inherit;"></textarea>
+            </label>
+            <div class="edit-body-img-controls" style="margin-top: 5px;"></div>
+            <input type="file" class="edit-body-file" multiple style="margin-top: 5px; margin-bottom: 15px;">
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px;">
+                <button class="btn-cancel-edit" style="cursor: pointer; padding: 8px 15px; background: #e2e3e5; border: 1px solid #d6d8db; border-radius: 4px; font-weight: bold;">Cancel (Reset)</button>
+                <button class="btn-save-edit" style="background: #28a745; color: white; cursor: pointer; padding: 8px 15px; border: none; border-radius: 4px; font-weight: bold;">Save Edits</button>
+            </div>
+        </div>
+
     </div>
 </template>
