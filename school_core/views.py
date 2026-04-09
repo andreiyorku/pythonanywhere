@@ -41,7 +41,9 @@ def api_handler(request):
     elif action in ['get_notes', 'add_note', 'delete_note', 'reset_note', 'reset_chapter', 'reset_course', 'edit_note']:
         response_data = logic.handle_note(action, data, request.FILES, request)
 
-    elif action in ['init_quiz', 'get_content', 'submit_answer']:
+        # Find this line at the bottom of the api_handler function
+
+    elif action in ['init_quiz', 'get_content', 'submit_answer', 'trigger_git_sync']:
         response_data = logic.handle_quiz(action, data, request)
 
     if response_data is not None:

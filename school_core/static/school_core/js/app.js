@@ -16,6 +16,10 @@ let currentUserId = null;
 let pendingHeaderFile = null;
 let pendingBodyFiles = [];
 
+// NEW: Batch Sync Variables
+let pendingGitSync = false;
+let gitSyncInterval = null;
+
 // --- NOTIFICATION SYSTEM ---
 function showToast(message, type = "info") {
     const toast = document.createElement('div');
@@ -53,7 +57,6 @@ function handleGitResponse(res) {
 function openImageModal(src) {
     let modal = document.getElementById('global-image-modal');
     if (!modal) {
-        // Create the modal container dynamically the first time it is needed
         modal = document.createElement('div');
         modal.id = 'global-image-modal';
         modal.style.cssText = `
@@ -62,7 +65,6 @@ function openImageModal(src) {
             justify-content: center; align-items: center; overflow: auto;
         `;
 
-        // Create Exit Button
         const closeBtn = document.createElement('span');
         closeBtn.innerHTML = "&times;";
         closeBtn.style.cssText = `
@@ -72,7 +74,6 @@ function openImageModal(src) {
         `;
         closeBtn.onclick = closeImageModal;
 
-        // Create the Image Element
         const imgContent = document.createElement('img');
         imgContent.id = 'global-modal-img';
         imgContent.style.cssText = `
@@ -80,10 +81,9 @@ function openImageModal(src) {
             object-fit: contain; cursor: zoom-in; transition: transform 0.2s ease;
         `;
 
-        // Add click-to-zoom toggle functionality
         let zoomed = false;
         imgContent.onclick = function(e) {
-            e.stopPropagation(); // Prevent the click from closing the background
+            e.stopPropagation();
             zoomed = !zoomed;
             if (zoomed) {
                 this.style.transform = "scale(1.5)";
@@ -94,7 +94,6 @@ function openImageModal(src) {
             }
         };
 
-        // Clicking the dark background closes the modal
         modal.onclick = closeImageModal;
 
         modal.appendChild(closeBtn);
@@ -102,7 +101,6 @@ function openImageModal(src) {
         document.body.appendChild(modal);
     }
 
-    // Reset state and show
     const img = document.getElementById('global-modal-img');
     img.src = src;
     img.style.transform = "scale(1)";
@@ -115,7 +113,6 @@ function closeImageModal() {
     if (modal) modal.style.display = "none";
 }
 
-// Allow hitting the ESC key to close the image
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeImageModal();
 });
@@ -223,6 +220,19 @@ function updateUserDisplay(username) {
 
 // --- ROUTER ---
 async function router(viewName) {
+
+    // Safety check: If we leave the quiz, stop the sync loop and push any final changes
+    if (viewName !== 'quiz') {
+        if (gitSyncInterval) {
+            clearInterval(gitSyncInterval);
+            gitSyncInterval = null;
+        }
+        if (pendingGitSync) {
+            api({ action: 'trigger_git_sync' }); // Fire and forget
+            pendingGitSync = false;
+        }
+    }
+
     const container = document.getElementById('content-slot');
     try {
         const res = await fetch(`/school_core/partial/${viewName}/`);
@@ -288,7 +298,6 @@ function parseContent(content) {
     return { text, images };
 }
 
-// UPDATED: Added onclick="openImageModal(this.src)" to all rendered images
 function renderMedia(content) {
     const { text, images } = parseContent(content);
     let html = "";
@@ -820,6 +829,18 @@ async function startQuiz(returnTo = 'hub') {
     if (!data || !data.deck || data.deck.length === 0) return alert("No active notes in selection.");
 
     quizDeck = data.deck;
+
+    // --- START BATCH SYNC TIMER ---
+    if (gitSyncInterval) clearInterval(gitSyncInterval);
+    gitSyncInterval = setInterval(async () => {
+        if (pendingGitSync) {
+            pendingGitSync = false;
+            showToast("☁️ Batch syncing progress to GitHub...", "info");
+            const res = await api({ action: 'trigger_git_sync' });
+            if (res) handleGitResponse(res);
+        }
+    }, 12000); // Runs every 12 seconds
+
     router('quiz');
 }
 
@@ -897,19 +918,17 @@ async function handleLocalAnswer(isCorrect) {
 
     if (isCorrect) {
         currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
-        showToast("☁️ Correct! Saving and syncing to GitHub...", "info");
+        showToast("✅ Correct! Progress saved locally.", "success");
+        // NEW: Queue the Git Sync instead of firing immediately
+        pendingGitSync = true;
     } else {
         showToast("📝 Wrong answer. Loading next...", "info");
     }
 
-    const res = await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
+    // Save to SQLite
+    await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
-    if (!res) {
-        showToast("⚠️ Server Timeout. Your answer was saved locally, but Git sync may have failed.", "error");
-    } else if (isCorrect) {
-        handleGitResponse(res);
-    }
-
+    // Instantly load next question
     nextQuestion();
 }
 
