@@ -439,24 +439,48 @@ def handle_quiz(action, data, request):
 
         return {'deck': final_deck}
 
+
     elif action == 'get_content':
+
         note_id = data.get('note_id')
+
+        # We add COALESCE(p.weight, n.weight) so the quiz knows the true base weight for editing
+
         query = """
-            SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name
-            FROM school_note n
-            JOIN school_chapter c ON n.chapter_id = c.id
-            JOIN school_course co ON c.course_id = co.id
-            WHERE n.id = %s
-        """
-        rows = db_query(query, [note_id])
+
+                SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name, COALESCE(p.weight, n.weight) as raw_weight
+
+                FROM school_note n
+
+                JOIN school_chapter c ON n.chapter_id = c.id
+
+                JOIN school_course co ON c.course_id = co.id
+
+                LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
+
+                WHERE n.id = %s
+
+            """
+
+        rows = db_query(query, [user_id, note_id])
+
         if rows:
             return {
+
                 'header': rows[0][0],
+
                 'body': rows[0][1],
+
                 'chapter_name': rows[0][2],
+
                 'chapter_index': rows[0][3],
-                'course_name': rows[0][4]
+
+                'course_name': rows[0][4],
+
+                'raw_weight': rows[0][5]
+
             }
+
         return {'error': 'Note not found'}
 
     elif action == 'submit_answer':

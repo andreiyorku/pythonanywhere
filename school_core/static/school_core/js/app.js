@@ -896,7 +896,6 @@ async function nextQuestion() {
     const chIdx = clone.querySelector('.q-chapter-index');
     if(chIdx) chIdx.innerText = content.chapter_index;
 
-    // View Mode Rendering
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
     clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
@@ -925,6 +924,10 @@ async function nextQuestion() {
 
         editMode.querySelector('.edit-header-text').value = hData.text;
         editMode.querySelector('.edit-body-text').value = bData.text;
+
+        // Populate the new Raw Weight input
+        const wInput = editMode.querySelector('.edit-weight-val');
+        if (wInput) wInput.value = content.raw_weight;
 
         const hControls = editMode.querySelector('.edit-header-img-controls');
         hControls.innerHTML = '';
@@ -973,6 +976,12 @@ async function nextQuestion() {
         formData.append('header', editMode.querySelector('.edit-header-text').value);
         formData.append('body', editMode.querySelector('.edit-body-text').value);
 
+        // Grab the manually adjusted weight
+        const wInputSave = editMode.querySelector('.edit-weight-val');
+        if (wInputSave && wInputSave.value !== "") {
+            formData.append('weight', wInputSave.value);
+        }
+
         const remH = editMode.querySelector('.remove-header-img');
         if (remH && remH.checked) formData.append('remove_header_img', 'true');
         const fileH = editMode.querySelector('.edit-header-file').files[0];
@@ -994,10 +1003,10 @@ async function nextQuestion() {
             showToast("✅ Edits saved successfully!", "success");
             pendingGitSync = true;
 
-            // Refresh the view with new data
             const updatedContent = await api({ action: 'get_content', note_id: winner.id });
             content.header = updatedContent.header;
             content.body = updatedContent.body;
+            content.raw_weight = updatedContent.raw_weight;
 
             viewMode.querySelector('.q-header').innerHTML = renderMedia(content.header);
             viewMode.querySelector('.q-body').innerHTML = renderMedia(content.body);
