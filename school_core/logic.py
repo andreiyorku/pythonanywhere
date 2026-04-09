@@ -434,95 +434,69 @@ def handle_quiz(action, data, request):
                 # Apply multipliers to the final question pool
                 for note in ch_data['notes']:
                     final_w = note['w'] * course_mult * chap_mult
-                    if final_w > 0:
+                    # Ignore suspended/zeroed-out questions in the active deck
+                    if final_w > 0 and note['w'] > 0:
                         final_deck.append({'id': note['id'], 'w': final_w, 'chapter_id': ch_id})
 
         return {'deck': final_deck}
 
-
     elif action == 'get_content':
-
         note_id = data.get('note_id')
 
-        # We add COALESCE(p.weight, n.weight) so the quiz knows the true base weight for editing
-
+        # Pulls the raw_weight out so the Edit UI knows the un-multiplied true base weight
         query = """
-
-                SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name, COALESCE(p.weight, n.weight) as raw_weight
-
-                FROM school_note n
-
-                JOIN school_chapter c ON n.chapter_id = c.id
-
-                JOIN school_course co ON c.course_id = co.id
-
-                LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
-
-                WHERE n.id = %s
-
-            """
-
+            SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name, COALESCE(p.weight, n.weight) as raw_weight
+            FROM school_note n
+            JOIN school_chapter c ON n.chapter_id = c.id
+            JOIN school_course co ON c.course_id = co.id
+            LEFT JOIN school_progress p ON n.id = p.note_id AND p.user_id = %s
+            WHERE n.id = %s
+        """
         rows = db_query(query, [user_id, note_id])
-
         if rows:
             return {
-
                 'header': rows[0][0],
-
                 'body': rows[0][1],
-
                 'chapter_name': rows[0][2],
-
                 'chapter_index': rows[0][3],
-
                 'course_name': rows[0][4],
-
                 'raw_weight': rows[0][5]
-
             }
-
         return {'error': 'Note not found'}
 
-
     elif action == 'submit_answer':
-
         if not user_id: return {'error': 'Must be logged in'}
-
         note_id = data['note_id']
-
         is_correct = data['is_correct']
-
         if isinstance(is_correct, str): is_correct = (is_correct.lower() == 'true')
 
         existing = db_query("SELECT weight FROM school_progress WHERE user_id = %s AND note_id = %s",
-
                             [user_id, note_id])
-
         current_weight = existing[0][0] if existing else 10.0
-
         if not existing:
-
             global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
-
             if global_row: current_weight = global_row[0][0]
 
-        # NEW: If the question is suspended (0), freeze it and ignore the click.
-
+        # If a question has been suspended (0 weight), freeze its math permanently
         if current_weight <= 0:
             return {'status': 'saved'}
 
         new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1)
 
         if existing:
-
             db_query("UPDATE school_progress SET weight=%s WHERE user_id=%s AND note_id=%s",
-
                      [new_weight, user_id, note_id])
-
         else:
-
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
-
                      [user_id, note_id, new_weight])
 
+        # Git sync is skipped here and instead handled by the batched interval
         return {'status': 'saved'}
+
+    elif action == 'trigger_git_sync':
+        if not user_id: return {'error': 'Must be logged in'}
+        # This securely pushes all accumulated quiz changes to GitHub in one batched job
+        git_res = _run_git_sync("Batched quiz progress auto-sync")
+        return {'status': 'success', 'git': git_res}
+
+    return None
