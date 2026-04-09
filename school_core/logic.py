@@ -424,9 +424,10 @@ def handle_quiz(action, data, request):
                 elif mode == 'reverse':
                     chap_mult = (N - rank + 1)
                 elif mode == 'equal':
-                    # Boost smaller chapters so they match the pool impact of massive chapters
-                    chap_raw_sum = ch_data['total_raw_w']
-                    chap_mult = (100.0 / chap_raw_sum) if chap_raw_sum > 0 else 1.0
+                    # Use a static baseline (count of questions x 10) to prevent "Zombie Math"
+                    chap_note_count = len(ch_data['notes'])
+                    baseline_weight = chap_note_count * 10.0
+                    chap_mult = (100.0 / baseline_weight) if baseline_weight > 0 else 1.0
                 else:
                     # Standard mode: Chapters compete naturally based on size/weight
                     chap_mult = 1.0
