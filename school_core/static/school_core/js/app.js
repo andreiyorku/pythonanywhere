@@ -221,6 +221,7 @@ function updateUserDisplay(username) {
 // --- ROUTER ---
 async function router(viewName) {
 
+    // Auto-sync remaining progress when leaving the quiz view
     if (viewName !== 'quiz') {
         if (gitSyncInterval) {
             clearInterval(gitSyncInterval);
@@ -617,33 +618,19 @@ async function loadNotes() {
         viewMode.querySelector('.note-header').innerHTML = renderMedia(n.header);
         viewMode.querySelector('.note-body').innerHTML = renderMedia(n.body);
 
-        elif action == 'submit_answer':
-        if not user_id: return {'error': 'Must be logged in'}
-        note_id = data['note_id']
-        is_correct = data['is_correct']
-        if isinstance(is_correct, str): is_correct = (is_correct.lower() == 'true')
+        const wSpan = clone.querySelector('.note-weight');
 
-        existing = db_query("SELECT weight FROM school_progress WHERE user_id = %s AND note_id = %s",
-                            [user_id, note_id])
-        current_weight = existing[0][0] if existing else 10.0
-        if not existing:
-            global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
-            if global_row: current_weight = global_row[0][0]
+        // Highlight suspended questions in red
+        if (n.weight <= 0) {
+            wSpan.innerHTML = "<span style='color: red; font-weight: bold;'>Suspended (0)</span>";
+        } else {
+            wSpan.innerText = n.weight;
+            if (n.weight !== 10) wSpan.style.fontWeight = 'bold';
+        }
 
-        # NEW: If the question is suspended (0), freeze it and ignore the click.
-        if current_weight <= 0:
-            return {'status': 'saved'}
-
-        new_weight = max(2.23e-308, current_weight / 2.0) if is_correct else (current_weight * 1)
-
-        if existing:
-            db_query("UPDATE school_progress SET weight=%s WHERE user_id=%s AND note_id=%s",
-                     [new_weight, user_id, note_id])
-        else:
-            db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
-                     [user_id, note_id, new_weight])
-
-        return {'status': 'saved'}
+        const btnReset = clone.querySelector('.btn-reset');
+        if (n.weight !== 10) btnReset.onclick = () => resetNoteWeight(n.id);
+        else btnReset.style.display = 'none';
 
         const canEdit = (currentUserIsAdmin || (currentUserId && n.owner_id === currentUserId));
         const btnDelete = clone.querySelector('.btn-delete');
@@ -880,7 +867,6 @@ async function nextQuestion() {
     }
 
     // 3. Find ALL questions that share this maximum weight
-    // (Using a tiny epsilon < 1e-10 to account for JavaScript floating point math quirks)
     const topCandidates = candidates.filter(n => Math.abs(n.w - maxWeight) < 1e-10);
 
     // 4. Randomly pick one of the tied top candidates
@@ -1018,14 +1004,12 @@ async function nextQuestion() {
         editMode.querySelector('.btn-save-edit').innerText = "Saving...";
 
         const res = await api(formData, true);
-        const res = await api(formData, true);
         if (res && res.error) {
             alert(res.error);
             editMode.querySelector('.btn-save-edit').innerText = "Save Edits";
         } else if (res) {
 
             // NEW: If you set the weight to 0, vaporize it from the active quiz loop
-            const wInputSave = editMode.querySelector('.edit-weight-val');
             if (wInputSave && parseFloat(wInputSave.value) <= 0) {
                 showToast("🚫 Question Suspended! Removed from quiz.", "info");
                 quizDeck = quizDeck.filter(n => n.id !== winner.id);
@@ -1034,7 +1018,6 @@ async function nextQuestion() {
                 return;
             }
 
-            // Normal update (if weight > 0)
             showToast("✅ Edits saved successfully!", "success");
             pendingGitSync = true;
 
@@ -1106,7 +1089,6 @@ window.addEventListener('paste', e => {
         return;
     }
 
-    // UPDATED: Allow pasting inside the new Quiz Edit Mode
     if (active.classList.contains('edit-header-text')) {
         const container = active.closest('.note-edit') || active.closest('.q-edit-mode');
         if (container) {
