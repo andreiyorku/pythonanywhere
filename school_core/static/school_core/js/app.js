@@ -849,20 +849,24 @@ async function nextQuestion() {
     container.innerHTML = "<h3>Calculating...</h3>";
 
     let winner = null;
+
+    // 1. Exclude the immediate last question so we never get back-to-back repeats
     const candidates = (quizDeck.length > 1 && lastQuizItemId) ? quizDeck.filter(n => n.id !== lastQuizItemId) : quizDeck;
 
-    let totalWeight = candidates.reduce((sum, n) => sum + n.w, 0);
-    let randomVal = Math.random() * totalWeight;
-    let runningSum = 0;
-
+    // 2. Find the absolute highest weight in the remaining pool
+    let maxWeight = -1;
     for (let note of candidates) {
-        runningSum += note.w;
-        if (randomVal <= runningSum) {
-            winner = note;
-            break;
-        }
+        if (note.w > maxWeight) maxWeight = note.w;
     }
 
+    // 3. Find ALL questions that share this maximum weight
+    // (Using a tiny epsilon < 1e-10 to account for JavaScript floating point math quirks)
+    const topCandidates = candidates.filter(n => Math.abs(n.w - maxWeight) < 1e-10);
+
+    // 4. Randomly pick one of the tied top candidates
+    winner = topCandidates[Math.floor(Math.random() * topCandidates.length)];
+
+    // Fallback just in case
     if (!winner) winner = candidates[candidates.length - 1];
 
     lastQuizItemId = winner.id;
@@ -925,7 +929,6 @@ async function nextQuestion() {
         editMode.querySelector('.edit-header-text').value = hData.text;
         editMode.querySelector('.edit-body-text').value = bData.text;
 
-        // Populate the new Raw Weight input
         const wInput = editMode.querySelector('.edit-weight-val');
         if (wInput) wInput.value = content.raw_weight;
 
@@ -976,7 +979,6 @@ async function nextQuestion() {
         formData.append('header', editMode.querySelector('.edit-header-text').value);
         formData.append('body', editMode.querySelector('.edit-body-text').value);
 
-        // Grab the manually adjusted weight
         const wInputSave = editMode.querySelector('.edit-weight-val');
         if (wInputSave && wInputSave.value !== "") {
             formData.append('weight', wInputSave.value);
