@@ -482,7 +482,7 @@ def handle_quiz(action, data, request):
                      [user_id, note_id, new_weight])
 
         # Git Sync is skipped here to prevent 502 Timeout crashes.
-        # It is instead handled by the 'trigger_git_sync' batch action.dd
+        # It is instead handled by the 'trigger_git_sync' batch action.dddd
         return {'status': 'saved'}
 
     elif action == 'trigger_git_sync':
