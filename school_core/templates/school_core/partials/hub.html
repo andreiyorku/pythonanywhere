@@ -1,59 +1,64 @@
-<h2>My Subjects</h2>
+<div class="hub-container" style="padding: 20px; max-width: 900px; margin: auto;">
 
-<div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px;">
-    <strong>Multi-Course Quiz Builder</strong><br>
-    <small>Select courses or chapters below. Distribute Focus % to determine how often notes from each course appear. Must total exactly 100%.</small><br><br>
+    <h2 style="border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 20px;">📚 My Dashboard</h2>
 
-    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-        <button onclick="startQuiz('hub')" style="background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
-            Start Multi-Course Quiz
+    <div style="background: #f4f4f9; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <h3 style="margin-top: 0; color: #333;">🚀 Launch Global Quiz</h3>
+
+        <div style="margin-bottom: 15px;">
+            <label style="font-weight: bold; margin-right: 10px;">Chapter Priority Mode:</label>
+            <select id="quiz-chapter-mode" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc; font-size: 1em;">
+                <option value="standard">Standard (Natural Progression)</option>
+                <option value="forward">Forward Focus (Gentle Curve)</option>
+                <option value="reverse">Reverse Focus (Aggressive Catch-Up)</option>
+                <option value="middle">Middle Focus (Tent-Pole / Midterms)</option>
+                <option value="equal">Equalize Chapters (Static Balance)</option>
+            </select>
+        </div>
+
+        <div style="margin-bottom: 15px; font-size: 1.1em;">
+            <strong id="focus-total-display">Total Focus: 0%</strong>
+            <small style="color: #666; margin-left: 10px;">(Must equal exactly 100% across all selected courses)</small>
+        </div>
+
+        <button onclick="startQuiz('hub')" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 1.1em; cursor: pointer; transition: background 0.2s;">
+            ▶️ Begin Study Session
         </button>
-
-        <select id="quiz-chapter-mode" style="padding: 9px; border-radius: 4px; border: 1px solid #ccc;">
-            <option value="standard">Mode: Standard (Size Based)</option>
-            <option value="equal">Mode: Equalize Chapters</option>
-            <option value="forward">Mode: Focus New (Higher Ch. = Heavier)</option>
-            <option value="reverse">Mode: Review Old (Lower Ch. = Heavier)</option>
-        </select>
-
-        <strong id="focus-total-display" style="color: red; font-size: 1.1em; margin-left: auto;">Total Focus: 0%</strong>
     </div>
-</div>
 
-<div style="margin-bottom: 20px;">
-    <input type="text" id="new-course-name" placeholder="New Subject Name">
-    <button onclick="addCourse()">Create Subject</button>
-</div>
+    <div style="margin-bottom: 20px; display: flex; gap: 10px;">
+        <input type="text" id="new-course-name" placeholder="Create a New Course..." style="padding: 10px; flex-grow: 1; border: 1px solid #ccc; border-radius: 4px;">
+        <button onclick="addCourse()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+            ➕ Add Course
+        </button>
+    </div>
 
-<div id="course-list"></div>
+    <div id="course-list"></div>
+</div>
 
 <template id="course-template">
-    <div style="margin-bottom: 10px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 10px; border: 1px solid #ddd;">
-            <div style="display: flex; align-items: center;">
-                <input type="checkbox" class="course-check" title="Select All Chapters" style="margin-right: 5px;">
-                <strong class="course-name" style="margin-right: 15px;"></strong>
-                <label style="font-size: 0.9em; background: #eee; padding: 4px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 5px;">
-                    Focus: <input type="number" class="course-percentage" placeholder="0" min="0" max="100" style="width: 80px; text-align:center; padding: 4px; box-sizing: border-box;" oninput="updateTotalFocus()"> %
-                </label>
+    <div style="border: 1px solid #ddd; margin-bottom: 15px; border-radius: 6px; background: #fff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+        <div style="padding: 12px 15px; background: #e9ecef; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;">
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" class="course-check" title="Include in Global Quiz" style="transform: scale(1.2); cursor: pointer;">
+                <strong class="course-name" style="font-size: 1.2em; color: #333;"></strong>
+
+                <span style="margin-left: 15px; font-size: 0.9em; color: #555; font-weight: bold;">Focus:</span>
+                <input type="number" class="course-percentage" min="0" max="100" style="width: 70px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center;" placeholder="%">
             </div>
-            <div>
-                <button class="btn-expand" style="margin-right: 5px;">▼ Chapters</button>
-                <button class="btn-open">Open</button>
-                <button class="btn-rename">Rename</button>
-                <button class="btn-reset-course" style="background: #ffc107; color: black; border: 1px solid #d39e00;">Reset</button>
-                <button class="btn-delete" style="background: #ffcccc; color: #cc0000;">X</button>
+
+            <div style="display: flex; gap: 5px;">
+                <button class="btn-expand" style="cursor: pointer; background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Chapters ⬇️</button>
+                <button class="btn-open" style="cursor: pointer; background: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Open Course</button>
+                <button class="btn-rename" style="cursor: pointer; background: transparent; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Rename</button>
+                <button class="btn-reset-course" style="cursor: pointer; background: #ffc107; color: #333; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Reset</button>
+                <button class="btn-delete" style="cursor: pointer; background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Delete</button>
             </div>
         </div>
-        <div class="hub-chapters-container" style="display:none; padding: 10px 10px 10px 30px; border-left: 2px solid #ccc; background: #fff;"></div>
-    </div>
-</template>
 
-<template id="hub-chapter-template">
-    <div style="margin-bottom: 5px;">
-        <label>
-            <input type="checkbox" class="chap-select">
-            <span class="chap-name"></span>
-        </label>
+        <div class="hub-chapters-container" style="padding: 15px; display: none; background: #fafafa; border-top: 1px solid #eee;">
+            </div>
     </div>
 </template>

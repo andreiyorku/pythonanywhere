@@ -412,7 +412,8 @@ def handle_quiz(action, data, request):
             course_mult = float(course_percentages.get(c_id, 0))
             if course_mult <= 0: continue
 
-            # Rank chapters by their assigned index
+            # Rank chapters natively by their assigned index
+            # (Bulletproof against chapter index jumps like 3 -> 6)
             sorted_chaps = sorted(chapters.items(), key=lambda x: x[1]['index'])
             N = len(sorted_chaps)
 
@@ -421,13 +422,17 @@ def handle_quiz(action, data, request):
 
                 if mode == 'forward':
                     # Gentle curve: Rank 1 gets x1.1, Rank 8 gets x1.8
-                    # Higher chapters get a slight edge, but older chapters still survive
                     chap_mult = 1.0 + (rank * 0.1)
 
                 elif mode == 'reverse':
                     # Aggressive Hard Curve: Reverses the index entirely!
-                    # If 8 chapters are selected: Rank 1 gets x8.0, Rank 8 gets x1.0
                     chap_mult = float(N - rank + 1)
+
+                elif mode == 'middle':
+                    # "Tent-Pole" Curve: Middle chapters get max priority, edges mirror each other
+                    mid_point = (N + 1) / 2.0
+                    distance = abs(rank - mid_point)
+                    chap_mult = max(1.0, float(N - (distance * 2.0)))
 
                 elif mode == 'equal':
                     # Use a static baseline (count of questions x 10) to prevent "Zombie Math"
@@ -435,7 +440,7 @@ def handle_quiz(action, data, request):
                     baseline_weight = chap_note_count * 10.0
                     chap_mult = (100.0 / baseline_weight) if baseline_weight > 0 else 1.0
                 else:
-                    # Standard mode: Chapters compete naturally based on size/weight
+                    # Standard mode
                     chap_mult = 1.0
 
                 # Apply multipliers to the final question pool
@@ -450,7 +455,6 @@ def handle_quiz(action, data, request):
     elif action == 'get_content':
         note_id = data.get('note_id')
 
-        # Pulls the raw_weight out so the Edit UI knows the un-multiplied true base weight
         query = """
             SELECT n.header, n.body, c.name as chapter_name, c.chapter_index, co.name as course_name, COALESCE(p.weight, n.weight) as raw_weight
             FROM school_note n
@@ -484,7 +488,6 @@ def handle_quiz(action, data, request):
             global_row = db_query("SELECT weight FROM school_note WHERE id = %s", [note_id])
             if global_row: current_weight = global_row[0][0]
 
-        # If a question has been suspended (0 weight), freeze its math permanently
         if current_weight <= 0:
             return {'status': 'saved'}
 
@@ -497,12 +500,10 @@ def handle_quiz(action, data, request):
             db_query("INSERT INTO school_progress (user_id, note_id, weight) VALUES (%s, %s, %s)",
                      [user_id, note_id, new_weight])
 
-        # Git sync is skipped here and instead handled by the batched interval
         return {'status': 'saved'}
 
     elif action == 'trigger_git_sync':
         if not user_id: return {'error': 'Must be logged in'}
-        # This securely pushes all accumulated quiz changes to GitHub in one batched job
         git_res = _run_git_sync("Batched quiz progress auto-sync")
         return {'status': 'success', 'git': git_res}
 
