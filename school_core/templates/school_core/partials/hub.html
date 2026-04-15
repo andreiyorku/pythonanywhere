@@ -39,17 +39,17 @@
 <template id="course-template">
     <div style="border: 1px solid #ddd; margin-bottom: 15px; border-radius: 6px; background: #fff; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
 
-        <div style="padding: 12px 15px; background: #e9ecef; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd;">
+        <div style="padding: 12px 15px; background: #e9ecef; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px; border-bottom: 1px solid #ddd;">
 
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 250px;">
                 <input type="checkbox" class="course-check" title="Include in Global Quiz" style="transform: scale(1.2); cursor: pointer;">
-                <strong class="course-name" style="font-size: 1.2em; color: #333;"></strong>
+                <strong class="course-name" style="font-size: 1.2em; color: #333; word-break: break-all;"></strong>
 
-                <span style="margin-left: 15px; font-size: 0.9em; color: #555; font-weight: bold;">Focus:</span>
+                <span style="margin-left: 10px; font-size: 0.9em; color: #555; font-weight: bold;">Focus:</span>
                 <input type="number" class="course-percentage" min="0" max="100" style="width: 70px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: center;" placeholder="%">
             </div>
 
-            <div style="display: flex; gap: 5px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
                 <button class="btn-expand" style="cursor: pointer; background: #6c757d; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Chapters ⬇️</button>
                 <button class="btn-open" style="cursor: pointer; background: #17a2b8; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Open Course</button>
                 <button class="btn-rename" style="cursor: pointer; background: transparent; border: 1px solid #ccc; padding: 6px 12px; border-radius: 4px; font-size: 0.9em;">Rename</button>

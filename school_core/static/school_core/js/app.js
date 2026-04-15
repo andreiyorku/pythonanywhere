@@ -357,12 +357,14 @@ function updateTotalFocus() {
 
 async function populateChapters(courseId) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
-    if (container.innerHTML === '') {
+
+    if (container.innerHTML === '' || container.innerHTML.includes('No chapters yet')) {
         const data = await api({ action: 'get_chapters', course_id: courseId });
         if (!data) return;
 
         container.innerHTML = '';
-        if(data.chapters) {
+
+        if(data.chapters && data.chapters.length > 0) {
             data.chapters.forEach(c => {
                 const el = document.createElement('div');
 
@@ -380,6 +382,9 @@ async function populateChapters(courseId) {
                 el.innerHTML = `<input type="checkbox" class="chap-select course-chap-${courseId}" value="${c.id}" ${isChecked ? 'checked' : ''} onchange="handleChapterCheck('${courseId}', this)"> ${c.name}`;
                 container.appendChild(el);
             });
+        } else {
+            // NEW: Fills the void so you know the button actually worked
+            container.innerHTML = '<div style="color: #777; font-style: italic; padding: 5px 0;">No chapters yet. Click "Open Course" to create some!</div>';
         }
     }
 }
@@ -483,7 +488,7 @@ async function resetCourseWeights(passedCourseId = null) {
 
 async function toggleHubChapters(courseId, forceOpen = false) {
     const container = document.getElementById(`hub-chapters-${courseId}`);
-    if (container.innerHTML === '') await populateChapters(courseId);
+    if (container.innerHTML === '' || container.innerHTML.includes('No chapters yet')) await populateChapters(courseId);
 
     if (container.style.display === 'none' || forceOpen) {
         container.style.display = 'block';
@@ -496,7 +501,7 @@ async function toggleCourseSelection(masterCheckbox, courseId) {
     saveCourseSelection(courseId, masterCheckbox.checked);
 
     const container = document.getElementById(`hub-chapters-${courseId}`);
-    if (container.innerHTML === '') await populateChapters(courseId);
+    if (container.innerHTML === '' || container.innerHTML.includes('No chapters yet')) await populateChapters(courseId);
 
     if (masterCheckbox.checked) container.style.display = 'block';
 
