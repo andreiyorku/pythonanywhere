@@ -11,13 +11,13 @@
 <body>
 
     <div id="app-container">
-        <h1 onclick="router('hub')">School Manager</h1>
+        <h1 onclick="window.App.router('hub')">School Manager</h1>
 
         <div id="content-slot">
             <p style="text-align:center; color:#999;">Loading App...</p>
         </div>
     </div>
 
-    <script src="{% static 'school_core/js/app.js' %}?v=5"></script>
+    <script type="module" src="{% static 'school_core/js/main.js' %}"></script>
 </body>
 </html>

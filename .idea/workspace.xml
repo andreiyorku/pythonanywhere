@@ -5,6 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="13fa07a6-ed4d-4a44-82d9-0fe9fd1cd5c0" name="Changes" comment="...">
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/ApiService.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/Auth.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/Content.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/Quiz.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/Store.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/UI.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/school_core/static/school_core/js/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/auth.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/auth.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/chapter.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/course.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/school_core/templates/school_core/partials/hub.html" beforeDir="false" afterPath="$PROJECT_DIR$/school_core/templates/school_core/partials/hub.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -206,14 +218,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1747591742940</updated>
-    </task>
-    <task id="LOCAL-00112" summary="fretmap">
-      <option name="closed" value="true" />
-      <created>1771537457668</created>
-      <option name="number" value="00112" />
-      <option name="presentableId" value="LOCAL-00112" />
-      <option name="project" value="LOCAL" />
-      <updated>1771537457668</updated>
     </task>
     <task id="LOCAL-00113" summary="fretmap">
       <option name="closed" value="true" />
@@ -599,7 +603,15 @@
       <option name="project" value="LOCAL" />
       <updated>1776224798864</updated>
     </task>
-    <option name="localTasksCounter" value="161" />
+    <task id="LOCAL-00161" summary="...">
+      <option name="closed" value="true" />
+      <created>1776225080451</created>
+      <option name="number" value="00161" />
+      <option name="presentableId" value="LOCAL-00161" />
+      <option name="project" value="LOCAL" />
+      <updated>1776225080452</updated>
+    </task>
+    <option name="localTasksCounter" value="162" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">

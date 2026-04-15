@@ -1,10 +1,10 @@
 <div style="margin-bottom:15px; display: flex; align-items: center; justify-content: space-between;">
     <div>
-        <button onclick="router('course')"><< Back to Course</button>
+        <button onclick="window.App.router('course')"><< Back to Course</button>
         <span id="chapter-title" style="font-size: 1.5em; font-weight: bold; margin-left: 10px;">Chapter View</span>
     </div>
 
-    <button onclick="resetChapterWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00; cursor: pointer; padding: 5px 10px;">
+    <button onclick="window.App.resetChapterWeights()" style="background: #ffc107; color: black; border: 1px solid #d39e00; cursor: pointer; padding: 5px 10px;">
         ⚠ Reset Chapter Progress
     </button>
 </div>
@@ -40,7 +40,7 @@
         <div id="preview-text-body" style="font-size: 0.8em; color: green; display: none;">Images selected</div>
     </div>
 
-    <button onclick="addNote()" style="width: 100%; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; font-weight: bold;">Save Note</button>
+    <button onclick="window.App.addNote()" style="width: 100%; padding: 10px; cursor: pointer; background: #28a745; color: white; border: none; font-weight: bold;">Save Note</button>
 </div>
 
 <div id="notes-list"></div>

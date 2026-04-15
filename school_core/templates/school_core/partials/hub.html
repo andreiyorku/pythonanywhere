@@ -21,14 +21,14 @@
             <small style="color: #666; margin-left: 10px;">(Must equal exactly 100% across all selected courses)</small>
         </div>
 
-        <button onclick="startQuiz('hub')" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 1.1em; cursor: pointer; transition: background 0.2s;">
+        <button onclick="window.App.startQuiz('hub')" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; font-size: 1.1em; cursor: pointer; transition: background 0.2s;">
             ▶️ Begin Study Session
         </button>
     </div>
 
     <div style="margin-bottom: 20px; display: flex; gap: 10px;">
         <input type="text" id="new-course-name" placeholder="Create a New Course..." style="padding: 10px; flex-grow: 1; border: 1px solid #ccc; border-radius: 4px;">
-        <button onclick="addCourse()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
+        <button onclick="window.App.addCourse()" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer;">
             ➕ Add Course
         </button>
     </div>
