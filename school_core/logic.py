@@ -420,9 +420,15 @@ def handle_quiz(action, data, request):
                 rank = i + 1
 
                 if mode == 'forward':
-                    chap_mult = rank
+                    # Gentle curve: Rank 1 gets x1.1, Rank 8 gets x1.8
+                    # Higher chapters get a slight edge, but older chapters still survive
+                    chap_mult = 1.0 + (rank * 0.1)
+
                 elif mode == 'reverse':
-                    chap_mult = (N - rank + 1)
+                    # Aggressive Hard Curve: Reverses the index entirely!
+                    # If 8 chapters are selected: Rank 1 gets x8.0, Rank 8 gets x1.0
+                    chap_mult = float(N - rank + 1)
+
                 elif mode == 'equal':
                     # Use a static baseline (count of questions x 10) to prevent "Zombie Math"
                     chap_note_count = len(ch_data['notes'])
