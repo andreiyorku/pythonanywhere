@@ -4,10 +4,12 @@ let currentCourseName = "";
 let currentCourseOwner = null;
 let currentChapterId = null;
 let currentChapterName = "";
-let quizQueue = [];
+let quizDeck = [];
 let currentQuizItem = null;
-let currentQuizChapterIds = [];
 let lastQuizItemId = null;
+let currentQuizChapterIds = [];
+let currentCoursePercentages = {};
+let currentChapterMode = 'standard';
 let quizReturnView = 'hub';
 let isRegisterMode = false;
 let currentUserIsAdmin = false;
@@ -221,7 +223,6 @@ function updateUserDisplay(username) {
 // --- ROUTER ---
 async function router(viewName) {
 
-    // Auto-sync remaining progress when leaving the quiz view
     if (viewName !== 'quiz') {
         if (gitSyncInterval) {
             clearInterval(gitSyncInterval);
@@ -620,7 +621,6 @@ async function loadNotes() {
 
         const wSpan = clone.querySelector('.note-weight');
 
-        // Highlight suspended questions in red
         if (n.weight <= 0) {
             wSpan.innerHTML = "<span style='color: red; font-weight: bold;'>Suspended (0)</span>";
         } else {
@@ -835,7 +835,7 @@ async function startQuiz(returnTo = 'hub') {
 
     if (!data || !data.deck || data.deck.length === 0) return alert("No active notes in selection.");
 
-    quizDeck = data.deck;
+    quizDeck = data.deck; // Load the master deck
 
     if (gitSyncInterval) clearInterval(gitSyncInterval);
     gitSyncInterval = setInterval(async () => {
@@ -852,25 +852,30 @@ async function startQuiz(returnTo = 'hub') {
 
 async function nextQuestion() {
     const container = document.getElementById('quiz-container');
-    if (quizDeck.length === 0) { container.innerHTML = "<h3>Deck empty.</h3>"; return; }
+    if (quizDeck.length === 0) {
+        container.innerHTML = "<h3>Deck empty. All questions mastered or suspended!</h3>";
+        return;
+    }
     container.innerHTML = "<h3>Calculating...</h3>";
 
+    // 1. Exclude the immediate last question so we never get back-to-back repeats
+    let candidates = (quizDeck.length > 1 && lastQuizItemId)
+        ? quizDeck.filter(n => n.id !== lastQuizItemId)
+        : quizDeck;
+
+    // 2. The Roulette Wheel Spin!
+    let totalWeight = candidates.reduce((sum, item) => sum + item.w, 0);
+    let randomVal = Math.random() * totalWeight;
+    let runningSum = 0;
     let winner = null;
 
-    // 1. Exclude the immediate last question so we never get back-to-back repeats
-    const candidates = (quizDeck.length > 1 && lastQuizItemId) ? quizDeck.filter(n => n.id !== lastQuizItemId) : quizDeck;
-
-    // 2. Find the absolute highest weight in the remaining pool
-    let maxWeight = -1;
-    for (let note of candidates) {
-        if (note.w > maxWeight) maxWeight = note.w;
+    for (let i = 0; i < candidates.length; i++) {
+        runningSum += candidates[i].w;
+        if (randomVal <= runningSum) {
+            winner = candidates[i];
+            break;
+        }
     }
-
-    // 3. Find ALL questions that share this maximum weight
-    const topCandidates = candidates.filter(n => Math.abs(n.w - maxWeight) < 1e-10);
-
-    // 4. Randomly pick one of the tied top candidates
-    winner = topCandidates[Math.floor(Math.random() * topCandidates.length)];
 
     // Fallback just in case
     if (!winner) winner = candidates[candidates.length - 1];
@@ -878,7 +883,7 @@ async function nextQuestion() {
     lastQuizItemId = winner.id;
     currentQuizItem = winner;
 
-    const content = await api({ action: 'get_content', note_id: winner.id });
+    const content = await api({ action: 'get_content', note_id: currentQuizItem.id });
 
     if (!content || content.error) {
         container.innerHTML = `
@@ -908,7 +913,7 @@ async function nextQuestion() {
 
     clone.querySelector('.q-header').innerHTML = renderMedia(content.header);
     clone.querySelector('.q-body').innerHTML = renderMedia(content.body);
-    clone.querySelector('.q-weight').innerText = winner.w.toExponential(2);
+    clone.querySelector('.q-weight').innerText = currentQuizItem.w.toExponential(2);
 
     const ansArea = clone.querySelector('.q-answer-area');
     clone.querySelector('.btn-show-answer').onclick = () => { ansArea.style.display = 'block'; };
@@ -981,7 +986,7 @@ async function nextQuestion() {
     clone.querySelector('.btn-save-edit').onclick = async () => {
         const formData = new FormData();
         formData.append('action', 'edit_note');
-        formData.append('note_id', winner.id);
+        formData.append('note_id', currentQuizItem.id);
         formData.append('header', editMode.querySelector('.edit-header-text').value);
         formData.append('body', editMode.querySelector('.edit-body-text').value);
 
@@ -1009,19 +1014,19 @@ async function nextQuestion() {
             editMode.querySelector('.btn-save-edit').innerText = "Save Edits";
         } else if (res) {
 
-            // NEW: If you set the weight to 0, vaporize it from the active quiz loop
+            // Vaporize the item from the live deck if weight is 0
             if (wInputSave && parseFloat(wInputSave.value) <= 0) {
-                showToast("🚫 Question Suspended! Removed from quiz.", "info");
-                quizDeck = quizDeck.filter(n => n.id !== winner.id);
+                showToast("🚫 Question Suspended!", "info");
+                quizDeck = quizDeck.filter(n => n.id !== currentQuizItem.id);
                 pendingGitSync = true;
-                nextQuestion(); // Instantly jump to the next card
+                nextQuestion();
                 return;
             }
 
             showToast("✅ Edits saved successfully!", "success");
             pendingGitSync = true;
 
-            const updatedContent = await api({ action: 'get_content', note_id: winner.id });
+            const updatedContent = await api({ action: 'get_content', note_id: currentQuizItem.id });
             content.header = updatedContent.header;
             content.body = updatedContent.body;
             content.raw_weight = updatedContent.raw_weight;
@@ -1050,15 +1055,19 @@ async function handleLocalAnswer(isCorrect) {
                            </div>`;
 
     if (isCorrect) {
-        currentQuizItem.w = Math.max(2.23e-308, currentQuizItem.w / 2);
+        // Find the item in our master deck and halve its weight locally
+        let deckItem = quizDeck.find(n => n.id === currentQuizItem.id);
+        if (deckItem) deckItem.w = Math.max(2.23e-308, deckItem.w / 2);
+
         showToast("✅ Correct! Progress saved locally.", "success");
-        pendingGitSync = true;
     } else {
         showToast("📝 Wrong answer. Loading next...", "info");
     }
 
+    pendingGitSync = true;
     await api({ action: 'submit_answer', note_id: currentQuizItem.id, is_correct: isCorrect });
 
+    // Spin the wheel again!
     nextQuestion();
 }
 
